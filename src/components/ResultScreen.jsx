@@ -28,7 +28,7 @@ const ACHIEVEMENT_ICONS = {
 export default function ResultScreen({ state, onPlayAgain }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
-  const { W, D, L, GF, GA, pts, achievements, table, playerMatches, playerStats } = result;
+  const { W, D, L, GF, GA, pts, pos = 18, achievements, table, playerMatches, playerStats } = result;
   const [sharing, setSharing] = useState(false);
   const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
 
@@ -140,7 +140,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
                   <div className="lp-bar">
                     <div
                       className="lp-marker"
-                      style={{ left: `${Math.max(2, Math.min(96, 100 - (pts / 102) * 100))}%` }}
+                      style={{ left: `${Math.max(2, Math.min(96, 2 + ((18 - pos) / 17) * 94))}%` }}
                     />
                     <div className="lp-zone lp-relegation" style={{ width: '22%' }} title="Relegation zone" />
                     <div className="lp-zone lp-midtable" style={{ width: '44%', left: '22%' }} />

@@ -24,8 +24,9 @@ function weightedPick(pool, weights) {
 
 function generateMatchEvents(goalsFor, squad) {
   const events = [];
+  const gk = squad.find(p => p.slotType === 'GK');
   for (let i = 0; i < goalsFor; i++) {
-    const scorer   = weightedPick(squad, SCORE_WEIGHTS);
+    const scorer = gk && Math.random() < 0.0005 ? gk : weightedPick(squad, SCORE_WEIGHTS);
     const hasAssist = Math.random() < 0.62;
     const pool2    = squad.filter(p => p !== scorer);
     const assister = hasAssist && pool2.length ? weightedPick(pool2, ASSIST_WEIGHTS) : null;
@@ -131,7 +132,7 @@ export function simulateFullLeague(slots) {
     .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label }));
 
   const statsMap = {};
-  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, goals: 0, assists: 0 }; });
+  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0 }; });
 
   playerMatches.forEach(m => {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
@@ -163,10 +164,14 @@ export function simulateFullLeague(slots) {
   }).map((r, i) => ({ ...r, pos: i + 1 }));
 
   const ps = stats[playerIdx];
+  const playerPos = table.find(r => r.isPlayer)?.pos ?? 18;
+  const gkGoal = playerStats.some(p => p.slotType === 'GK' && p.goals > 0);
   const result = {
     W: ps.W, D: ps.D, L: ps.L,
     GF: ps.GF, GA: ps.GA,
     pts: ps.W * 3 + ps.D,
+    pos: playerPos,
+    gkGoal,
     ratings,
   };
 
@@ -176,17 +181,19 @@ export function simulateFullLeague(slots) {
 // ── Achievements ──────────────────────────────────────────────────────────────
 
 export function getAchievements(result, slots = []) {
-  const { W, D, L, GF, GA, pts } = result;
+  const { W, D, L, GF, GA, pts, pos = 18, gkGoal = false } = result;
   const achievements = [];
 
   if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfekte Saison',      desc: '34-0-0 – Eine Legende der Bundesliga.' });
   else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',          desc: 'Die gesamte Saison unbesiegt.' });
 
-  if (pts >= 82)          achievements.push({ key: 'champions',  label: 'Deutscher Meister!',   desc: 'Bundesliga-Champion – die Schale geholt.' });
-  else if (pts >= 62)     achievements.push({ key: 'top4',       label: 'Champions League',      desc: 'Top-4 – ein Platz in der Königsklasse.' });
-  else if (pts >= 52)     achievements.push({ key: 'europe',     label: 'Europa League',         desc: 'Europacup-Platz gesichert.' });
-  else if (pts >= 48)     achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',     desc: 'Solide Saison in der oberen Tabellenhälfte.' });
-  else if (pts >= 34)     achievements.push({ key: 'midtable',   label: 'Gerettet',              desc: 'Klassenerhalt knapp geschafft.' });
+  if (pos === 1)          achievements.push({ key: 'champions',  label: 'Deutscher Meister!',   desc: 'Bundesliga-Champion – die Schale geholt.' });
+  else if (pos <= 4)      achievements.push({ key: 'top4',       label: 'Champions League',      desc: 'Top-4 – ein Platz in der Königsklasse.' });
+  else if (pos === 5)     achievements.push({ key: 'europe',     label: 'Europa League',         desc: 'Europacup-Platz gesichert.' });
+  else if (pos === 6)     achievements.push({ key: 'conference', label: 'Conference League',     desc: 'Europäischer Fußball – ein Platz in der Conference League.' });
+  else if (pos <= 9)      achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',     desc: 'Solide Saison in der oberen Tabellenhälfte.' });
+  else if (pos <= 15)     achievements.push({ key: 'midtable',   label: 'Gerettet',              desc: 'Klassenerhalt gesichert.' });
+  else if (pos === 16)    achievements.push({ key: 'playoff',    label: 'Relegation',            desc: 'Platz 16 – muss in die Relegation.' });
   else if (pts <= 15)     achievements.push({ key: 'derby',      label: 'Historisches Desaster', desc: 'Einer der schlechtesten Absteiger aller Zeiten.' });
   else                    achievements.push({ key: 'relegated',  label: 'Abgestiegen',           desc: 'Ab in die 2. Bundesliga.' });
 
@@ -198,6 +205,7 @@ export function getAchievements(result, slots = []) {
 
   if (W >= 30)            achievements.push({ key: 'dominant',   label: 'Dominanz',              desc: '30+ Siege – beherrschend von Anfang bis Ende.' });
   if (D >= 10)            achievements.push({ key: 'mister_draw',label: 'Remis-König',           desc: '10+ Unentschieden – das konsistenteste Team.' });
+  if (gkGoal)             achievements.push({ key: 'gk_goal',    label: 'Torwart-Tor!',          desc: 'Der Keeper hat getroffen – ein Moment für die Ewigkeit.' });
 
   const filled = slots.filter(s => s.player);
   if (filled.length === 11) {

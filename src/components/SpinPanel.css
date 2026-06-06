@@ -2,7 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: 100%;
+  width: 100%;
+  max-width: 480px;
 }
 
 .position-hint {
@@ -219,6 +220,7 @@
 
 .spin-btn {
   flex: 1;
+  max-width: 100%;
 }
 
 .reroll-btn {
@@ -230,8 +232,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow-y: auto;
-  flex: 1;
 }
 
 .candidates-header {

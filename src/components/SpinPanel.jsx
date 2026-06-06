@@ -235,7 +235,7 @@ export default function SpinPanel({
           )}
           {machineState === 'done' && (
             <span className="slot-status--count" style={{ color: clubMeta?.color }}>
-              {candidates.length} Kandidat{candidates.length !== 1 ? 'en' : ''}
+              {candidates.length} Spieler
             </span>
           )}
         </div>
