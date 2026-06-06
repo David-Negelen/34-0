@@ -27,20 +27,18 @@ export default function SetupScreen({ setup, onUpdate, onStart }) {
         {/* Formation */}
         <section className="setup-section">
           <h3 className="setup-label">Formation</h3>
-          <div className="formation-layout">
-            <div className="formation-btns">
-              {FORMATION_KEYS.map(key => (
-                <button
-                  key={key}
-                  className={`formation-btn ${formation === key ? 'selected' : ''}`}
-                  onClick={() => onUpdate({ formation: key })}
-                >
-                  {key}
-                </button>
-              ))}
-            </div>
-            <PitchMini slots={FORMATIONS[formation].slots} />
+          <div className="formation-btns">
+            {FORMATION_KEYS.map(key => (
+              <button
+                key={key}
+                className={`formation-btn ${formation === key ? 'selected' : ''}`}
+                onClick={() => onUpdate({ formation: key })}
+              >
+                {key}
+              </button>
+            ))}
           </div>
+          <PitchMini slots={FORMATIONS[formation].slots} />
           <p className="formation-desc">{FORMATIONS[formation].description}</p>
         </section>
 
