@@ -215,6 +215,22 @@ def main():
             ratings_lookup.get((tm_id, year), PLACEHOLDER_RATING)
             for (_, year) in season_entries
         ]
+
+        # Fill placeholder years with the nearest known rating from the same player
+        # so a player like Malen doesn't show 50 for one missing season.
+        # Players with zero real ratings keep 50 everywhere.
+        years = [year for (_, year) in season_entries]
+        known = [(y, r) for y, r in zip(years, season_ratings) if r != PLACEHOLDER_RATING]
+        if known:
+            filled = []
+            for y, r in zip(years, season_ratings):
+                if r != PLACEHOLDER_RATING:
+                    filled.append(r)
+                else:
+                    nearest = min(known, key=lambda kr: abs(kr[0] - y))[1]
+                    filled.append(nearest)
+            season_ratings = filled
+
         prime_rating = max(season_ratings) if season_ratings else PLACEHOLDER_RATING
 
         seasons_js_parts = []
