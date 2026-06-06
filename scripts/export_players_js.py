@@ -134,6 +134,17 @@ def main():
     con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
 
+    # Load all scraped ratings: (player_id, season_year) → rating
+    ratings_exist = con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='player_ratings'"
+    ).fetchone() is not None
+
+    ratings_lookup: dict[tuple[int, int], int] = {}
+    if ratings_exist:
+        for r in con.execute("SELECT player_id, season_year, rating FROM player_ratings").fetchall():
+            ratings_lookup[(r["player_id"], r["season_year"])] = r["rating"]
+        print(f"  {len(ratings_lookup)} rating entries loaded from DB")
+
     # One row per (player, club, season_year, position). All seasons >= MIN_YEAR.
     rows = con.execute("""
         SELECT
@@ -198,12 +209,19 @@ def main():
 
         pid = slugify(p["name"]) + "_" + str(p["tm_id"])
         pos_js = "[" + ", ".join(f"'{pos}'" for pos in positions) + "]"
+        tm_id = p["tm_id"]
+
+        season_ratings = [
+            ratings_lookup.get((tm_id, year), PLACEHOLDER_RATING)
+            for (_, year) in season_entries
+        ]
+        prime_rating = max(season_ratings) if season_ratings else PLACEHOLDER_RATING
 
         seasons_js_parts = []
-        for (club, year) in season_entries:
+        for (club, year), rating in zip(season_entries, season_ratings):
             sl = season_label(year)
             seasons_js_parts.append(
-                f"{{ club: {repr(club)}, season: '{sl}', rating: {PLACEHOLDER_RATING} }}"
+                f"{{ club: {repr(club)}, season: '{sl}', rating: {rating} }}"
             )
         seasons_js = "[" + ", ".join(seasons_js_parts) + "]"
 
@@ -212,7 +230,7 @@ def main():
         lines.append(f"    name: {repr(p['name'])},")
         lines.append(f"    positions: {pos_js},")
         lines.append(f"    seasons: {seasons_js},")
-        lines.append(f"    primeRating: {PLACEHOLDER_RATING},")
+        lines.append(f"    primeRating: {prime_rating},")
         lines.append("  },")
     lines.append("];")
     lines.append("")
@@ -220,7 +238,9 @@ def main():
     OUT_PATH.write_text("\n".join(lines), encoding="utf-8")
 
     total = len(players) - skipped
+    real_ratings = sum(1 for v in ratings_lookup.values() if v != PLACEHOLDER_RATING) if ratings_lookup else 0
     print(f"✓ {total} players → {OUT_PATH}  ({skipped} skipped — no known-club seasons)")
+    print(f"  {real_ratings} real ratings used, rest are placeholder ({PLACEHOLDER_RATING})")
     season_counts: dict[str, int] = {}
     for p in players.values():
         for (club, year) in p["seasons"]:
