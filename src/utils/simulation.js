@@ -11,7 +11,6 @@ function poisson(lambda) {
 
 const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, SS:22, ST:32 };
 const ASSIST_WEIGHTS = { GK:0, RB:5, CB:2, LB:5, DM:8, CM:16, AM:22, RW:14, LW:14, SS:8, ST:6 };
-const CARD_WEIGHTS   = { GK:2, RB:8, CB:10, LB:8, DM:12, CM:9, AM:6, RW:5, LW:5, SS:5, ST:8 };
 
 function weightedPick(pool, weights) {
   const total = pool.reduce((s, p) => s + (weights[p.slotType] ?? 1), 0);
@@ -32,13 +31,6 @@ function generateMatchEvents(goalsFor, squad) {
     const assister = hasAssist && pool2.length ? weightedPick(pool2, ASSIST_WEIGHTS) : null;
     events.push({ type: 'goal', minute: Math.floor(Math.random() * 90) + 1, scorer, assister });
   }
-  const yellows = poisson(1.7);
-  for (let i = 0; i < yellows; i++) {
-    events.push({ type: 'yellow', minute: Math.floor(Math.random() * 90) + 1, player: weightedPick(squad, CARD_WEIGHTS) });
-  }
-  if (Math.random() < 0.055) {
-    events.push({ type: 'red', minute: Math.floor(Math.random() * 80) + 10, player: weightedPick(squad, CARD_WEIGHTS) });
-  }
   return events.sort((a, b) => a.minute - b.minute);
 }
 
@@ -48,8 +40,8 @@ function generateMatchEvents(goalsFor, squad) {
 // lambdaH is driven by home attack vs away defense; lambdaA vice-versa.
 // Home advantage baked in as +0.18 / -0.18.
 function simulateMatch(hAtt, hDef, aAtt, aDef) {
-  const lambdaH = Math.max(0.25, 1.30 + 0.18 + (hAtt - aDef) * 0.013);
-  const lambdaA = Math.max(0.25, 1.30 - 0.18 + (aAtt - hDef) * 0.013);
+  const lambdaH = Math.max(0.50, 1.50 + 0.18 + (hAtt - aDef) * 0.06);
+  const lambdaA = Math.max(0.50, 1.50 - 0.18 + (aAtt - hDef) * 0.06);
   return { hg: poisson(lambdaH), ag: poisson(lambdaA) };
 }
 
@@ -139,16 +131,18 @@ export function simulateFullLeague(slots) {
     .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label }));
 
   const statsMap = {};
-  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, goals: 0, assists: 0, yellows: 0, reds: 0 }; });
+  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, goals: 0, assists: 0 }; });
 
   playerMatches.forEach(m => {
-    const goalsFor = m.home === 'Deine 11' ? m.hg : m.ag;
+    const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
+    const goalsAgainst = m.home === 'Deine 11' ? m.ag : m.hg;
     const events = squad.length ? generateMatchEvents(goalsFor, squad) : [];
     m.events = events;
+    m.oppMinutes = Array.from({ length: goalsAgainst }, () =>
+      Math.floor(Math.random() * 90) + 1
+    ).sort((a, b) => a - b);
     events.forEach(e => {
-      if (e.type === 'goal')   { statsMap[e.scorer.name].goals++; if (e.assister) statsMap[e.assister.name].assists++; }
-      if (e.type === 'yellow') { statsMap[e.player.name].yellows++; }
-      if (e.type === 'red')    { statsMap[e.player.name].reds++; }
+      if (e.type === 'goal') { statsMap[e.scorer.name].goals++; if (e.assister) statsMap[e.assister.name].assists++; }
     });
   });
 

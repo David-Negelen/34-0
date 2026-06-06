@@ -18,7 +18,7 @@ export default function PlayerCard({ player, showRatings, ratingMode, onClick, d
         <div className="player-name">{player.name}</div>
         <div className="player-meta">
           {player.positions.map(p => (
-            <span key={p} className="player-pos-badge">{labelDE(p)}</span>
+            <span key={p} className={`player-pos-badge pos-${p}`}>{labelDE(p)}</span>
           ))}
         </div>
       </div>

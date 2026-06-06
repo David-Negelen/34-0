@@ -428,8 +428,8 @@
 .match-log {
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-top: 2px solid var(--red);
   border-radius: var(--radius-lg);
-  padding: 14px 0 6px;
   overflow: hidden;
 }
 
@@ -437,8 +437,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  margin-bottom: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(227, 0, 11, 0.05);
+}
+
+.ml-matchday {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  opacity: 0.8;
 }
 
 .ml-running {
@@ -447,116 +457,103 @@
 }
 
 .ml-running strong {
-  color: var(--red);
+  color: var(--text);
 }
 
 .ml-list {
-  max-height: 420px;
-  overflow-y: auto;
+  height: 480px;
+  overflow-y: scroll;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
 }
 
-.ml-row {
+.ml-list::-webkit-scrollbar { width: 4px; }
+.ml-list::-webkit-scrollbar-track { background: transparent; }
+.ml-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+.ml-card {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 16px 3px 13px;
-  font-size: 12px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
   border-left: 3px solid transparent;
-  animation: ml-appear 0.12s ease-out both;
+  animation: ml-appear 0.18s ease-out both;
 }
+
+.ml-card:last-child { border-bottom: none; }
+
+.ml-card-w { border-left-color: var(--green); }
+.ml-card-d { border-left-color: rgba(255,255,255,0.18); }
+.ml-card-l { border-left-color: var(--red); }
 
 @keyframes ml-appear {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-.ml-row-w { border-left-color: var(--green); }
-.ml-row-d { border-left-color: rgba(255,255,255,0.25); }
-.ml-row-l { border-left-color: var(--red); }
-
-.ml-day {
-  width: 22px;
-  text-align: right;
-  color: var(--text-muted);
-  font-size: 10px;
-  flex-shrink: 0;
-}
-
-.ml-team {
-  flex: 1;
-  color: var(--text);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.ml-home { text-align: right; }
-.ml-away { text-align: left; }
-.ml-player { font-weight: 700; color: var(--red); }
-
-.ml-score {
-  width: 36px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text);
-  flex-shrink: 0;
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .ml-badge {
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  font-size: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 10px;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .ml-badge-w { background: rgba(76,175,80,0.18); color: var(--green); }
 .ml-badge-d { background: rgba(255,255,255,0.07); color: var(--text-muted); }
-.ml-badge-l { background: rgba(227,0,11,0.15); color: var(--red); }
+.ml-badge-l { background: rgba(227,0,11,0.14); color: var(--red); }
 
-/* ── Goal events inside match log ── */
-.ml-event {
+.ml-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ml-card-top {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 16px 2px 40px;
-  font-size: 11px;
-  color: var(--text-muted);
-  animation: ml-appear 0.12s ease-out both;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.ml-event-icon { flex-shrink: 0; font-size: 10px; }
-
-.ml-event-minute {
-  width: 26px;
-  flex-shrink: 0;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.ml-event-scorer {
-  font-weight: 600;
+.ml-opponent {
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text);
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
-.ml-event-assist {
-  font-size: 10px;
+.ml-score {
+  font-size: 18px;
+  font-weight: 900;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+.ml-score-w { color: var(--green); }
+.ml-score-d { color: var(--text); }
+.ml-score-l { color: var(--red); }
+
+.ml-scorers {
+  margin-top: 3px;
+  font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
-  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ml-opp-goals {
+  opacity: 0.6;
 }
 
 /* ── Player stats table ── */

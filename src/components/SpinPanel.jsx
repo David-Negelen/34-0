@@ -243,7 +243,6 @@ export default function SpinPanel({
         <div className="candidates-list fade-in">
           <div className="candidates-header">
             <h4>Spieler wählen</h4>
-            <button className="btn btn-ghost btn-sm" onClick={resetToIdle}>← Zurück</button>
           </div>
           {candidates.length === 0 ? (
             <p className="no-candidates">Keine Kandidaten für deine offenen Positionen.</p>

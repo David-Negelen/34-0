@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import FormationBoard from './FormationBoard';
 import { generateResultCanvas, shareResult, downloadResult } from '../utils/export';
 import { buildShareText } from '../utils/simulation';
@@ -71,10 +71,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
             <h1 className="result-title">Saison abgeschlossen</h1>
           </div>
           <div className="result-header-actions">
-            <button className="btn btn-ghost btn-sm" onClick={handleDownload} disabled={sharing}>
-              ↓ Speichern
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={handleShare} disabled={sharing}>
+<button className="btn btn-secondary btn-sm" onClick={handleShare} disabled={sharing}>
               Teilen
             </button>
             <button className="btn btn-primary" onClick={onPlayAgain}>
@@ -88,7 +85,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
 
         {/* Left: formation board */}
         <div className="result-left">
-          <div className="result-section-label">Your XI — {setup.formation}</div>
+          <div className="result-section-label">Deine 11 — {setup.formation}</div>
           <div className="result-pitch-wrap">
             <FormationBoard
               slots={slots}
@@ -213,43 +210,28 @@ function MatchLog({ matches, onDone }) {
   const listRef = useRef(null);
   const doneCalled = useRef(false);
 
-  const items = useMemo(() => {
-    const out = [];
-    for (const m of matches) {
-      const isHome = m.home === 'Deine 11';
-      const own = isHome ? m.hg : m.ag;
-      const opp = isHome ? m.ag : m.hg;
-      const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
-      out.push({ kind: 'match', m, res, isHome, own, opp });
-      for (const ev of (m.events ?? [])) {
-        if (ev.type === 'goal') out.push({ kind: 'goal', ev });
-      }
-    }
-    return out;
-  }, [matches]);
-
   useEffect(() => {
-    if (visible >= items.length) {
+    if (visible >= matches.length) {
       if (!doneCalled.current) { doneCalled.current = true; onDone?.(); }
       return;
     }
-    const delay = items[visible]?.kind === 'goal' ? 220 : 400;
-    const t = setTimeout(() => setVisible(v => v + 1), delay);
+    const t = setTimeout(() => setVisible(v => v + 1), 480);
     return () => clearTimeout(t);
-  }, [visible, items]);
+  }, [visible, matches]);
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [visible]);
 
-  let runW = 0, runD = 0, runL = 0, runGF = 0, runGA = 0, matchCount = 0;
+  let runW = 0, runD = 0, runL = 0, runGF = 0, runGA = 0;
   for (let i = 0; i < visible; i++) {
-    if (items[i].kind !== 'match') continue;
-    matchCount++;
-    const { own, opp, res } = items[i];
+    const m = matches[i];
+    const isHome = m.home === 'Deine 11';
+    const own = isHome ? m.hg : m.ag;
+    const opp = isHome ? m.ag : m.hg;
     runGF += own; runGA += opp;
-    if (res === 'w') runW++;
-    else if (res === 'l') runL++;
+    if (own > opp) runW++;
+    else if (own < opp) runL++;
     else runD++;
   }
   const runPts = runW * 3 + runD;
@@ -257,38 +239,42 @@ function MatchLog({ matches, onDone }) {
   return (
     <div className="match-log">
       <div className="ml-header">
-        <span className="result-section-label" style={{ margin: 0 }}>Spieltagsergebnisse</span>
+        <span className="ml-matchday">Spieltag {visible} / {matches.length}</span>
         <span className="ml-running">
-          {matchCount}/{matches.length} · <strong>{runPts} Pkt</strong> · {runW}S {runD}U {runL}N · {runGF}:{runGA}
+          {runW}S {runD}U {runL}N · <strong>{runPts} Pkt</strong> · {runGF}:{runGA}
         </span>
       </div>
       <div className="ml-list" ref={listRef}>
-        {items.map((item, i) => {
+        {matches.map((m, i) => {
           if (i >= visible) return null;
-          if (item.kind === 'match') {
-            const { m, res, isHome } = item;
-            return (
-              <div key={i} className={`ml-row ml-row-${res}`}>
-                <span className="ml-day">{m.day}.</span>
-                <span className={`ml-team ml-home${isHome ? ' ml-player' : ''}`}>{m.home}</span>
-                <span className="ml-score">{m.hg}:{m.ag}</span>
-                <span className={`ml-team ml-away${!isHome ? ' ml-player' : ''}`}>{m.away}</span>
-                <span className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</span>
+          const isHome = m.home === 'Deine 11';
+          const own = isHome ? m.hg : m.ag;
+          const opp = isHome ? m.ag : m.hg;
+          const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
+          const opponent = isHome ? m.away : m.home;
+          const ourGoals = (m.events ?? []).filter(e => e.type === 'goal');
+          const oppMins = m.oppMinutes ?? [];
+          return (
+            <div key={i} className={`ml-card ml-card-${res}`}>
+              <div className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</div>
+              <div className="ml-card-body">
+                <div className="ml-card-top">
+                  <span className="ml-opponent">{opponent}</span>
+                  <span className={`ml-score ml-score-${res}`}>{own}–{opp}</span>
+                </div>
+                {(ourGoals.length > 0 || oppMins.length > 0) && (
+                  <div className="ml-scorers">
+                    {ourGoals.length > 0 && (
+                      <span className="ml-our-goals">⚽ {ourGoals.map(e => `${e.scorer.name} ${e.minute}'`).join('  ')}</span>
+                    )}
+                    {oppMins.length > 0 && (
+                      <span className="ml-opp-goals">{ourGoals.length > 0 ? '  · ' : '· '}{oppMins.map(min => `${min}'`).join(' ')}</span>
+                    )}
+                  </div>
+                )}
               </div>
-            );
-          }
-          if (item.kind === 'goal') {
-            const { ev } = item;
-            return (
-              <div key={i} className="ml-event">
-                <span className="ml-event-icon">⚽</span>
-                <span className="ml-event-minute">{ev.minute}'</span>
-                <span className="ml-event-scorer">{ev.scorer.name}</span>
-                {ev.assister && <span className="ml-event-assist">↗ {ev.assister.name}</span>}
-              </div>
-            );
-          }
-          return null;
+            </div>
+          );
         })}
       </div>
     </div>
@@ -305,8 +291,6 @@ function PlayerStats({ stats }) {
         <span className="ps-name"></span>
         <span className="ps-col" title="Tore">⚽</span>
         <span className="ps-col" title="Vorlagen">🅰️</span>
-        <span className="ps-col" title="Gelbe Karten">🟨</span>
-        <span className="ps-col" title="Rote Karten">🟥</span>
       </div>
       {sorted.map(p => (
         <div key={p.name} className={`ps-row ${p.goals > 0 ? 'ps-row-scorer' : ''}`}>
@@ -316,8 +300,6 @@ function PlayerStats({ stats }) {
           </span>
           <span className="ps-col">{p.goals  || '—'}</span>
           <span className="ps-col">{p.assists || '—'}</span>
-          <span className="ps-col">{p.yellows || '—'}</span>
-          <span className={`ps-col ${p.reds > 0 ? 'ps-red' : ''}`}>{p.reds || '—'}</span>
         </div>
       ))}
     </div>
