@@ -69,6 +69,15 @@ export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries 
   return null;
 }
 
+// German position label mapping
+const LABEL_DE = {
+  GK: 'TW', RB: 'RV', CB: 'IV', LB: 'LV',
+  DM: 'DM', CM: 'ZM', AM: 'OM',
+  RW: 'RF', LW: 'LF', SS: 'HS', ST: 'ST',
+  RM: 'RM', LM: 'LM', RWB: 'RAV', LWB: 'LAV',
+};
+export const labelDE = label => LABEL_DE[label] ?? label;
+
 // Rating to display for a player based on ratingMode
 export function getDisplayRating(player, ratingMode) {
   return ratingMode === 'prime' ? player.primeRating : player.seasonRating;

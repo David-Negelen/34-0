@@ -8,6 +8,7 @@ import {
   getCompatibleSlots,
   getDisplayRating,
   randomSpin,
+  labelDE,
 } from '../utils/playerUtils';
 import PlayerCard from './PlayerCard';
 import './SpinPanel.css';
@@ -93,13 +94,11 @@ export default function SpinPanel({
           : shuffle(eligible);
 
         setCandidates(sorted);
-        setPhase('spun');
+        setPhase('picking');
       }
     }
     next();
   }
-
-  function handlePickPlayer() { setPhase('picking'); }
 
   function handlePlayerClick(player) {
     const rating = getDisplayRating(player, ratingMode);
@@ -149,8 +148,8 @@ export default function SpinPanel({
     ? selectedSlotId !== null
     : openSlots.length > 0;
 
-  const canSpin  = (phase === 'idle' || phase === 'spun') && spinReady;
-  const canReroll = phase === 'spun' && rerollsLeft > 0;
+  const canSpin   = (phase === 'idle' || phase === 'spun' || phase === 'picking') && spinReady;
+  const canReroll = (phase === 'spun' || phase === 'picking') && rerollsLeft > 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -209,19 +208,13 @@ export default function SpinPanel({
 
       {/* ── Action buttons ── */}
       <div className="spin-actions">
-        {(phase === 'idle' || (phase === 'spun' && !deadSpin)) && (
+        {(phase === 'idle' || (phase === 'spun' && !deadSpin) || phase === 'picking') && (
           <button
             className="btn btn-primary btn-lg spin-btn"
             onClick={() => doSpin(false)}
             disabled={!canSpin}
           >
             {phase === 'idle' ? 'Drehen' : 'Nochmal drehen'}
-          </button>
-        )}
-
-        {phase === 'spun' && !deadSpin && candidates.length > 0 && (
-          <button className="btn btn-secondary" onClick={handlePickPlayer}>
-            Spieler anzeigen →
           </button>
         )}
 
@@ -250,7 +243,7 @@ export default function SpinPanel({
         <div className="candidates-list fade-in">
           <div className="candidates-header">
             <h4>Spieler wählen</h4>
-            <button className="btn btn-ghost btn-sm" onClick={() => setPhase('spun')}>← Zurück</button>
+            <button className="btn btn-ghost btn-sm" onClick={resetToIdle}>← Zurück</button>
           </div>
           {candidates.length === 0 ? (
             <p className="no-candidates">Keine Kandidaten für deine offenen Positionen.</p>
@@ -283,7 +276,7 @@ export default function SpinPanel({
                   className="btn btn-secondary slot-choice-btn"
                   onClick={() => handleSlotChoice(slot.id)}
                 >
-                  {slot.label}
+                  {labelDE(slot.label)}
                 </button>
               ))}
             </div>

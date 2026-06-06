@@ -57,7 +57,7 @@ export function simulateFullLeague(slots) {
 
   const teams = [
     ...LEAGUE_TEAMS.map(t => ({ ...t, att: t.strength, def: t.strength })),
-    { name: 'Dein XI', att: attStr, def: defStr, isPlayer: true },
+    { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true },
   ];
   const n = teams.length; // 18
   const playerIdx = n - 1;

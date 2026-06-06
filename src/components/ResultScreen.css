@@ -340,12 +340,13 @@
   background: rgba(227, 0, 11, 0.07);
 }
 
-.lt-zone-champion  { border-left-color: var(--gold); }
-.lt-zone-ucl       { border-left-color: var(--blue); }
-.lt-zone-uel       { border-left-color: #00bcd4; }
-.lt-zone-playoff   { border-left-color: #ff9800; }
-.lt-zone-relegated { border-left-color: var(--red); }
-.lt-zone-mid       { border-left-color: transparent; }
+.lt-zone-champion   { border-left-color: var(--gold); }
+.lt-zone-ucl        { border-left-color: var(--blue); }
+.lt-zone-uel        { border-left-color: #00bcd4; }
+.lt-zone-conference { border-left-color: #66bb6a; }
+.lt-zone-playoff    { border-left-color: #ff9800; }
+.lt-zone-relegated  { border-left-color: var(--red); }
+.lt-zone-mid        { border-left-color: transparent; }
 
 .lt-pos {
   width: 20px;
@@ -416,10 +417,11 @@
   border-left: 2px solid transparent;
 }
 
-.lt-legend-champion  { border-left-color: var(--gold); color: var(--gold); }
-.lt-legend-ucl       { border-left-color: var(--blue); color: var(--blue); }
-.lt-legend-uel       { border-left-color: #00bcd4; color: #00bcd4; }
-.lt-legend-relegated { border-left-color: var(--red); color: var(--red); }
+.lt-legend-champion    { border-left-color: var(--gold); color: var(--gold); }
+.lt-legend-ucl         { border-left-color: var(--blue); color: var(--blue); }
+.lt-legend-uel         { border-left-color: #00bcd4; color: #00bcd4; }
+.lt-legend-conference  { border-left-color: #66bb6a; color: #66bb6a; }
+.lt-legend-relegated   { border-left-color: var(--red); color: var(--red); }
 
 /* ── Match log ── */
 .match-log {

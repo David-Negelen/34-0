@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import FormationBoard from './FormationBoard';
 import { generateResultCanvas, shareResult, downloadResult } from '../utils/export';
 import { buildShareText } from '../utils/simulation';
+import { labelDE } from '../utils/playerUtils';
 import './ResultScreen.css';
 
 const ACHIEVEMENT_ICONS = {
@@ -29,6 +30,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
   const { slots } = draft;
   const { W, D, L, GF, GA, pts, achievements, table, playerMatches } = result;
   const [sharing, setSharing] = useState(false);
+  const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
 
   const GD = GF - GA;
   const topAchievement = achievements?.[0];
@@ -99,96 +101,103 @@ export default function ResultScreen({ state, onPlayAgain }) {
         {/* Right: season results */}
         <div className="result-right">
 
-          {/* Primary achievement */}
-          {topAchievement && (
-            <div className="result-achievement-primary fade-in">
-              <span className="ach-icon">{ACHIEVEMENT_ICONS[topAchievement.key] ?? '🏅'}</span>
-              <div>
-                <div className="ach-label">{topAchievement.label}</div>
-                <div className="ach-desc">{topAchievement.desc}</div>
-              </div>
-            </div>
+          {/* Match log — animates first, gates everything else */}
+          {playerMatches?.length > 0 && (
+            <MatchLog matches={playerMatches} onDone={() => setMatchLogDone(true)} />
           )}
 
-          {/* Season stats */}
-          <div className="result-stats-card">
-            <div className="result-section-label">Simulierte Saison — 34 Spieltage</div>
+          {matchLogDone && (
+            <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-            <div className="season-wdl">
-              <StatPill label="S" value={W} color="var(--green)" />
-              <StatPill label="U" value={D} color="var(--text-muted)" />
-              <StatPill label="N" value={L} color="var(--red)" />
-            </div>
-
-            <div className="season-details">
-              <SeasonStat label="Punkte" value={pts} big />
-              <SeasonStat label="Tore" value={GF} />
-              <SeasonStat label="Gegentore" value={GA} />
-              <SeasonStat label="Tordifferenz" value={`${GD > 0 ? '+' : ''}${GD}`} />
-              <SeasonStat label="Siegquote" value={`${Math.round((W / 34) * 100)}%`} />
-            </div>
-
-            {/* Simulated table position */}
-            <div className="league-position-bar">
-              <div className="lp-label">Geschätzter Tabellenplatz</div>
-              <div className="lp-bar">
-                <div
-                  className="lp-marker"
-                  style={{ left: `${Math.max(2, Math.min(96, 100 - (pts / 102) * 100))}%` }}
-                />
-                <div className="lp-zone lp-relegation" style={{ width: '22%' }} title="Relegation zone" />
-                <div className="lp-zone lp-midtable" style={{ width: '44%', left: '22%' }} />
-                <div className="lp-zone lp-europe" style={{ width: '22%', left: '66%' }} />
-                <div className="lp-zone lp-title" style={{ width: '12%', left: '88%' }} />
-              </div>
-              <div className="lp-key">
-                <span className="lp-key-item relegation">Abstieg</span>
-                <span className="lp-key-item midtable">Mittelfeld</span>
-                <span className="lp-key-item europe">Europa</span>
-                <span className="lp-key-item title">Meister</span>
-              </div>
-            </div>
-          </div>
-
-          {/* League table */}
-          <LeagueTable table={table} />
-
-          {/* Match log — animated game by game */}
-          {playerMatches?.length > 0 && <MatchLog matches={playerMatches} />}
-
-          {/* Additional achievements */}
-          {achievements?.length > 1 && (
-            <div className="result-extra-achievements">
-              <div className="result-section-label">Errungenschaften</div>
-              <div className="ach-list">
-                {achievements.slice(1).map(a => (
-                  <div key={a.key} className="ach-item">
-                    <span>{ACHIEVEMENT_ICONS[a.key] ?? '🏅'}</span>
-                    <div>
-                      <div className="ach-item-label">{a.label}</div>
-                      <div className="ach-item-desc">{a.desc}</div>
-                    </div>
+              {/* Primary achievement */}
+              {topAchievement && (
+                <div className="result-achievement-primary">
+                  <span className="ach-icon">{ACHIEVEMENT_ICONS[topAchievement.key] ?? '🏅'}</span>
+                  <div>
+                    <div className="ach-label">{topAchievement.label}</div>
+                    <div className="ach-desc">{topAchievement.desc}</div>
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Season stats */}
+              <div className="result-stats-card">
+                <div className="result-section-label">Simulierte Saison — 34 Spieltage</div>
+
+                <div className="season-wdl">
+                  <StatPill label="S" value={W} color="var(--green)" />
+                  <StatPill label="U" value={D} color="var(--text-muted)" />
+                  <StatPill label="N" value={L} color="var(--red)" />
+                </div>
+
+                <div className="season-details">
+                  <SeasonStat label="Punkte" value={pts} big />
+                  <SeasonStat label="Tore" value={GF} />
+                  <SeasonStat label="Gegentore" value={GA} />
+                  <SeasonStat label="Tordifferenz" value={`${GD > 0 ? '+' : ''}${GD}`} />
+                  <SeasonStat label="Siegquote" value={`${Math.round((W / 34) * 100)}%`} />
+                </div>
+
+                <div className="league-position-bar">
+                  <div className="lp-label">Geschätzter Tabellenplatz</div>
+                  <div className="lp-bar">
+                    <div
+                      className="lp-marker"
+                      style={{ left: `${Math.max(2, Math.min(96, 100 - (pts / 102) * 100))}%` }}
+                    />
+                    <div className="lp-zone lp-relegation" style={{ width: '22%' }} title="Relegation zone" />
+                    <div className="lp-zone lp-midtable" style={{ width: '44%', left: '22%' }} />
+                    <div className="lp-zone lp-europe" style={{ width: '22%', left: '66%' }} />
+                    <div className="lp-zone lp-title" style={{ width: '12%', left: '88%' }} />
+                  </div>
+                  <div className="lp-key">
+                    <span className="lp-key-item relegation">Abstieg</span>
+                    <span className="lp-key-item midtable">Mittelfeld</span>
+                    <span className="lp-key-item europe">Europa</span>
+                    <span className="lp-key-item title">Meister</span>
+                  </div>
+                </div>
               </div>
+
+              {/* League table */}
+              <LeagueTable table={table} />
+
+              {/* Additional achievements */}
+              {achievements?.length > 1 && (
+                <div className="result-extra-achievements">
+                  <div className="result-section-label">Errungenschaften</div>
+                  <div className="ach-list">
+                    {achievements.slice(1).map(a => (
+                      <div key={a.key} className="ach-item">
+                        <span>{ACHIEVEMENT_ICONS[a.key] ?? '🏅'}</span>
+                        <div>
+                          <div className="ach-item-label">{a.label}</div>
+                          <div className="ach-item-desc">{a.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Squad list */}
+              <div className="result-squad-list">
+                <div className="result-section-label">Deine 11</div>
+                {slots
+                  .filter(s => s.player)
+                  .map(s => (
+                    <div key={s.id} className="squad-row">
+                      <span className="squad-pos">{labelDE(s.label)}</span>
+                      <span className="squad-name">{s.player.name}</span>
+                      {setup.showRatings && (
+                        <span className="squad-rating">{s.player.displayRating}</span>
+                      )}
+                    </div>
+                  ))}
+              </div>
+
             </div>
           )}
-
-          {/* Squad list */}
-          <div className="result-squad-list">
-            <div className="result-section-label">Dein XI</div>
-            {slots
-              .filter(s => s.player)
-              .map(s => (
-                <div key={s.id} className="squad-row">
-                  <span className="squad-pos">{s.label}</span>
-                  <span className="squad-name">{s.player.name}</span>
-                  {setup.showRatings && (
-                    <span className="squad-rating">{s.player.displayRating}</span>
-                  )}
-                </div>
-              ))}
-          </div>
 
         </div>
       </div>
@@ -196,13 +205,20 @@ export default function ResultScreen({ state, onPlayAgain }) {
   );
 }
 
-function MatchLog({ matches }) {
+function MatchLog({ matches, onDone }) {
   const [visible, setVisible] = useState(0);
   const listRef = useRef(null);
+  const doneCalled = useRef(false);
 
   useEffect(() => {
-    if (visible >= matches.length) return;
-    const t = setTimeout(() => setVisible(v => v + 1), 100);
+    if (visible >= matches.length) {
+      if (!doneCalled.current) {
+        doneCalled.current = true;
+        onDone?.();
+      }
+      return;
+    }
+    const t = setTimeout(() => setVisible(v => v + 1), 150);
     return () => clearTimeout(t);
   }, [visible, matches.length]);
 
@@ -215,7 +231,7 @@ function MatchLog({ matches }) {
   let runW = 0, runD = 0, runL = 0, runGF = 0, runGA = 0;
   for (let i = 0; i < visible; i++) {
     const m = matches[i];
-    const isHome = m.home === 'Dein XI';
+    const isHome = m.home === 'Deine 11';
     const own = isHome ? m.hg : m.ag;
     const opp = isHome ? m.ag : m.hg;
     runGF += own; runGA += opp;
@@ -236,7 +252,7 @@ function MatchLog({ matches }) {
       <div className="ml-list" ref={listRef}>
         {matches.map((m, i) => {
           if (i >= visible) return null;
-          const isHome = m.home === 'Dein XI';
+          const isHome = m.home === 'Deine 11';
           const own = isHome ? m.hg : m.ag;
           const opp = isHome ? m.ag : m.hg;
           const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
@@ -259,6 +275,7 @@ function tableZone(pos) {
   if (pos === 1)  return 'champion';
   if (pos <= 4)   return 'ucl';
   if (pos <= 6)   return 'uel';
+  if (pos === 7)  return 'conference';
   if (pos === 16) return 'playoff';
   if (pos >= 17)  return 'relegated';
   return 'mid';
@@ -297,6 +314,7 @@ function LeagueTable({ table }) {
         <span className="lt-legend-item lt-legend-champion">Meister</span>
         <span className="lt-legend-item lt-legend-ucl">Champions League</span>
         <span className="lt-legend-item lt-legend-uel">Europa League</span>
+        <span className="lt-legend-item lt-legend-conference">Conference League</span>
         <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
       </div>
     </div>

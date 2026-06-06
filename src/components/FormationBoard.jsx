@@ -1,5 +1,4 @@
-import { shortName } from '../utils/playerUtils';
-import { ratingClass } from '../utils/playerUtils';
+import { shortName, ratingClass, labelDE } from '../utils/playerUtils';
 import './FormationBoard.css';
 
 export default function FormationBoard({
@@ -51,7 +50,7 @@ export default function FormationBoard({
               title={slot.player?.name ?? slot.label}
             >
               {isEmpty ? (
-                <span className="slot-label">{slot.label}</span>
+                <span className="slot-label">{labelDE(slot.label)}</span>
               ) : (
                 <>
                   <span className="slot-player-name">{shortName(slot.player.name)}</span>
