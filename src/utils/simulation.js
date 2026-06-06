@@ -134,16 +134,17 @@ export function simulateFullLeague(slots) {
     }
   }
 
-  // Re-order into Hinrunde (first 17) then Rückrunde (return fixtures),
-  // so the same opponent never appears back-to-back.
+  // Hinrunde (first 17, one per opponent) then Rückrunde mirroring that order,
+  // so game N+17 is always the return fixture of game N.
   {
-    const seen = new Set();
-    const h1 = [], h2 = [];
+    const first = new Map(), second = new Map();
+    const h1 = [];
     for (const m of playerMatches) {
       const opp = m.home === 'Deine 11' ? m.away : m.home;
-      if (!seen.has(opp)) { seen.add(opp); h1.push(m); }
-      else h2.push(m);
+      if (!first.has(opp)) { first.set(opp, m); h1.push(m); }
+      else second.set(opp, m);
     }
+    const h2 = h1.map(m => second.get(m.home === 'Deine 11' ? m.away : m.home));
     playerMatches.splice(0, playerMatches.length, ...h1, ...h2);
   }
   playerMatches.forEach((m, i) => { m.day = i + 1; });
