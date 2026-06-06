@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import FormationBoard from './FormationBoard';
 import { generateResultCanvas, shareResult, downloadResult } from '../utils/export';
-import { buildShareText, simulateLeagueTable } from '../utils/simulation';
+import { buildShareText } from '../utils/simulation';
 import './ResultScreen.css';
 
 const ACHIEVEMENT_ICONS = {
@@ -27,9 +27,8 @@ const ACHIEVEMENT_ICONS = {
 export default function ResultScreen({ state, onPlayAgain }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
-  const { W, D, L, GF, GA, pts, achievements } = result;
+  const { W, D, L, GF, GA, pts, achievements, table, playerMatches } = result;
   const [sharing, setSharing] = useState(false);
-  const [leagueTable] = useState(() => simulateLeagueTable(result));
 
   const GD = GF - GA;
   const topAchievement = achievements?.[0];
@@ -152,7 +151,10 @@ export default function ResultScreen({ state, onPlayAgain }) {
           </div>
 
           {/* League table */}
-          <LeagueTable table={leagueTable} />
+          <LeagueTable table={table} />
+
+          {/* Match log — animated game by game */}
+          {playerMatches?.length > 0 && <MatchLog matches={playerMatches} />}
 
           {/* Additional achievements */}
           {achievements?.length > 1 && (
@@ -189,6 +191,65 @@ export default function ResultScreen({ state, onPlayAgain }) {
           </div>
 
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchLog({ matches }) {
+  const [visible, setVisible] = useState(0);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (visible >= matches.length) return;
+    const t = setTimeout(() => setVisible(v => v + 1), 100);
+    return () => clearTimeout(t);
+  }, [visible, matches.length]);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [visible]);
+
+  let runW = 0, runD = 0, runL = 0, runGF = 0, runGA = 0;
+  for (let i = 0; i < visible; i++) {
+    const m = matches[i];
+    const isHome = m.home === 'Dein XI';
+    const own = isHome ? m.hg : m.ag;
+    const opp = isHome ? m.ag : m.hg;
+    runGF += own; runGA += opp;
+    if (own > opp) runW++;
+    else if (own < opp) runL++;
+    else runD++;
+  }
+  const runPts = runW * 3 + runD;
+
+  return (
+    <div className="match-log">
+      <div className="ml-header">
+        <span className="result-section-label" style={{ margin: 0 }}>Spieltagsergebnisse</span>
+        <span className="ml-running">
+          {visible}/{matches.length} · <strong>{runPts} Pkt</strong> · {runW}S {runD}U {runL}N · {runGF}:{runGA}
+        </span>
+      </div>
+      <div className="ml-list" ref={listRef}>
+        {matches.map((m, i) => {
+          if (i >= visible) return null;
+          const isHome = m.home === 'Dein XI';
+          const own = isHome ? m.hg : m.ag;
+          const opp = isHome ? m.ag : m.hg;
+          const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
+          return (
+            <div key={i} className={`ml-row ml-row-${res}`}>
+              <span className="ml-day">{i + 1}.</span>
+              <span className={`ml-team ml-home${isHome ? ' ml-player' : ''}`}>{m.home}</span>
+              <span className="ml-score">{m.hg}:{m.ag}</span>
+              <span className={`ml-team ml-away${!isHome ? ' ml-player' : ''}`}>{m.away}</span>
+              <span className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

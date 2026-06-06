@@ -18,13 +18,13 @@ export function getSeasonsForClub(players, club) {
   return [...seasons].sort();
 }
 
-// Players at a club in a season, with seasonRating attached
+// Players at a club in a season, with seasonRating + spin context attached
 export function getPlayersForClubSeason(players, club, season) {
   return players
     .filter(p => p.seasons.some(s => s.club === club && s.season === season))
     .map(p => {
       const entry = p.seasons.find(s => s.club === club && s.season === season);
-      return { ...p, seasonRating: entry.rating };
+      return { ...p, seasonRating: entry.rating, spunClub: club, spunSeason: season };
     });
 }
 
@@ -51,16 +51,18 @@ export function getCompatibleSlots(player, openSlots) {
   return openSlots.filter(slot => canPlayerFillSlot(player, slot.type));
 }
 
-// Pick a random club and season that has eligible candidates for the open slots
-// Returns { club, season, candidates } or null if nothing found after maxTries
-export function randomSpin(players, openSlots, maxTries = 30) {
+// Pick a random club and season that has eligible candidates for the open slots.
+// excludeIds: Set of player IDs already placed in the squad — excluded from pool and eligibility check.
+// Returns { club, season, candidates } or null if nothing found after maxTries.
+export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries = 30) {
   const clubs = getClubsInDb(players);
   for (let i = 0; i < maxTries; i++) {
     const club = clubs[Math.floor(Math.random() * clubs.length)];
     const seasons = getSeasonsForClub(players, club);
     if (!seasons.length) continue;
     const season = seasons[Math.floor(Math.random() * seasons.length)];
-    const pool = getPlayersForClubSeason(players, club, season);
+    const pool = getPlayersForClubSeason(players, club, season)
+      .filter(p => !excludeIds.has(p.id));
     const eligible = getEligiblePlayers(pool, openSlots);
     if (eligible.length > 0) return { club, season, candidates: pool };
   }

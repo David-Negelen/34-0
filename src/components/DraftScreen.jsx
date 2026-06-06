@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FormationBoard from './FormationBoard';
 import SpinPanel from './SpinPanel';
 import RatingsPanel from './RatingsPanel';
-import { simulateSeason, getAchievements } from '../utils/simulation';
+import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
 export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
@@ -27,8 +27,8 @@ export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
       const updatedSlots = slots.map(s =>
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
-      const season = simulateSeason(updatedSlots);
-      setResult({ ...season, achievements: getAchievements(season, updatedSlots) });
+      const { result, table, playerMatches } = simulateFullLeague(updatedSlots);
+      setResult({ ...result, achievements: getAchievements(result, updatedSlots), table, playerMatches });
     }
   }
 

@@ -58,7 +58,8 @@ export default function SpinPanel({
 
     if (!spinSlots.length) return;
 
-    const result = randomSpin(PLAYERS, spinSlots);
+    const placedIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
+    const result = randomSpin(PLAYERS, spinSlots, placedIds);
 
     setPhase('animating');
     const frames = Array.from({ length: SPIN_FRAMES }, (_, i) =>

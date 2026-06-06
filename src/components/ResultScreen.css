@@ -421,6 +421,104 @@
 .lt-legend-uel       { border-left-color: #00bcd4; color: #00bcd4; }
 .lt-legend-relegated { border-left-color: var(--red); color: var(--red); }
 
+/* ── Match log ── */
+.match-log {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 0 6px;
+  overflow: hidden;
+}
+
+.ml-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+
+.ml-running {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ml-running strong {
+  color: var(--red);
+}
+
+.ml-list {
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ml-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 16px 3px 13px;
+  font-size: 12px;
+  border-left: 3px solid transparent;
+  animation: ml-appear 0.12s ease-out both;
+}
+
+@keyframes ml-appear {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.ml-row-w { border-left-color: var(--green); }
+.ml-row-d { border-left-color: rgba(255,255,255,0.25); }
+.ml-row-l { border-left-color: var(--red); }
+
+.ml-day {
+  width: 22px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.ml-team {
+  flex: 1;
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.ml-home { text-align: right; }
+.ml-away { text-align: left; }
+.ml-player { font-weight: 700; color: var(--red); }
+
+.ml-score {
+  width: 36px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.ml-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ml-badge-w { background: rgba(76,175,80,0.18); color: var(--green); }
+.ml-badge-d { background: rgba(255,255,255,0.07); color: var(--text-muted); }
+.ml-badge-l { background: rgba(227,0,11,0.15); color: var(--red); }
+
 @media (max-width: 800px) {
   .result-body    { flex-direction: column; padding: 16px; }
   .result-left    { width: 100%; position: static; }
