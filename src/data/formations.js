@@ -18,7 +18,7 @@ export const SLOT_COMPAT = {
 export const FORMATIONS = {
   '4-3-3': {
     name: '4-3-3',
-    description: 'High press, attacking width, fluid interchange between midfield and attack.',
+    description: 'Hohes Pressing, Flügelbreite und flüssiges Zusammenspiel zwischen Mittelfeld und Angriff.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'RB', label: 'RB', x: 80, y: 72 },
@@ -35,7 +35,7 @@ export const FORMATIONS = {
   },
   '4-4-2': {
     name: '4-4-2',
-    description: 'Classic balance of width and defensive stability with a deadly striking partnership.',
+    description: 'Klassisches Gleichgewicht aus Breite und Defensive mit tödlichem Sturm-Duo.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'RB', label: 'RB', x: 80, y: 72 },
@@ -52,7 +52,7 @@ export const FORMATIONS = {
   },
   '4-2-3-1': {
     name: '4-2-3-1',
-    description: 'Double pivot protection with a creative #10 behind one lone striker.',
+    description: 'Doppelsechs mit einer kreativen Zehner-Rolle hinter einer Sturmspitze.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'RB', label: 'RB', x: 80, y: 72 },
@@ -69,7 +69,7 @@ export const FORMATIONS = {
   },
   '4-5-1': {
     name: '4-5-1',
-    description: 'Compact defensive block that transitions quickly with attacking wingers.',
+    description: 'Kompakter Defensivblock mit schnellem Umschaltspiel über die Außenpositionen.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'RB', label: 'RB', x: 80, y: 72 },
@@ -86,7 +86,7 @@ export const FORMATIONS = {
   },
   '3-4-3': {
     name: '3-4-3',
-    description: 'Attacking triangle with wing-backs providing width and three centre-backs.',
+    description: 'Angriffstrio mit Schienenspieler für Breite und stabiler Dreierkette.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'CB', label: 'CB', x: 68, y: 72 },
@@ -103,7 +103,7 @@ export const FORMATIONS = {
   },
   '3-5-2': {
     name: '3-5-2',
-    description: 'Physical midfield dominance with wing-backs bombing forward to support two strikers.',
+    description: 'Physische Mittelfelddominanz – offensive Schienen unterstützen das Sturm-Duo.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'CB', label: 'CB', x: 68, y: 72 },
@@ -120,7 +120,7 @@ export const FORMATIONS = {
   },
   '5-4-1': {
     name: '5-4-1',
-    description: 'Fortress back-five with attacking wing-backs and a lone striker on the counter.',
+    description: 'Fünferkette mit offensiven Außenverteidigern und einer Sturmspitze auf Konter.',
     slots: [
       { id: 0, type: 'GK', label: 'GK', x: 50, y: 88 },
       { id: 1, type: 'RB', label: 'RWB', x: 88, y: 72 },

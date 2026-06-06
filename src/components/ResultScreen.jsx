@@ -60,17 +60,17 @@ export default function ResultScreen({ state, onPlayAgain }) {
         <div className="result-header-inner">
           <div className="result-title-group">
             <span className="result-eyebrow">Bundesliga Dream XI</span>
-            <h1 className="result-title">Season Complete</h1>
+            <h1 className="result-title">Saison abgeschlossen</h1>
           </div>
           <div className="result-header-actions">
             <button className="btn btn-ghost btn-sm" onClick={handleDownload} disabled={sharing}>
-              ↓ Save
+              ↓ Speichern
             </button>
             <button className="btn btn-secondary btn-sm" onClick={handleShare} disabled={sharing}>
-              Share
+              Teilen
             </button>
             <button className="btn btn-primary" onClick={onPlayAgain}>
-              Play Again
+              Nochmal spielen
             </button>
           </div>
         </div>
@@ -106,25 +106,25 @@ export default function ResultScreen({ state, onPlayAgain }) {
 
           {/* Season stats */}
           <div className="result-stats-card">
-            <div className="result-section-label">Simulated Season — 34 Matches</div>
+            <div className="result-section-label">Simulierte Saison — 34 Spieltage</div>
 
             <div className="season-wdl">
-              <StatPill label="W" value={W} color="var(--green)" />
-              <StatPill label="D" value={D} color="var(--text-muted)" />
-              <StatPill label="L" value={L} color="var(--red)" />
+              <StatPill label="S" value={W} color="var(--green)" />
+              <StatPill label="U" value={D} color="var(--text-muted)" />
+              <StatPill label="N" value={L} color="var(--red)" />
             </div>
 
             <div className="season-details">
-              <SeasonStat label="Points" value={pts} big />
-              <SeasonStat label="Goals For" value={GF} />
-              <SeasonStat label="Goals Against" value={GA} />
-              <SeasonStat label="Goal Difference" value={`${GD > 0 ? '+' : ''}${GD}`} />
-              <SeasonStat label="Win Rate" value={`${Math.round((W / 34) * 100)}%`} />
+              <SeasonStat label="Punkte" value={pts} big />
+              <SeasonStat label="Tore" value={GF} />
+              <SeasonStat label="Gegentore" value={GA} />
+              <SeasonStat label="Tordifferenz" value={`${GD > 0 ? '+' : ''}${GD}`} />
+              <SeasonStat label="Siegquote" value={`${Math.round((W / 34) * 100)}%`} />
             </div>
 
             {/* Simulated table position */}
             <div className="league-position-bar">
-              <div className="lp-label">Estimated finish</div>
+              <div className="lp-label">Geschätzter Tabellenplatz</div>
               <div className="lp-bar">
                 <div
                   className="lp-marker"
@@ -136,10 +136,10 @@ export default function ResultScreen({ state, onPlayAgain }) {
                 <div className="lp-zone lp-title" style={{ width: '12%', left: '88%' }} />
               </div>
               <div className="lp-key">
-                <span className="lp-key-item relegation">Relegation</span>
-                <span className="lp-key-item midtable">Mid-table</span>
-                <span className="lp-key-item europe">Europe</span>
-                <span className="lp-key-item title">Title</span>
+                <span className="lp-key-item relegation">Abstieg</span>
+                <span className="lp-key-item midtable">Mittelfeld</span>
+                <span className="lp-key-item europe">Europa</span>
+                <span className="lp-key-item title">Meister</span>
               </div>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
           {/* Additional achievements */}
           {achievements?.length > 1 && (
             <div className="result-extra-achievements">
-              <div className="result-section-label">Achievements</div>
+              <div className="result-section-label">Errungenschaften</div>
               <div className="ach-list">
                 {achievements.slice(1).map(a => (
                   <div key={a.key} className="ach-item">
@@ -164,7 +164,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
 
           {/* Squad list */}
           <div className="result-squad-list">
-            <div className="result-section-label">Final Squad</div>
+            <div className="result-section-label">Dein XI</div>
             {slots
               .filter(s => s.player)
               .map(s => (

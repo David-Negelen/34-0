@@ -43,7 +43,7 @@ export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
         <div className="draft-header-left">
           <span className="draft-title">BUNDESLIGA DREAM XI</span>
           <span className="draft-formation badge badge-muted">{setup.formation}</span>
-          {!showRatings && <span className="badge badge-gold">Blind Mode</span>}
+          {!showRatings && <span className="badge badge-gold">Blind-Modus</span>}
         </div>
         <div className="draft-header-right">
           <div className="progress-wrap">
@@ -59,7 +59,7 @@ export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
                 className={`reroll-dot ${i < rerollsLeft ? 'active' : ''}`}
               />
             ))}
-            <span className="rerolls-label">{rerollsLeft} reroll{rerollsLeft !== 1 ? 's' : ''}</span>
+            <span className="rerolls-label">{rerollsLeft} Joker</span>
           </div>
         </div>
       </header>

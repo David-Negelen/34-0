@@ -157,8 +157,8 @@ export default function SpinPanel({
       {draftMode === 'position-first' && (phase === 'idle') && (
         <div className="position-hint fade-in">
           {selectedSlotId === null
-            ? 'Click an empty slot on the pitch to select a position'
-            : 'Slot selected — press Spin'}
+            ? 'Wähle eine leere Position auf dem Spielfeld'
+            : 'Position gewählt – jetzt drehen'}
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default function SpinPanel({
         {phase === 'idle' && (
           <div className="spin-idle">
             <span className="spin-idle-label">
-              {openSlots.length === 0 ? 'Squad complete!' : 'Ready to spin'}
+              {openSlots.length === 0 ? 'Kader vollständig!' : 'Bereit zum Drehen'}
             </span>
           </div>
         )}
@@ -188,15 +188,15 @@ export default function SpinPanel({
               {currentSpin.club}
             </span>
             <span className="spin-count">
-              {candidates.length} candidate{candidates.length !== 1 ? 's' : ''}
+              {candidates.length} Kandidat{candidates.length !== 1 ? 'en' : ''}
             </span>
           </div>
         )}
 
         {deadSpin && (
           <div className="spin-dead fade-in">
-            <span className="spin-dead-title">Dead Spin</span>
-            <span className="spin-dead-sub">No eligible players for open slots</span>
+            <span className="spin-dead-title">Kein Treffer</span>
+            <span className="spin-dead-sub">Keine passenden Spieler für offene Positionen</span>
           </div>
         )}
       </div>
@@ -209,25 +209,25 @@ export default function SpinPanel({
             onClick={() => doSpin(false)}
             disabled={!canSpin}
           >
-            {phase === 'idle' ? 'Spin' : 'Respin'}
+            {phase === 'idle' ? 'Drehen' : 'Nochmal drehen'}
           </button>
         )}
 
         {phase === 'spun' && !deadSpin && candidates.length > 0 && (
           <button className="btn btn-secondary" onClick={handlePickPlayer}>
-            View Players →
+            Spieler anzeigen →
           </button>
         )}
 
         {canReroll && (
           <button className="btn btn-ghost reroll-btn" onClick={() => doSpin(true)}>
-            Reroll ({rerollsLeft} left)
+            Joker einsetzen ({rerollsLeft} übrig)
           </button>
         )}
 
         {(deadSpin || (phase === 'spun' && candidates.length === 0)) && (
           <button className="btn btn-secondary" onClick={() => doSpin(false)}>
-            Try Again (free)
+            Nochmal versuchen (gratis)
           </button>
         )}
       </div>
@@ -236,11 +236,11 @@ export default function SpinPanel({
       {phase === 'picking' && (
         <div className="candidates-list fade-in">
           <div className="candidates-header">
-            <h4>Choose a player</h4>
-            <button className="btn btn-ghost btn-sm" onClick={() => setPhase('spun')}>← Back</button>
+            <h4>Spieler wählen</h4>
+            <button className="btn btn-ghost btn-sm" onClick={() => setPhase('spun')}>← Zurück</button>
           </div>
           {candidates.length === 0 ? (
-            <p className="no-candidates">No eligible candidates for your open slots.</p>
+            <p className="no-candidates">Keine Kandidaten für deine offenen Positionen.</p>
           ) : (
             candidates.map(player => (
               <PlayerCard
@@ -259,9 +259,9 @@ export default function SpinPanel({
       {phase === 'slot-choice' && pendingPlayer && (
         <div className="overlay">
           <div className="overlay-card">
-            <h3 style={{ marginBottom: 6 }}>Choose a slot</h3>
+            <h3 style={{ marginBottom: 6 }}>Position wählen</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
-              Where should <strong>{pendingPlayer.player.name}</strong> play?
+              Wo soll <strong>{pendingPlayer.player.name}</strong> spielen?
             </p>
             <div className="slot-choice-list">
               {getCompatibleSlots(pendingPlayer.player, openSlots).map(slot => (
@@ -279,7 +279,7 @@ export default function SpinPanel({
               style={{ marginTop: 12, width: '100%' }}
               onClick={() => { setPendingPlayer(null); setPhase('picking'); }}
             >
-              Cancel
+              Abbrechen
             </button>
           </div>
         </div>

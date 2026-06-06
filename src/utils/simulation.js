@@ -55,19 +55,19 @@ export function getAchievements(result) {
   const { W, D, L, GF, GA, pts } = result;
   const achievements = [];
 
-  if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfect Season',      desc: '34-0-0 — Unbeatable.' });
-  else if (L === 0)       achievements.push({ key: 'invincible', label: 'Invincibles',          desc: 'Unbeaten all season.' });
+  if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfekte Saison',      desc: '34-0-0 – Unschlagbar.' });
+  else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',         desc: 'Die gesamte Saison unbesiegt.' });
 
-  if (pts >= 82)          achievements.push({ key: 'champions',  label: 'Meister!',             desc: 'Bundesliga champions.' });
-  else if (pts >= 62)     achievements.push({ key: 'top4',       label: 'Champions League',     desc: 'Top-4 finish secured.' });
-  else if (pts >= 48)     achievements.push({ key: 'tophalf',    label: 'Top Half',             desc: 'Comfortable mid-table.' });
-  else if (pts >= 34)     achievements.push({ key: 'midtable',   label: 'Safe',                 desc: 'Survived the season.' });
-  else if (pts <= 15)     achievements.push({ key: 'derby',      label: 'Worse Than Derby',     desc: 'Historically bad. A disaster.' });
-  else                    achievements.push({ key: 'relegated',  label: 'Relegated',            desc: 'Down to the 2. Bundesliga.' });
+  if (pts >= 82)          achievements.push({ key: 'champions',  label: 'Deutscher Meister!',   desc: 'Bundesliga-Champion – Schale geholt.' });
+  else if (pts >= 62)     achievements.push({ key: 'top4',       label: 'Champions League',     desc: 'Top-4 – Champions League gesichert.' });
+  else if (pts >= 48)     achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',    desc: 'Solide Saison im Mittelfeld.' });
+  else if (pts >= 34)     achievements.push({ key: 'midtable',   label: 'Gerettet',             desc: 'Klassenerhalt knapp geschafft.' });
+  else if (pts <= 15)     achievements.push({ key: 'derby',      label: 'Historisches Desaster',desc: 'Einer der schlechtesten Absteiger aller Zeiten.' });
+  else                    achievements.push({ key: 'relegated',  label: 'Abgestiegen',          desc: 'Ab in die 2. Bundesliga.' });
 
-  if (GF >= 90)           achievements.push({ key: 'century',    label: 'Goal Machine',         desc: '90+ goals in a season.' });
-  if (GA <= 25)           achievements.push({ key: 'fortress',   label: 'Fortress Defence',     desc: '25 goals or fewer conceded.' });
-  if (W >= 30)            achievements.push({ key: 'dominant',   label: 'Dominant',             desc: '30+ wins in a season.' });
+  if (GF >= 90)           achievements.push({ key: 'century',    label: 'Tormaschine',          desc: '90+ Tore in einer Saison.' });
+  if (GA <= 25)           achievements.push({ key: 'fortress',   label: 'Festung',              desc: 'Nur 25 Gegentore – Defensive der Extraklasse.' });
+  if (W >= 30)            achievements.push({ key: 'dominant',   label: 'Dominanz',             desc: '30+ Siege in einer Saison.' });
 
   return achievements;
 }
