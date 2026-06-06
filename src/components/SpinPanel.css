@@ -1,7 +1,7 @@
 .spin-panel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   height: 100%;
 }
 
@@ -9,8 +9,8 @@
   background: rgba(245, 197, 24, 0.08);
   border: 1px solid rgba(245, 197, 24, 0.25);
   border-radius: var(--radius);
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 8px 14px;
+  font-size: 12px;
   color: var(--gold);
   text-align: center;
 }
@@ -19,24 +19,24 @@
 .slot-machine {
   background: #070707;
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 6px 24px rgba(0, 0, 0, 0.5);
+    0 4px 20px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
 }
 
 .slot-window {
   position: relative;
 }
 
-/* The center payline stripe */
 .slot-payline {
   position: absolute;
   top: 50%;
   left: 0;
   right: 0;
-  height: 38px;
+  height: 34px;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.022);
   border-top: 1px solid rgba(255, 255, 255, 0.055);
@@ -49,7 +49,7 @@
 .slot-machine--spinning .slot-payline {
   background: rgba(227, 0, 11, 0.07);
   border-color: rgba(227, 0, 11, 0.3);
-  box-shadow: 0 0 18px rgba(227, 0, 11, 0.18);
+  box-shadow: 0 0 16px rgba(227, 0, 11, 0.18);
 }
 
 .slot-machine--done .slot-payline {
@@ -62,16 +62,14 @@
   border-color: rgba(227, 0, 11, 0.15);
 }
 
-/* Reels container */
 .slot-reels {
   display: flex;
   border-bottom: 1px solid rgba(255, 255, 255, 0.055);
 }
 
-/* Individual reel */
 .slot-reel {
   position: relative;
-  height: 92px;
+  height: 80px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -79,7 +77,7 @@
 }
 
 .slot-reel--season {
-  width: 138px;
+  width: 130px;
   flex-shrink: 0;
   border-right: 1px solid rgba(255, 255, 255, 0.055);
 }
@@ -89,14 +87,13 @@
   min-width: 0;
 }
 
-/* Top/bottom gradient masks — simulate the reel drum */
 .slot-reel::before,
 .slot-reel::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
-  height: 28px;
+  height: 24px;
   z-index: 2;
   pointer-events: none;
 }
@@ -111,7 +108,6 @@
   background: linear-gradient(to top, #070707, transparent);
 }
 
-/* Track holds the animated value */
 .slot-reel-track {
   position: relative;
   z-index: 1;
@@ -119,23 +115,21 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 0 14px;
+  padding: 0 12px;
   box-sizing: border-box;
 }
 
-/* Small corner label */
 .slot-reel-lbl {
   position: absolute;
-  bottom: 6px;
-  left: 10px;
-  font-size: 8px;
+  bottom: 5px;
+  left: 9px;
+  font-size: 7px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  color: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.14);
   z-index: 3;
 }
 
-/* Reel values */
 .reel-val {
   display: block;
   font-weight: 900;
@@ -147,19 +141,17 @@
   line-height: 1.2;
 }
 
-.slot-reel--season .reel-val { font-size: 19px; letter-spacing: 0.5px; }
-.slot-reel--club   .reel-val { font-size: 17px; }
+.slot-reel--season .reel-val { font-size: 18px; letter-spacing: 0.5px; }
+.slot-reel--club   .reel-val { font-size: 16px; }
 
-/* Idle — dim placeholders */
 .reel-val--idle {
-  font-size: 26px !important;
-  letter-spacing: 6px;
-  color: rgba(255, 255, 255, 0.1);
+  font-size: 22px !important;
+  letter-spacing: 8px;
+  color: rgba(255, 255, 255, 0.08);
 }
 
-/* Spinning — slide up fast on each tick */
 @keyframes reel-spin {
-  from { opacity: 0; transform: translateY(38px); }
+  from { opacity: 0; transform: translateY(34px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -168,32 +160,29 @@
   color: var(--text);
 }
 
-/* Done — settle with a slight overshoot */
 @keyframes reel-land {
-  0%   { opacity: 0; transform: translateY(32px); }
-  55%  { opacity: 1; transform: translateY(-5px); }
-  75%  { transform: translateY(2px); }
+  0%   { opacity: 0; transform: translateY(28px); }
+  55%  { opacity: 1; transform: translateY(-4px); }
+  78%  { transform: translateY(2px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
 .reel-val--done {
-  animation: reel-land 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: reel-land 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
   color: var(--text);
 }
 
 .slot-reel--club .reel-val--done {
-  /* color applied via inline style from clubMeta */
   filter: brightness(1.15);
 }
 
-/* Status bar */
 .slot-status {
-  padding: 9px 16px;
-  min-height: 36px;
+  padding: 7px 14px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
   text-align: center;
 }
@@ -215,7 +204,7 @@
 }
 
 .slot-status--count {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.2px;
 }
@@ -225,6 +214,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .spin-btn {
@@ -242,63 +232,6 @@
   gap: 6px;
   overflow-y: auto;
   flex: 1;
-}
-
-/* ── Manual picker ── */
-.manual-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 0 4px;
-  border-top: 1px solid var(--border);
-}
-
-.manual-picker-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.manual-field {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.manual-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-}
-
-.manual-input {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 13px;
-  padding: 7px 10px;
-  outline: none;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
-}
-
-.manual-input:focus { border-color: var(--red); }
-.manual-input:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.manual-sep {
-  font-size: 16px;
-  color: var(--text-muted);
-  padding-bottom: 8px;
-  flex-shrink: 0;
-}
-
-.manual-load-btn {
-  align-self: flex-start;
 }
 
 .candidates-header {

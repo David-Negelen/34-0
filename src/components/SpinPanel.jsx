@@ -7,8 +7,6 @@ import {
   getOpenSlots,
   getCompatibleSlots,
   getDisplayRating,
-  getSeasonsForClub,
-  getPlayersForClubSeason,
   randomSpin,
   labelDE,
 } from '../utils/playerUtils';
@@ -32,7 +30,7 @@ export default function SpinPanel({
   slots,
   setup,
   rerollsLeft,
-  selectedSlotId,   // managed by parent (position-first mode)
+  selectedSlotId,
   onPlayerPlaced,
   onReroll,
   onClearSlot,
@@ -41,22 +39,17 @@ export default function SpinPanel({
   const openSlots = getOpenSlots(slots);
   const allClubs = getClubsInDb(PLAYERS);
 
-
   const [phase, setPhase] = useState('idle');
-  // idle | animating | spun | picking | slot-choice
   const [displayedClub, setDisplayedClub] = useState('');
   const [displayedSeason, setDisplayedSeason] = useState('');
   const [animTick, setAnimTick] = useState(0);
-  const [currentSpin, setCurrentSpin] = useState(null);   // { club, season }
+  const [currentSpin, setCurrentSpin] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [pendingPlayer, setPendingPlayer] = useState(null);
   const [deadSpin, setDeadSpin] = useState(false);
-  const [manualClub, setManualClub] = useState('');
-  const [manualSeason, setManualSeason] = useState('');
 
   const animRef = useRef(null);
 
-  // ── Spin logic ────────────────────────────────────────────────────────────
   function doSpin(isReroll) {
     if (isReroll) onReroll();
     setDeadSpin(false);
@@ -86,7 +79,6 @@ export default function SpinPanel({
     function next() {
       setAnimTick(t => t + 1);
       setDisplayedClub(clubFrames[idx]);
-      // season reel runs at half speed for slot-machine stagger
       if (idx % 2 === 0 || idx === SPIN_FRAMES - 1) setDisplayedSeason(seasonFrames[idx]);
       idx++;
       if (idx < SPIN_FRAMES) {
@@ -150,37 +142,6 @@ export default function SpinPanel({
     setPendingPlayer(null);
   }
 
-  // ── Manual club+season selection ──────────────────────────────────────────
-  const manualClubValid = allClubs.includes(manualClub);
-  const manualSeasons = manualClubValid
-    ? getSeasonsForClub(PLAYERS, manualClub).filter(s => parseInt(s) >= 2015)
-    : [];
-
-  function doManualSpin() {
-    if (!manualClubValid || !manualSeason) return;
-    const placedIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
-    const pool = getPlayersForClubSeason(PLAYERS, manualClub, manualSeason)
-      .filter(p => !placedIds.has(p.id));
-
-    const spinSlots = draftMode === 'position-first' && selectedSlotId !== null
-      ? openSlots.filter(s => s.id === selectedSlotId)
-      : openSlots;
-
-    const eligible = draftMode === 'position-first' && selectedSlotId !== null
-      ? pool.filter(p => getCompatibleSlots(p, spinSlots).length > 0)
-      : getEligiblePlayers(pool, openSlots);
-
-    const sorted = showRatings
-      ? [...eligible].sort((a, b) => getDisplayRating(b, ratingMode) - getDisplayRating(a, ratingMode))
-      : shuffle(eligible);
-
-    setCurrentSpin({ club: manualClub, season: manualSeason });
-    setCandidates(sorted);
-    setDeadSpin(false);
-    setPhase('picking');
-  }
-
-  // Reset to idle when all slots filled
   useEffect(() => {
     if (openSlots.length === 0) resetToIdle();
   }, [openSlots.length]);
@@ -229,7 +190,7 @@ export default function SpinPanel({
   return (
     <div className="spin-panel">
 
-      {draftMode === 'position-first' && (phase === 'idle') && (
+      {draftMode === 'position-first' && phase === 'idle' && (
         <div className="position-hint fade-in">
           {selectedSlotId === null
             ? 'Wähle eine leere Position auf dem Spielfeld'
@@ -311,45 +272,6 @@ export default function SpinPanel({
           </>
         )}
       </div>
-
-      {/* ── Manual picker ── */}
-      {phase === 'idle' && openSlots.length > 0 && (
-        <div className="manual-picker">
-          <div className="manual-picker-row">
-            <div className="manual-field">
-              <label className="manual-label">KLUB</label>
-              <input
-                className="manual-input"
-                list="manual-club-list"
-                value={manualClub}
-                onChange={e => { setManualClub(e.target.value); setManualSeason(''); }}
-                placeholder="Suchen…"
-              />
-              <datalist id="manual-club-list">
-                {allClubs.map(c => <option key={c} value={c} />)}
-              </datalist>
-            </div>
-            <span className="manual-sep">×</span>
-            <div className="manual-field">
-              <label className="manual-label">SAISON</label>
-              <select
-                className="manual-input"
-                value={manualSeason}
-                onChange={e => setManualSeason(e.target.value)}
-                disabled={!manualSeasons.length}
-              >
-                <option value="">—</option>
-                {manualSeasons.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-          {manualClubValid && manualSeason && (
-            <button className="btn btn-secondary btn-sm manual-load-btn" onClick={doManualSpin}>
-              Laden
-            </button>
-          )}
-        </div>
-      )}
 
       {/* ── Candidate list ── */}
       {phase === 'picking' && (
