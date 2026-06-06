@@ -15,109 +15,209 @@
   text-align: center;
 }
 
-/* ── Spin display box ── */
-.spin-display {
-  background: var(--bg-card);
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-lg);
-  min-height: 110px;
+/* ── Slot machine ── */
+.slot-machine {
+  background: #070707;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.slot-window {
+  position: relative;
+}
+
+/* The center payline stripe */
+.slot-payline {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 38px;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.022);
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  z-index: 0;
+  pointer-events: none;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.slot-machine--spinning .slot-payline {
+  background: rgba(227, 0, 11, 0.07);
+  border-color: rgba(227, 0, 11, 0.3);
+  box-shadow: 0 0 18px rgba(227, 0, 11, 0.18);
+}
+
+.slot-machine--done .slot-payline {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.slot-machine--dead .slot-payline {
+  background: rgba(227, 0, 11, 0.04);
+  border-color: rgba(227, 0, 11, 0.15);
+}
+
+/* Reels container */
+.slot-reels {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+/* Individual reel */
+.slot-reel {
+  position: relative;
+  height: 92px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
 }
 
-.spin-idle {
-  text-align: center;
+.slot-reel--season {
+  width: 138px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.055);
 }
 
-.spin-idle-label {
-  font-size: 15px;
-  color: var(--text-dim);
-  font-weight: 500;
+.slot-reel--club {
+  flex: 1;
+  min-width: 0;
 }
 
-.spin-animating {
-  text-align: center;
+/* Top/bottom gradient masks — simulate the reel drum */
+.slot-reel::before,
+.slot-reel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.slot-reel::before {
+  top: 0;
+  background: linear-gradient(to bottom, #070707, transparent);
+}
+
+.slot-reel::after {
+  bottom: 0;
+  background: linear-gradient(to top, #070707, transparent);
+}
+
+/* Track holds the animated value */
+.slot-reel-track {
+  position: relative;
+  z-index: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 14px;
+  box-sizing: border-box;
 }
 
-@keyframes slot-tick {
-  from { opacity: 0; transform: translateY(6px); }
+/* Small corner label */
+.slot-reel-lbl {
+  position: absolute;
+  bottom: 6px;
+  left: 10px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.16);
+  z-index: 3;
+}
+
+/* Reel values */
+.reel-val {
+  display: block;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+.slot-reel--season .reel-val { font-size: 19px; letter-spacing: 0.5px; }
+.slot-reel--club   .reel-val { font-size: 17px; }
+
+/* Idle — dim placeholders */
+.reel-val--idle {
+  font-size: 26px !important;
+  letter-spacing: 6px;
+  color: rgba(255, 255, 255, 0.1);
+}
+
+/* Spinning — slide up fast on each tick */
+@keyframes reel-spin {
+  from { opacity: 0; transform: translateY(38px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.spin-animating .spin-season,
-.spin-animating .spin-club-anim {
-  animation: slot-tick 0.07s ease-out both;
-  display: inline-block;
-}
-
-.spin-club-anim {
-  font-size: 28px;
-  font-weight: 900;
+.reel-val--spin {
+  animation: reel-spin 0.055s ease-out both;
   color: var(--text);
-  letter-spacing: -0.5px;
 }
 
-.spin-result {
+/* Done — settle with a slight overshoot */
+@keyframes reel-land {
+  0%   { opacity: 0; transform: translateY(32px); }
+  55%  { opacity: 1; transform: translateY(-5px); }
+  75%  { transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.reel-val--done {
+  animation: reel-land 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  color: var(--text);
+}
+
+.slot-reel--club .reel-val--done {
+  /* color applied via inline style from clubMeta */
+  filter: brightness(1.15);
+}
+
+/* Status bar */
+.slot-status {
+  padding: 9px 16px;
+  min-height: 36px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  text-align: center;
-  width: 100%;
-}
-
-.spin-season {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.spin-club {
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--club-color, var(--text));
-  line-height: 1.1;
-  text-shadow: 0 0 20px rgba(0,0,0,0.5);
-  /* fallback color if club-color is too dark */
-  text-stroke: 0.5px rgba(255,255,255,0.1);
-}
-
-/* Ensure dark club colors are readable */
-.spin-club {
-  -webkit-text-stroke: 0;
-  filter: brightness(1.3);
-}
-
-.spin-count {
+  justify-content: center;
   font-size: 12px;
   color: var(--text-muted);
-}
-
-.spin-dead {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
   text-align: center;
 }
 
-.spin-dead-title {
-  font-size: 18px;
+@keyframes status-dots {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 1; }
+}
+
+.slot-status--spinning {
+  letter-spacing: 6px;
+  color: var(--red);
+  animation: status-dots 0.7s ease-in-out infinite;
+}
+
+.slot-status--dead {
+  font-size: 11px;
+  color: var(--red);
+}
+
+.slot-status--count {
+  font-size: 14px;
   font-weight: 800;
-  color: var(--text-muted);
-}
-
-.spin-dead-sub {
-  font-size: 12px;
-  color: var(--text-dim);
+  letter-spacing: 0.2px;
 }
 
 /* ── Actions ── */

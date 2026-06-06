@@ -46,6 +46,7 @@ export default function SpinPanel({
   // idle | animating | spun | picking | slot-choice
   const [displayedClub, setDisplayedClub] = useState('');
   const [displayedSeason, setDisplayedSeason] = useState('');
+  const [animTick, setAnimTick] = useState(0);
   const [currentSpin, setCurrentSpin] = useState(null);   // { club, season }
   const [candidates, setCandidates] = useState([]);
   const [pendingPlayer, setPendingPlayer] = useState(null);
@@ -83,11 +84,12 @@ export default function SpinPanel({
 
     let idx = 0;
     function next() {
+      setAnimTick(t => t + 1);
       setDisplayedClub(clubFrames[idx]);
       // season reel runs at half speed for slot-machine stagger
       if (idx % 2 === 0 || idx === SPIN_FRAMES - 1) setDisplayedSeason(seasonFrames[idx]);
       idx++;
-      if (idx < frames.length) {
+      if (idx < SPIN_FRAMES) {
         animRef.current = setTimeout(next, SPIN_DELAYS[idx - 1]);
       } else {
         if (!result) {
@@ -195,6 +197,34 @@ export default function SpinPanel({
   const canSpin   = (phase === 'idle' || phase === 'spun' || phase === 'picking') && spinReady;
   const canReroll = (phase === 'spun' || phase === 'picking') && rerollsLeft > 0;
 
+  // ── Slot machine reel state ───────────────────────────────────────────────
+  let machineState = 'idle';
+  let reelSeason = '—', reelClub = '—';
+  let reelSeasonKey = 'idle-s', reelClubKey = 'idle-c';
+  let reelSeasonCls = 'reel-val reel-val--idle', reelClubCls = 'reel-val reel-val--idle';
+  let reelClubStyle;
+
+  if (phase === 'animating') {
+    machineState = 'spinning';
+    reelSeason = displayedSeason;
+    reelClub = displayedClub;
+    reelSeasonKey = `s-${animTick}`;
+    reelClubKey = `c-${animTick}`;
+    reelSeasonCls = 'reel-val reel-val--spin';
+    reelClubCls = 'reel-val reel-val--spin';
+  } else if (deadSpin) {
+    machineState = 'dead';
+  } else if (currentSpin) {
+    machineState = 'done';
+    reelSeason = currentSpin.season;
+    reelClub = currentSpin.club;
+    reelSeasonKey = `done-s-${currentSpin.season}`;
+    reelClubKey = `done-c-${currentSpin.club}`;
+    reelSeasonCls = 'reel-val reel-val--done';
+    reelClubCls = 'reel-val reel-val--done';
+    if (clubMeta?.color) reelClubStyle = { color: clubMeta.color };
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="spin-panel">
@@ -207,48 +237,47 @@ export default function SpinPanel({
         </div>
       )}
 
-      {/* ── Spin display ── */}
-      <div className="spin-display">
-        {phase === 'idle' && (
-          <div className="spin-idle">
-            <span className="spin-idle-label">
-              {openSlots.length === 0 ? 'Kader vollständig!' : 'Bereit zum Drehen'}
-            </span>
+      {/* ── Slot machine ── */}
+      <div className={`slot-machine slot-machine--${machineState}`}>
+        <div className="slot-window">
+          <div className="slot-payline" />
+          <div className="slot-reels">
+            <div className="slot-reel slot-reel--season">
+              <div className="slot-reel-track">
+                <span key={reelSeasonKey} className={reelSeasonCls}>{reelSeason}</span>
+              </div>
+              <span className="slot-reel-lbl">SAISON</span>
+            </div>
+            <div className="slot-reel slot-reel--club">
+              <div className="slot-reel-track">
+                <span key={reelClubKey} className={reelClubCls} style={reelClubStyle}>
+                  {reelClub}
+                </span>
+              </div>
+              <span className="slot-reel-lbl">KLUB</span>
+            </div>
           </div>
-        )}
-
-        {phase === 'animating' && (
-          <div className="spin-animating">
-            <span key={displayedSeason} className="spin-season">{displayedSeason}</span>
-            <span key={displayedClub} className="spin-club-anim">{displayedClub}</span>
-          </div>
-        )}
-
-        {(phase === 'spun' || phase === 'picking' || phase === 'slot-choice') && currentSpin && (
-          <div className="spin-result fade-in">
-            <span className="spin-season">{currentSpin.season}</span>
-            <span
-              className="spin-club"
-              style={{ color: clubMeta?.color }}
-            >
-              {currentSpin.club}
+        </div>
+        <div className="slot-status">
+          {machineState === 'idle' && (
+            <span>{openSlots.length === 0 ? 'Kader vollständig!' : 'Bereit zum Drehen'}</span>
+          )}
+          {machineState === 'spinning' && (
+            <span className="slot-status--spinning">● ● ●</span>
+          )}
+          {machineState === 'dead' && (
+            <span className="slot-status--dead">
+              {draftMode === 'position-first' && selectedSlotId !== null
+                ? 'Keine passenden Spieler für diese Position'
+                : 'Keine passenden Spieler für offene Positionen'}
             </span>
-            <span className="spin-count">
+          )}
+          {machineState === 'done' && (
+            <span className="slot-status--count" style={{ color: clubMeta?.color }}>
               {candidates.length} Kandidat{candidates.length !== 1 ? 'en' : ''}
             </span>
-          </div>
-        )}
-
-        {deadSpin && (
-          <div className="spin-dead fade-in">
-            <span className="spin-dead-title">Kein Treffer</span>
-            <span className="spin-dead-sub">
-              {draftMode === 'position-first' && selectedSlotId !== null
-                ? `Kein passender Spieler für diese Position – anderen Slot wählen oder nochmal drehen.`
-                : 'Keine passenden Spieler für offene Positionen.'}
-            </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Action buttons ── */}
