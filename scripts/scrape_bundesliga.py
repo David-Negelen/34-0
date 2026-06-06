@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Scrape Bundesliga squads from Transfermarkt for seasons 2000/01 – 2025/26.
-Stores: which clubs were in the league each season, and each club's full squad.
-Player data: name + positions only (no DOB, nationality, ratings).
+Scrape Bundesliga squads from Transfermarkt for seasons 2025/26 → 2010/11.
+Positions are fetched from each player's individual profile page using the
+"Detailposition" panel (dd.detail-position__position).
 
 Usage:
     source .venv/bin/activate
     python scripts/scrape_bundesliga.py
 
-Resumes automatically if interrupted — already-scraped season/club combos are skipped.
+Resumes automatically — already-scraped (season, club) combos are skipped,
+and player profiles already in the DB are not re-fetched.
 Output: bundesliga_draft.db
 """
 
@@ -41,11 +42,11 @@ HEADERS = {
     "Referer": "https://www.transfermarkt.de/",
 }
 
-DELAY = 2.0        # seconds between requests
-RETRY_DELAY = 30.0 # seconds to wait after a 429/503
+DELAY = 2.0
+RETRY_DELAY = 30.0
 
 
-# ── Database setup ────────────────────────────────────────────────────────────
+# ── Database ──────────────────────────────────────────────────────────────────
 
 def init_db(con: sqlite3.Connection):
     con.executescript("""
@@ -73,12 +74,18 @@ def init_db(con: sqlite3.Connection):
             name  TEXT NOT NULL
         );
 
+        -- positions fetched from the player's profile detail page
         CREATE TABLE IF NOT EXISTS player_positions (
-            player_id INTEGER NOT NULL,
-            position  TEXT    NOT NULL,
+            player_id  INTEGER NOT NULL,
+            position   TEXT    NOT NULL,
             is_primary INTEGER DEFAULT 1,
             PRIMARY KEY (player_id, position),
             FOREIGN KEY (player_id) REFERENCES players(tm_id)
+        );
+
+        -- sentinel: player profile has been fetched (even if no positions found)
+        CREATE TABLE IF NOT EXISTS player_profiles_fetched (
+            player_id INTEGER PRIMARY KEY
         );
 
         CREATE TABLE IF NOT EXISTS squad_entries (
@@ -89,7 +96,7 @@ def init_db(con: sqlite3.Connection):
             FOREIGN KEY (player_id) REFERENCES players(tm_id)
         );
 
-        -- Track which (season, club) squads are fully scraped
+        -- tracks which (season, club) squads are fully scraped
         CREATE TABLE IF NOT EXISTS scrape_log (
             season_year INTEGER NOT NULL,
             club_id     INTEGER NOT NULL,
@@ -100,7 +107,7 @@ def init_db(con: sqlite3.Connection):
     con.commit()
 
 
-# ── HTTP helpers ──────────────────────────────────────────────────────────────
+# ── HTTP ──────────────────────────────────────────────────────────────────────
 
 session = requests.Session()
 session.headers.update(HEADERS)
@@ -124,40 +131,41 @@ def fetch(url: str, retries: int = 3) -> BeautifulSoup:
     raise RuntimeError(f"Failed to fetch {url}")
 
 
-# ── Parsing helpers ───────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def parse_club_id_slug(href: str):
-    """'/fc-bayern-muenchen/startseite/verein/27' → (27, 'fc-bayern-muenchen')"""
     m = re.search(r"/([^/]+)/[^/]+/verein/(\d+)", href)
     if m:
         return int(m.group(2)), m.group(1)
     return None, None
 
 def parse_player_id(href: str):
-    """/manuel-neuer/profil/spieler/17259  → 17259"""
     m = re.search(r"/spieler/(\d+)", href)
     return int(m.group(1)) if m else None
 
+def make_profile_url(href: str) -> str:
+    """Normalize any TM player href to the canonical /profil/spieler/ URL."""
+    m = re.match(r"/([^/]+)/[^/]+/spieler/(\d+)", href)
+    if m:
+        return f"{BASE}/{m.group(1)}/profil/spieler/{m.group(2)}"
+    return BASE + href
+
 def season_label(year: int) -> str:
-    """2000 → '2000-01'"""
-    return f"{year}-{str(year + 1)[-2:]}"
+    return f"{year}/{str(year + 1)[-2:]}"
 
 
-# ── Season overview scraper ───────────────────────────────────────────────────
+# ── Scrapers ──────────────────────────────────────────────────────────────────
 
 def scrape_season_clubs(year: int) -> list[dict]:
-    """Return list of {tm_id, name, slug} for all clubs in the given season."""
     url = (
         f"{BASE}/bundesliga/startseite/wettbewerb/{BUNDESLIGA_ID}"
         f"/plus/?saison_id={year}"
     )
-    print(f"  Fetching season {season_label(year)} overview …")
+    print(f"  Fetching {season_label(year)} overview …")
     soup = fetch(url)
 
     clubs = []
     seen = set()
-
-    # Club links appear in the main items table
     for a in soup.select("table.items td.hauptlink a[href*='/verein/']"):
         href = a.get("href", "")
         tm_id, slug = parse_club_id_slug(href)
@@ -166,7 +174,6 @@ def scrape_season_clubs(year: int) -> list[dict]:
             clubs.append({"tm_id": tm_id, "name": a.get_text(strip=True), "slug": slug})
 
     if not clubs:
-        # Fallback: any verein link in the page
         for a in soup.select("a[href*='/verein/']"):
             href = a.get("href", "")
             tm_id, slug = parse_club_id_slug(href)
@@ -178,10 +185,8 @@ def scrape_season_clubs(year: int) -> list[dict]:
     return clubs
 
 
-# ── Squad scraper ─────────────────────────────────────────────────────────────
-
 def scrape_squad(club: dict, year: int) -> list[dict]:
-    """Return list of {tm_id, name, positions: [str]} for the club's season squad."""
+    """Return list of {tm_id, name, profile_url} — no positions here."""
     url = (
         f"{BASE}/{club['slug']}/kader/verein/{club['tm_id']}"
         f"/saison_id/{year}/plus/1"
@@ -190,7 +195,6 @@ def scrape_squad(club: dict, year: int) -> list[dict]:
 
     players = []
     seen = set()
-
     table = soup.find("table", class_="items")
     if not table:
         return players
@@ -199,50 +203,41 @@ def scrape_squad(club: dict, year: int) -> list[dict]:
         name_cell = row.select_one("td.hauptlink a[href*='/spieler/']")
         if not name_cell:
             continue
-        player_id = parse_player_id(name_cell.get("href", ""))
+        href = name_cell.get("href", "")
+        player_id = parse_player_id(href)
         if not player_id or player_id in seen:
             continue
         seen.add(player_id)
-
         name = name_cell.get_text(strip=True)
         if not name:
             continue
-
-        # Positions: collect all td[title] values that match known position strings.
-        # TM puts the main position in a title attribute; the first match is primary.
-        positions = []
-        for td in row.find_all("td"):
-            title = td.get("title", "").strip()
-            if _is_position(title) and title not in positions:
-                positions.append(title)
-
-        players.append({"tm_id": player_id, "name": name, "positions": positions})
+        players.append({
+            "tm_id": player_id,
+            "name": name,
+            "profile_url": make_profile_url(href),
+        })
 
     return players
 
-# Known German position strings from Transfermarkt
-_TM_POSITIONS = {
-    "Torwart",
-    "Innenverteidiger", "Rechter Verteidiger", "Linker Verteidiger", "Libero",
-    "Defensives Mittelfeld", "Zentrales Mittelfeld", "Offensives Mittelfeld",
-    "Rechtes Mittelfeld", "Linkes Mittelfeld",
-    "Mittelstürmer", "Linksaußen", "Rechtsaußen", "Hängende Spitze",
-    # English equivalents (TM sometimes uses these)
-    "Goalkeeper", "Centre-Back", "Right-Back", "Left-Back",
-    "Defensive Midfield", "Central Midfield", "Attacking Midfield",
-    "Right Midfield", "Left Midfield",
-    "Centre-Forward", "Left Winger", "Right Winger", "Second Striker",
-}
 
-def _is_position(text: str) -> bool:
-    return text in _TM_POSITIONS
+def scrape_player_positions(profile_url: str) -> list[str]:
+    """Fetch the player's profile page; extract positions from the Detailposition panel."""
+    soup = fetch(profile_url)
+    positions = []
+    for dd in soup.select("dd.detail-position__position"):
+        pos = dd.get_text(strip=True)
+        if pos:
+            positions.append(pos)
+    return positions
 
 
-# ── Persistence ───────────────────────────────────────────────────────────────
+# ── DB helpers ────────────────────────────────────────────────────────────────
 
-def save_season_clubs(con: sqlite3.Connection, year: int, clubs: list[dict]):
-    label = season_label(year)
-    con.execute("INSERT OR IGNORE INTO seasons (year, label) VALUES (?, ?)", (year, label))
+def save_season_clubs(con, year, clubs):
+    con.execute(
+        "INSERT OR IGNORE INTO seasons (year, label) VALUES (?, ?)",
+        (year, season_label(year))
+    )
     for c in clubs:
         con.execute(
             "INSERT OR IGNORE INTO clubs (tm_id, name, slug) VALUES (?, ?, ?)",
@@ -254,36 +249,46 @@ def save_season_clubs(con: sqlite3.Connection, year: int, clubs: list[dict]):
         )
     con.commit()
 
-def save_squad(con: sqlite3.Connection, year: int, club_id: int, players: list[dict]):
-    for p in players:
+def profile_already_fetched(con, player_id: int) -> bool:
+    return con.execute(
+        "SELECT 1 FROM player_profiles_fetched WHERE player_id=?", (player_id,)
+    ).fetchone() is not None
+
+def save_player_and_positions(con, player: dict, positions: list[str]):
+    con.execute(
+        "INSERT OR IGNORE INTO players (tm_id, name) VALUES (?, ?)",
+        (player["tm_id"], player["name"])
+    )
+    for i, pos in enumerate(positions):
         con.execute(
-            "INSERT OR IGNORE INTO players (tm_id, name) VALUES (?, ?)",
-            (p["tm_id"], p["name"])
-        )
-        # Upsert positions (take the first as primary, rest as secondary)
-        for i, pos in enumerate(p["positions"]):
-            con.execute(
-                "INSERT OR IGNORE INTO player_positions (player_id, position, is_primary) "
-                "VALUES (?, ?, ?)",
-                (p["tm_id"], pos, 1 if i == 0 else 0)
-            )
-        con.execute(
-            "INSERT OR IGNORE INTO squad_entries (season_year, club_id, player_id) "
+            "INSERT OR IGNORE INTO player_positions (player_id, position, is_primary) "
             "VALUES (?, ?, ?)",
-            (year, club_id, p["tm_id"])
+            (player["tm_id"], pos, 1 if i == 0 else 0)
         )
+    con.execute(
+        "INSERT OR IGNORE INTO player_profiles_fetched (player_id) VALUES (?)",
+        (player["tm_id"],)
+    )
+
+def save_squad_entry(con, year, club_id, player_id):
+    con.execute(
+        "INSERT OR IGNORE INTO squad_entries (season_year, club_id, player_id) "
+        "VALUES (?, ?, ?)",
+        (year, club_id, player_id)
+    )
+
+def already_scraped(con, year, club_id) -> bool:
+    return con.execute(
+        "SELECT 1 FROM scrape_log WHERE season_year=? AND club_id=?",
+        (year, club_id)
+    ).fetchone() is not None
+
+def mark_scraped(con, year, club_id):
     con.execute(
         "INSERT OR IGNORE INTO scrape_log (season_year, club_id) VALUES (?, ?)",
         (year, club_id)
     )
     con.commit()
-
-def already_scraped(con: sqlite3.Connection, year: int, club_id: int) -> bool:
-    row = con.execute(
-        "SELECT 1 FROM scrape_log WHERE season_year=? AND club_id=?",
-        (year, club_id)
-    ).fetchone()
-    return row is not None
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -292,45 +297,68 @@ def main():
     con = sqlite3.connect(DB_PATH)
     init_db(con)
 
-    seasons = range(2000, 2026)  # 2000/01 through 2025/26
+    # 2025/26 down to 2010/11  (16 seasons)
+    seasons = list(range(2025, 2009, -1))
     total = len(seasons)
 
     for i, year in enumerate(seasons, 1):
         print(f"\n[{i}/{total}] Season {season_label(year)}")
 
-        # Step 1: get clubs for this season
         clubs = scrape_season_clubs(year)
         if not clubs:
-            print(f"  ⚠  No clubs found for {year}, skipping")
+            print(f"  ⚠  No clubs found, skipping")
             continue
-        print(f"  {len(clubs)} clubs found")
+        print(f"  {len(clubs)} clubs")
         save_season_clubs(con, year, clubs)
 
-        # Step 2: scrape each club's squad
         for j, club in enumerate(clubs, 1):
             if already_scraped(con, year, club["tm_id"]):
-                print(f"  [{j}/{len(clubs)}] {club['name']} — already done, skipping")
+                print(f"  [{j}/{len(clubs)}] {club['name']} — skipped")
                 continue
 
-            print(f"  [{j}/{len(clubs)}] {club['name']} …", end=" ", flush=True)
+            print(f"  [{j}/{len(clubs)}] {club['name']} …", flush=True)
             try:
                 players = scrape_squad(club, year)
-                save_squad(con, year, club["tm_id"], players)
-                print(f"{len(players)} players")
             except Exception as e:
-                print(f"ERROR: {e}")
-                # Don't mark as scraped so it can be retried
+                print(f"    Squad fetch error: {e}")
+                continue
+
+            new_profiles = 0
+            for k, p in enumerate(players, 1):
+                if not profile_already_fetched(con, p["tm_id"]):
+                    print(f"    [{k}/{len(players)}] {p['name']} … ", end="", flush=True)
+                    try:
+                        positions = scrape_player_positions(p["profile_url"])
+                    except Exception as e:
+                        print(f"ERROR: {e}")
+                        positions = []
+                    save_player_and_positions(con, p, positions)
+                    pos_str = ", ".join(positions) if positions else "no position"
+                    print(f"→ {pos_str}")
+                    new_profiles += 1
+                else:
+                    print(f"    [{k}/{len(players)}] {p['name']} — cached")
+                    con.execute(
+                        "INSERT OR IGNORE INTO players (tm_id, name) VALUES (?, ?)",
+                        (p["tm_id"], p["name"])
+                    )
+                save_squad_entry(con, year, club["tm_id"], p["tm_id"])
+
+            con.commit()
+            mark_scraped(con, year, club["tm_id"])
+            print(f"  ✓ {club['name']}: {len(players)} players ({new_profiles} new profiles)")
 
     con.close()
 
-    # Summary
     con = sqlite3.connect(DB_PATH)
-    n_players  = con.execute("SELECT COUNT(*) FROM players").fetchone()[0]
-    n_entries  = con.execute("SELECT COUNT(*) FROM squad_entries").fetchone()[0]
-    n_seasons  = con.execute("SELECT COUNT(*) FROM seasons").fetchone()[0]
+    n_players = con.execute("SELECT COUNT(*) FROM players").fetchone()[0]
+    n_entries = con.execute("SELECT COUNT(*) FROM squad_entries").fetchone()[0]
+    n_seasons = con.execute("SELECT COUNT(*) FROM seasons").fetchone()[0]
+    n_pos     = con.execute("SELECT COUNT(DISTINCT player_id) FROM player_positions").fetchone()[0]
     con.close()
 
-    print(f"\n✓ Done — {n_seasons} seasons, {n_players} unique players, {n_entries} squad entries")
+    print(f"\n✓ Done — {n_seasons} seasons, {n_players} players, {n_entries} squad entries")
+    print(f"  {n_pos} players with position data")
     print(f"  Database: {DB_PATH}")
 
 

@@ -15,9 +15,10 @@ export default function SetupScreen({ setup, onUpdate, onStart }) {
       <header className="setup-header">
         <div className="setup-title">
           <span className="title-num">34</span>
-          <span className="title-dash">–</span>
+          <span className="title-dash">—</span>
           <span className="title-num">0</span>
         </div>
+        <div className="title-rule" />
         <p className="setup-tagline">Stell dein ultimatives Bundesliga-XI zusammen</p>
       </header>
 
@@ -124,12 +125,12 @@ export default function SetupScreen({ setup, onUpdate, onStart }) {
           </div>
         </section>
 
-        <button className="btn btn-primary btn-lg start-btn" onClick={onStart}>
+        <button className="start-btn" onClick={onStart}>
           Draft starten →
         </button>
 
         <footer className="setup-footer">
-          <span>Inspiriert von 82-0.com</span>
+          <span>Inspiriert von 38-0.app/game</span>
         </footer>
       </div>
     </div>
