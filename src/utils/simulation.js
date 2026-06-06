@@ -134,7 +134,18 @@ export function simulateFullLeague(slots) {
     }
   }
 
-  // Number player's 34 matches in simulation order
+  // Re-order into Hinrunde (first 17) then Rückrunde (return fixtures),
+  // so the same opponent never appears back-to-back.
+  {
+    const seen = new Set();
+    const h1 = [], h2 = [];
+    for (const m of playerMatches) {
+      const opp = m.home === 'Deine 11' ? m.away : m.home;
+      if (!seen.has(opp)) { seen.add(opp); h1.push(m); }
+      else h2.push(m);
+    }
+    playerMatches.splice(0, playerMatches.length, ...h1, ...h2);
+  }
   playerMatches.forEach((m, i) => { m.day = i + 1; });
 
   // Generate per-player events and aggregate season stats
