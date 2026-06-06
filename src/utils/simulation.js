@@ -7,6 +7,12 @@ function poisson(lambda) {
   return k - 1;
 }
 
+// Box-Muller: mean-0 Gaussian with given sigma
+function gauss(sigma) {
+  const u = 1 - Math.random();
+  return sigma * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+}
+
 // ── Player event simulation ───────────────────────────────────────────────────
 
 const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, SS:22, ST:32 };
@@ -83,8 +89,13 @@ export function simulateFullLeague(slots) {
   const attStr = Math.min(95, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3));
   const defStr = Math.min(95, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35));
 
+  // Each team gets a season-form offset (σ=6) so the table shuffles each run.
+  // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
   const teams = [
-    ...LEAGUE_TEAMS.map(t => ({ ...t, att: t.strength, def: t.strength })),
+    ...LEAGUE_TEAMS.map(t => {
+      const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(6))));
+      return { ...t, att: eff, def: eff };
+    }),
     { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true },
   ];
   const n = teams.length; // 18
