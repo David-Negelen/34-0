@@ -299,8 +299,8 @@ def main():
     con = sqlite3.connect(DB_PATH)
     init_db(con)
 
-    # 2025/26 down to 2010/11  (16 seasons)
-    seasons = list(range(2025, 2009, -1))
+    # 2025/26 down to 2004/05  (22 seasons)
+    seasons = list(range(2025, 2003, -1))
     total = len(seasons)
 
     for i, year in enumerate(seasons, 1):
