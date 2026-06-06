@@ -42,8 +42,8 @@ HEADERS = {
     "Referer": "https://www.transfermarkt.de/",
 }
 
-DELAY = 2.0
-RETRY_DELAY = 30.0
+DELAY = 2.5
+RETRY_DELAY = 45.0
 
 
 # ── Database ──────────────────────────────────────────────────────────────────
@@ -112,22 +112,24 @@ def init_db(con: sqlite3.Connection):
 session = requests.Session()
 session.headers.update(HEADERS)
 
-def fetch(url: str, retries: int = 3) -> BeautifulSoup:
+def fetch(url: str, retries: int = 5) -> BeautifulSoup:
     for attempt in range(retries):
         try:
             time.sleep(DELAY)
-            r = session.get(url, timeout=20)
-            if r.status_code in (429, 503):
-                print(f"    Rate-limited ({r.status_code}), waiting {RETRY_DELAY}s …")
-                time.sleep(RETRY_DELAY)
+            r = session.get(url, timeout=30)
+            if r.status_code in (429, 502, 503):
+                wait = RETRY_DELAY * (attempt + 1)
+                print(f"    Rate-limited ({r.status_code}), waiting {wait:.0f}s …")
+                time.sleep(wait)
                 continue
             r.raise_for_status()
             return BeautifulSoup(r.text, "lxml")
         except requests.RequestException as e:
             if attempt == retries - 1:
                 raise
-            print(f"    Error: {e}, retrying ({attempt+1}/{retries}) …")
-            time.sleep(DELAY * 3)
+            wait = DELAY * (3 ** (attempt + 1))
+            print(f"    Error: {e}, retrying ({attempt+1}/{retries}) in {wait:.0f}s …")
+            time.sleep(wait)
     raise RuntimeError(f"Failed to fetch {url}")
 
 
