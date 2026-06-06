@@ -9,13 +9,12 @@ function poisson(lambda) {
 
 // ── Match simulation ──────────────────────────────────────────────────────────
 
-// Simulate a single match between two teams.
-// Home advantage baked in: +0.18 goals/game for host.
-// Strength scale matches LEAGUE_TEAMS (55–90) and squad overall (typically 70–90).
-function simulateMatch(hStr, aStr) {
-  const diff = (hStr - aStr) * 0.013;
-  const lambdaH = Math.max(0.25, 1.30 + 0.18 + diff);
-  const lambdaA = Math.max(0.25, 1.30 - 0.18 - diff);
+// Simulate a single match with separate attack/defense ratings.
+// lambdaH is driven by home attack vs away defense; lambdaA vice-versa.
+// Home advantage baked in as +0.18 / -0.18.
+function simulateMatch(hAtt, hDef, aAtt, aDef) {
+  const lambdaH = Math.max(0.25, 1.30 + 0.18 + (hAtt - aDef) * 0.013);
+  const lambdaA = Math.max(0.25, 1.30 - 0.18 + (aAtt - hDef) * 0.013);
   return { hg: poisson(lambdaH), ag: poisson(lambdaA) };
 }
 
@@ -51,12 +50,14 @@ const LEAGUE_TEAMS = [
 //   playerMatches — [{day, home, away, hg, ag}, ...] for "Dein XI"'s 34 games
 export function simulateFullLeague(slots) {
   const ratings = calcSquadRatings(slots);
-  // Map squad overall (typically 70–90) onto the same strength scale as LEAGUE_TEAMS.
-  const playerStrength = Math.min(95, Math.max(50, ratings.overall ?? 72));
+  // Separate attack/defense strengths derived from positional ratings.
+  // att drives goals scored; def drives goals conceded.
+  const attStr = Math.min(95, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3));
+  const defStr = Math.min(95, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35));
 
   const teams = [
-    ...LEAGUE_TEAMS,
-    { name: 'Dein XI', strength: playerStrength, isPlayer: true },
+    ...LEAGUE_TEAMS.map(t => ({ ...t, att: t.strength, def: t.strength })),
+    { name: 'Dein XI', att: attStr, def: defStr, isPlayer: true },
   ];
   const n = teams.length; // 18
   const playerIdx = n - 1;
@@ -80,7 +81,7 @@ export function simulateFullLeague(slots) {
   const playerMatches = [];
 
   for (const [hi, ai] of fixtures) {
-    const { hg, ag } = simulateMatch(teams[hi].strength, teams[ai].strength);
+    const { hg, ag } = simulateMatch(teams[hi].att, teams[hi].def, teams[ai].att, teams[ai].def);
 
     if (hg > ag) { stats[hi].W++; stats[ai].L++; }
     else if (hg < ag) { stats[hi].L++; stats[ai].W++; }
