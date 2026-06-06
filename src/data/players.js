@@ -5,7 +5,7 @@ export const CLUBS = {
   'Borussia Dortmund': { color: '#FDE100', text: '#000' },
   'Bayer 04 Leverkusen': { color: '#E32221', text: '#000' },
   'RB Leipzig': { color: '#001E62', text: '#DD041B' },
-  'Borussia Mönchengladbach': { color: '#111111', text: '#fff' },
+  'Borussia Mönchengladbach': { color: '#00A551', text: '#fff' },
   'Eintracht Frankfurt': { color: '#E1000F', text: '#000' },
   'VfB Stuttgart': { color: '#E32221', text: '#fff' },
   'SC Freiburg': { color: '#E32221', text: '#000' },

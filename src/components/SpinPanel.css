@@ -39,6 +39,21 @@
 
 .spin-animating {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+@keyframes slot-tick {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.spin-animating .spin-season,
+.spin-animating .spin-club-anim {
+  animation: slot-tick 0.07s ease-out both;
+  display: inline-block;
 }
 
 .spin-club-anim {

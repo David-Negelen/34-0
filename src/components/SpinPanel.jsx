@@ -17,6 +17,7 @@ import './SpinPanel.css';
 
 const SPIN_FRAMES = 16;
 const SPIN_DELAYS = [60,60,70,80,90,110,130,155,175,200,240,270,310,350,390,440];
+const ANIM_SEASONS = ['2015-16','2016-17','2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25','2025-26'];
 
 function shuffle(arr) {
   const a = [...arr];
@@ -40,7 +41,6 @@ export default function SpinPanel({
   const openSlots = getOpenSlots(slots);
   const allClubs = getClubsInDb(PLAYERS);
 
-  const allSeasons = [...new Set(PLAYERS.flatMap(p => p.seasons.map(s => s.season)))].sort();
 
   const [phase, setPhase] = useState('idle');
   // idle | animating | spun | picking | slot-choice
@@ -77,14 +77,15 @@ export default function SpinPanel({
     );
     const seasonFrames = Array.from({ length: SPIN_FRAMES }, (_, i) =>
       i === SPIN_FRAMES - 1
-        ? (result?.season ?? allSeasons[0])
-        : allSeasons[Math.floor(Math.random() * allSeasons.length)]
+        ? (result?.season ?? ANIM_SEASONS[ANIM_SEASONS.length - 1])
+        : ANIM_SEASONS[Math.floor(Math.random() * ANIM_SEASONS.length)]
     );
 
     let idx = 0;
     function next() {
       setDisplayedClub(clubFrames[idx]);
-      setDisplayedSeason(seasonFrames[idx]);
+      // season reel runs at half speed for slot-machine stagger
+      if (idx % 2 === 0 || idx === SPIN_FRAMES - 1) setDisplayedSeason(seasonFrames[idx]);
       idx++;
       if (idx < frames.length) {
         animRef.current = setTimeout(next, SPIN_DELAYS[idx - 1]);
@@ -218,8 +219,8 @@ export default function SpinPanel({
 
         {phase === 'animating' && (
           <div className="spin-animating">
-            <span className="spin-season pulsing">{displayedSeason}</span>
-            <span className="spin-club-anim pulsing">{displayedClub}</span>
+            <span key={displayedSeason} className="spin-season">{displayedSeason}</span>
+            <span key={displayedClub} className="spin-club-anim">{displayedClub}</span>
           </div>
         )}
 
