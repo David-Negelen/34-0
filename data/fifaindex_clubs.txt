@@ -1,0 +1,38 @@
+# Bundesliga clubs — fifaindex.com team IDs
+# Format: {id}-{slug}   (one per line, # = comment)
+# Find the ID+slug from the URL at https://fifaindex.com/teams/
+# Example: https://fifaindex.com/teams/21-bayern-munchen/fc26/ → 21-bayern-munchen
+
+# ── Current / recent Bundesliga ──
+21-bayern-munchen
+22-borussia-dortmund
+32-bayer-leverkusen
+112172-rb-leipzig
+23-borussia-mgladbach
+# ??-eintracht-frankfurt
+# ??-vfb-stuttgart
+# ??-sc-freiburg
+# ??-tsg-hoffenheim
+# ??-vfl-wolfsburg
+# ??-union-berlin
+# ??-werder-bremen
+# ??-fc-augsburg
+# ??-fc-koln
+# ??-hamburger-sv
+# ??-fsv-mainz-05
+# ??-fc-st-pauli
+# ??-fc-heidenheim
+
+# ── Historical clubs ──
+# ??-fc-schalke-04
+# ??-hertha-bsc
+# ??-hannover-96
+# ??-fc-nurnberg
+# ??-arminia-bielefeld
+# ??-fc-ingolstadt-04
+# ??-sc-paderborn-07
+# ??-sv-darmstadt-98
+# ??-fortuna-dusseldorf
+# ??-holstein-kiel
+# ??-spvgg-greuther-furth
+# ??-vfl-bochum
