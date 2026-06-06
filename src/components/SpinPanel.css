@@ -129,6 +129,63 @@
   flex: 1;
 }
 
+/* ── Manual picker ── */
+.manual-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--border);
+}
+
+.manual-picker-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.manual-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.manual-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+}
+
+.manual-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.manual-input:focus { border-color: var(--red); }
+.manual-input:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.manual-sep {
+  font-size: 16px;
+  color: var(--text-muted);
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.manual-load-btn {
+  align-self: flex-start;
+}
+
 .candidates-header {
   display: flex;
   align-items: center;
