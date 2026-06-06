@@ -23,18 +23,17 @@
 }
 
 .title-num {
-  font-size: 88px;
+  font-size: 108px;
   font-weight: 900;
   color: #f0f0f0;
-  letter-spacing: -5px;
+  letter-spacing: -6px;
 }
 
 .title-dash {
-  font-size: 88px;
+  font-size: 108px;
   font-weight: 900;
   color: #E32221;
-  margin: 0 6px;
-  letter-spacing: -5px;
+  letter-spacing: -6px;
 }
 
 .title-rule {
@@ -46,7 +45,7 @@
 
 .setup-tagline {
   color: #666;
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 0.4px;
 }
 
@@ -66,7 +65,7 @@
 }
 
 .setup-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 3.5px;
   text-transform: uppercase;
@@ -81,12 +80,12 @@
 }
 
 .formation-btn {
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 5px;
   border: 1px solid #2a2a2a;
   background: #141414;
   color: #777;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   transition: border-color 0.12s ease, color 0.12s ease;
@@ -210,7 +209,7 @@
 }
 
 .diff-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   color: #bbb;
 }
@@ -220,7 +219,7 @@
 }
 
 .diff-sub {
-  font-size: 10px;
+  font-size: 11px;
   color: #555;
   line-height: 1.4;
 }
@@ -271,7 +270,7 @@
 }
 
 .opt-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   color: #bbb;
 }
@@ -281,7 +280,7 @@
 }
 
 .opt-sub {
-  font-size: 10px;
+  font-size: 11px;
   color: #555;
   line-height: 1.4;
 }
@@ -294,9 +293,9 @@
 .start-btn {
   display: block;
   width: 100%;
-  padding: 18px;
+  padding: 20px;
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 2.5px;
   text-transform: uppercase;
@@ -331,7 +330,7 @@
 
 /* ── Responsive ── */
 @media (max-width: 500px) {
-  .title-num, .title-dash { font-size: 64px; letter-spacing: -3px; }
+  .title-num, .title-dash { font-size: 76px; letter-spacing: -4px; }
   .diff-cards { grid-template-columns: 1fr; }
   .pitch-mini { height: 200px; }
 }

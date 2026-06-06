@@ -15,11 +15,9 @@ export default function SetupScreen({ setup, onUpdate, onStart }) {
       <header className="setup-header">
         <div className="setup-title">
           <span className="title-num">34</span>
-          <span className="title-dash">—</span>
+          <span className="title-dash">-</span>
           <span className="title-num">0</span>
         </div>
-        <div className="title-rule" />
-        <p className="setup-tagline">Stell dein ultimatives Bundesliga-XI zusammen</p>
       </header>
 
       <div className="setup-body">
@@ -117,8 +115,8 @@ export default function SetupScreen({ setup, onUpdate, onStart }) {
               className={`opt-card ${ratingMode === 'prime' ? 'selected' : ''}`}
               onClick={() => onUpdate({ ratingMode: 'prime' })}
             >
-              <span className="opt-name">Karrierehoch</span>
-              <span className="opt-sub">Jeder Spieler auf seinem Karrierehöhepunkt</span>
+              <span className="opt-name">Prime</span>
+              <span className="opt-sub">Jeder Spieler in seiner Prime</span>
             </button>
           </div>
         </section>
