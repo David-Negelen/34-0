@@ -2,13 +2,13 @@
 export const SLOT_COMPAT = {
   GK: ['GK'],
   RB: ['RB', 'CB'],
-  CB: ['CB', 'RB', 'LB', 'DM'],
+  CB: ['CB', 'RB', 'LB'],
   LB: ['LB', 'CB'],
   DM: ['DM', 'CM'],
   CM: ['CM', 'DM', 'AM'],
-  AM: ['AM', 'CM', 'SS', 'RW', 'LW'],
-  RW: ['RW', 'LW', 'AM'],
-  LW: ['LW', 'RW', 'AM'],
+  AM: ['AM', 'CM', 'SS'],
+  RW: ['RW', 'LW'],
+  LW: ['LW', 'RW'],
   SS: ['SS', 'ST', 'AM'],
   ST: ['ST', 'SS'],
 };
