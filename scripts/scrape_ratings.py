@@ -17,6 +17,7 @@ import time
 import re
 import sys
 import unicodedata
+import difflib
 from pathlib import Path
 
 try:
@@ -151,10 +152,23 @@ def fetch(url: str, retries: int = 3) -> BeautifulSoup | None:
 
 # ── Name normalisation ─────────────────────────────────────────────────────────
 
+# Characters that don't decompose via NFD — map them explicitly
+_TRANSLIT = str.maketrans({
+    'ı': 'i', 'İ': 'I',          # Turkish dotless i
+    'ø': 'o', 'Ø': 'O',          # Danish/Norwegian
+    'ł': 'l', 'Ł': 'L',          # Polish
+    'đ': 'd', 'Đ': 'D',          # South Slavic
+    'ð': 'd', 'Ð': 'D',          # Icelandic
+    'æ': 'ae', 'Æ': 'AE',        # Danish
+})
+
 def normalize(name: str) -> str:
+    name = name.replace("ß", "ss").replace("ẞ", "ss")
+    name = name.translate(_TRANSLIT)
     nfd = unicodedata.normalize("NFD", name)
     ascii_only = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
-    return re.sub(r"[^a-z ]", "", ascii_only.lower()).strip()
+    spaced = ascii_only.replace("-", " ").replace(".", " ")
+    return re.sub(r" +", " ", re.sub(r"[^a-z ]", "", spaced.lower())).strip()
 
 def name_score(a: str, b: str) -> float:
     na, nb = normalize(a), normalize(b)
@@ -163,8 +177,11 @@ def name_score(a: str, b: str) -> float:
     ta, tb = set(na.split()), set(nb.split())
     if not ta or not tb:
         return 0.0
-    # use min so "Robert Lewandowski" still matches "Robert Lewandowski-Perkovic"
-    return len(ta & tb) / min(len(ta), len(tb))
+    token_score = len(ta & tb) / min(len(ta), len(tb))
+    if token_score >= 0.80:
+        return token_score
+    # Fuzzy fallback: catches transliteration differences (e.g. Tymoschuk/Tymoshchuk)
+    return max(token_score, difflib.SequenceMatcher(None, na, nb).ratio())
 
 
 # ── Clubs file ─────────────────────────────────────────────────────────────────
@@ -190,13 +207,9 @@ def load_clubs() -> list[tuple[int, str]]:
 
 def parse_team_page(soup: BeautifulSoup) -> list[dict]:
     """
-    Extract players from a fifaindex team page.
-    Returns [{"name": str, "fi_player_id": int|None, "ovr": int}]
-
-    fifaindex table layout (each <tr>):
-      # | Name (link) | Country | Position | Age | OVR | POT | Contract | Value | Wage
-    OVR and POT are rendered as coloured badge spans.
-    We take the FIRST badge number per row → OVR.
+    Extract players from a fifaindex team page (Tailwind/React build).
+    Player links: /de/spieler/{id}-{slug}/{game}
+    OVR: first <td> with class containing 'font-bold font-heading' in each row.
     """
     players = []
     seen: set[str] = set()
@@ -205,7 +218,7 @@ def parse_team_page(soup: BeautifulSoup) -> list[dict]:
         if row.find("th"):
             continue
 
-        player_link = row.select_one("a[href*='/players/']")
+        player_link = row.select_one("a[href*='/spieler/']")
         if not player_link:
             continue
 
@@ -215,22 +228,16 @@ def parse_team_page(soup: BeautifulSoup) -> list[dict]:
         seen.add(name)
 
         href = player_link.get("href", "")
-        m = re.search(r"/players/(\d+)-", href)
+        m = re.search(r"/spieler/(\d+)-", href)
         fi_player_id = int(m.group(1)) if m else None
 
-        # First badge-style span with a 2-digit number → OVR
+        # First stat <td> (font-bold font-heading) → OVR
         ovr = None
-        for span in row.select("span"):
-            t = span.get_text(strip=True)
-            if re.fullmatch(r"[5-9]\d", t):
-                ovr = int(t)
-                break
-
-        # Fallback: scan <td> text values
-        if ovr is None:
-            for td in row.find_all("td"):
+        for td in row.find_all("td"):
+            cls = " ".join(td.get("class", []))
+            if "font-bold" in cls and "font-heading" in cls:
                 t = td.get_text(strip=True)
-                if re.fullmatch(r"[5-9]\d", t):
+                if re.fullmatch(r"\d{2}", t):
                     ovr = int(t)
                     break
 
@@ -289,7 +296,7 @@ def run(con: sqlite3.Connection):
             if already:
                 continue
 
-            url = f"{BASE}/teams/{fi_club_id}-{fi_slug}/{game_slug}/"
+            url = f"{BASE}/de/teams/{fi_club_id}-{fi_slug}/{game_slug}/"
             label = f"{season_year}-{str(season_year + 1)[-2:]}"
             print(f"  {game_slug:7s} ({label}) … ", end="", flush=True)
 
@@ -298,6 +305,11 @@ def run(con: sqlite3.Connection):
             except Exception as e:
                 print(f"ERROR: {e}")
                 continue
+
+            if DEBUG and soup:
+                dump = ROOT / "data" / "debug_page.html"
+                dump.write_text(soup.prettify(), encoding="utf-8")
+                print(f"    [debug] HTML saved to {dump}")
 
             if soup is None:
                 print("404 – club not in this edition, skipped")
