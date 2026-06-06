@@ -17,7 +17,7 @@ ROOT = Path(__file__).parent.parent
 DB_PATH = ROOT / "bundesliga_draft.db"
 OUT_PATH = ROOT / "src" / "data" / "players.js"
 
-MIN_YEAR = 2015  # cap: 2015-16 and later
+MIN_YEAR = 2007  # earliest season in DB
 
 POSITION_MAP = {
     "Torwart":               "GK",
@@ -103,7 +103,7 @@ CLUBS_META = {
     "VfL Bochum":               {"color": "#005CA8", "text": "#fff"},
 }
 
-PLACEHOLDER_RATING = 75
+PLACEHOLDER_RATING = 50
 
 
 def slugify(name: str) -> str:

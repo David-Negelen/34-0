@@ -269,19 +269,22 @@ def run(con: sqlite3.Connection):
         norm_exact[key] = tm_id
         norm_list.append((name, tm_id, key))
 
-    THRESHOLD = 0.80
+    THRESHOLD          = 0.80   # confident match
+    FALLBACK_THRESHOLD = 0.55   # close result — use but accept some noise
 
     def find_tm_id(scraped_name: str) -> tuple[int | None, float]:
         key = normalize(scraped_name)
         if key in norm_exact:
             return norm_exact[key], 1.0
         best_id, best_score = None, 0.0
-        for _, tm_id, nk in norm_list:
-            s = name_score(scraped_name, _)
+        for raw_name, tm_id, nk in norm_list:
+            s = name_score(scraped_name, raw_name)
             if s > best_score:
                 best_score = s
                 best_id = tm_id
-        return (best_id if best_score >= THRESHOLD else None), best_score
+        if best_score >= FALLBACK_THRESHOLD:
+            return best_id, best_score
+        return None, best_score
 
     games = list(GAME_SLUG_TO_YEAR.items())   # newest first
 
@@ -331,6 +334,8 @@ def run(con: sqlite3.Connection):
                         (tm_id, season_year, p["ovr"])
                     )
                     matched += 1
+                    if DEBUG and score < THRESHOLD:
+                        print(f"    ~ close match: {p['name']!r} (score={score:.2f})")
                 else:
                     unmatched += 1
                     if DEBUG:
