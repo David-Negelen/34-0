@@ -5,3 +5,4 @@ dist/
 .env.*
 CLAUDE.md
 bundesliga_draft.db-journal
+data/fifaindex_session.txt

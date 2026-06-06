@@ -30,19 +30,10 @@ DB_PATH    = ROOT / "bundesliga_draft.db"
 CLUBS_FILE = ROOT / "data" / "fifaindex_clubs.txt"
 BASE       = "https://fifaindex.com"
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Referer": "https://fifaindex.com/",
-}
+SESSION_FILE = ROOT / "data" / "fifaindex_session.txt"
 
-DELAY       = 2.5
-RETRY_DELAY = 60.0
+DELAY       = 1.5
+RETRY_DELAY = 30.0
 
 # game slug → season start year  (aligns with squad_entries.season_year)
 GAME_SLUG_TO_YEAR: dict[str, int] = {
@@ -95,32 +86,66 @@ def init_db(con: sqlite3.Connection):
     con.commit()
 
 
-# ── HTTP ───────────────────────────────────────────────────────────────────────
+# ── Session (loaded in main) ───────────────────────────────────────────────────
 
-session = requests.Session()
-session.headers.update(HEADERS)
+def load_session() -> requests.Session:
+    """Read user_agent + full cookie string from SESSION_FILE."""
+    values: dict[str, str] = {}
+    if SESSION_FILE.exists():
+        for line in SESSION_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.split("#")[0].strip()
+            if "=" in line:
+                k, _, v = line.partition("=")
+                values[k.strip()] = v.strip().strip("'\"")
 
-def fetch(url: str, retries: int = 4) -> BeautifulSoup | None:
+    ua = values.get("user_agent", "")
+    cookie_str = values.get("cookies", "")
+
+    if not ua or ua == "PASTE_HERE" or not cookie_str or cookie_str == "PASTE_FULL_COOKIE_HEADER_HERE":
+        sys.exit(
+            f"\nFill in {SESSION_FILE} before running.\n"
+            "  user_agent  →  Chrome console: navigator.userAgent\n"
+            "  cookies     →  Network tab > any fifaindex request > Request Headers > Cookie"
+        )
+
+    sess = requests.Session()
+    sess.headers.update({
+        "User-Agent": ua,
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Referer": "https://fifaindex.com/",
+    })
+    # Parse "name=value; name2=value2; …" cookie header
+    for part in cookie_str.split(";"):
+        part = part.strip()
+        if "=" in part:
+            name, _, val = part.partition("=")
+            sess.cookies.set(name.strip(), val.strip(), domain="fifaindex.com")
+    return sess
+
+
+session: requests.Session | None = None   # set by main()
+
+
+def fetch(url: str, retries: int = 3) -> BeautifulSoup | None:
     """Returns None on 404. Raises on persistent errors."""
     for attempt in range(retries):
         try:
             time.sleep(DELAY)
-            r = session.get(url, timeout=30)
+            r = session.get(url, timeout=20)
             if r.status_code == 404:
                 return None
             if r.status_code in (403, 429, 502, 503):
                 wait = RETRY_DELAY * (attempt + 1)
-                print(f"    Rate-limited ({r.status_code}), waiting {wait:.0f}s …")
+                print(f"    Blocked ({r.status_code}), waiting {wait:.0f}s …")
                 time.sleep(wait)
                 continue
             r.raise_for_status()
             return BeautifulSoup(r.text, "lxml")
-        except requests.RequestException as e:
+        except Exception as e:
             if attempt == retries - 1:
                 raise
-            wait = DELAY * (3 ** attempt)
-            print(f"    Error: {e}, retrying in {wait:.0f}s …")
-            time.sleep(wait)
+            print(f"    Error: {e}, retrying …")
     raise RuntimeError(f"Failed: {url}")
 
 
@@ -314,15 +339,17 @@ def run(con: sqlite3.Connection):
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
+    global session
+
     if not DB_PATH.exists():
         sys.exit(f"DB not found: {DB_PATH}")
     if not CLUBS_FILE.exists():
         sys.exit(
             f"Clubs file not found: {CLUBS_FILE}\n"
-            "Create it with one club per line, e.g.:  21-bayern-munchen\n"
-            "Find club IDs at https://fifaindex.com/teams/"
+            "Add entries like:  21-bayern-munchen"
         )
 
+    session = load_session()
     con = sqlite3.connect(DB_PATH, timeout=60)
     init_db(con)
     run(con)

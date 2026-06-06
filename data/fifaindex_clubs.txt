@@ -9,30 +9,36 @@
 32-bayer-leverkusen
 112172-rb-leipzig
 23-borussia-mgladbach
-# ??-eintracht-frankfurt
-# ??-vfb-stuttgart
-# ??-sc-freiburg
-# ??-tsg-hoffenheim
-# ??-vfl-wolfsburg
-# ??-union-berlin
-# ??-werder-bremen
-# ??-fc-augsburg
-# ??-fc-koln
-# ??-hamburger-sv
-# ??-fsv-mainz-05
-# ??-fc-st-pauli
-# ??-fc-heidenheim
+1824-eintracht-frankfurt
+36-vfb-stuttgart
+25-sc-freiburg
+10029-tsg-1899-hoffenheim
+175-vfl-wolfsburg
+1831-1-fc-union-berlin
+38-werder-bremen
+100409-fc-augsburg
+31-1-fc-koln
+28-hamburger-sv
+169-1-fsv-mainz-05
+110329-fc-st-pauli
+111235-1-fc-heidenheim
 
 # ── Historical clubs ──
-# ??-fc-schalke-04
-# ??-hertha-bsc
-# ??-hannover-96
-# ??-fc-nurnberg
-# ??-arminia-bielefeld
-# ??-fc-ingolstadt-04
-# ??-sc-paderborn-07
-# ??-sv-darmstadt-98
-# ??-fortuna-dusseldorf
-# ??-holstein-kiel
-# ??-spvgg-greuther-furth
-# ??-vfl-bochum
+34-fc-schalke-04
+166-hertha-bsc
+485-hannover-96
+171-1-fc-nurnberg
+159-arminia-bielefeld
+111239-fc-ingolstadt-04
+10030-sc-paderborn-07
+110502-sv-darmstadt-98
+110636-fortuna-dusseldorf
+576-holstein-kiel
+165-spvgg-greuther-furth
+160-vfl-bochum
+29-1-fc-kaiserslautern
+110500-eintracht-braunschweig
+162-energie-cottbus
+27-hansa-rostock
+1825-msv-duisburg
+1832-karlsruher-sc
