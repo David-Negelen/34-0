@@ -31,6 +31,7 @@ export default function SpinPanel({
   selectedSlotId,   // managed by parent (position-first mode)
   onPlayerPlaced,
   onReroll,
+  onClearSlot,
 }) {
   const { draftMode, showRatings, ratingMode } = setup;
   const openSlots = getOpenSlots(slots);
@@ -196,7 +197,11 @@ export default function SpinPanel({
         {deadSpin && (
           <div className="spin-dead fade-in">
             <span className="spin-dead-title">Kein Treffer</span>
-            <span className="spin-dead-sub">Keine passenden Spieler für offene Positionen</span>
+            <span className="spin-dead-sub">
+              {draftMode === 'position-first' && selectedSlotId !== null
+                ? `Kein passender Spieler für diese Position – anderen Slot wählen oder nochmal drehen.`
+                : 'Keine passenden Spieler für offene Positionen.'}
+            </span>
           </div>
         )}
       </div>
@@ -226,9 +231,16 @@ export default function SpinPanel({
         )}
 
         {(deadSpin || (phase === 'spun' && candidates.length === 0)) && (
-          <button className="btn btn-secondary" onClick={() => doSpin(false)}>
-            Nochmal versuchen (gratis)
-          </button>
+          <>
+            <button className="btn btn-secondary" onClick={() => doSpin(false)}>
+              Nochmal versuchen (gratis)
+            </button>
+            {draftMode === 'position-first' && selectedSlotId !== null && onClearSlot && (
+              <button className="btn btn-ghost" onClick={() => { resetToIdle(); onClearSlot(); }}>
+                Andere Position wählen
+              </button>
+            )}
+          </>
         )}
       </div>
 

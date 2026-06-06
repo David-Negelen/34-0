@@ -5,4 +5,3 @@ dist/
 .env.*
 CLAUDE.md
 bundesliga_draft.db-journal
-bundesliga_draft.db

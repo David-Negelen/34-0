@@ -1,8 +1,24 @@
 import { shortName } from './playerUtils';
 import { getAchievements } from './simulation';
 
+// Cross-browser rounded rect (ctx.roundRect not available in all browsers)
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y,     x + w, y + r,     r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x,     y + h, x,     y + h - r, r);
+  ctx.lineTo(x,     y + r);
+  ctx.arcTo(x,     y,     x + r, y,         r);
+  ctx.closePath();
+}
+
 // Generate a canvas image of the completed XI + result
-export function generateResultCanvas(slots, result, formation) {
+// achievements: pre-computed array from result state (includes squad-based ones)
+export function generateResultCanvas(slots, result, formation, achievements) {
   const W = 540, H = 720;
   const canvas = document.createElement('canvas');
   canvas.width = W * 2;
@@ -11,6 +27,7 @@ export function generateResultCanvas(slots, result, formation) {
   ctx.scale(2, 2);
 
   const { W: wins, D: draws, L: losses, GF: gf, GA: ga, pts } = result;
+  const achs = achievements ?? getAchievements(result);
 
   // ── Background ────────────────────────────────────────────────────────────
   ctx.fillStyle = '#0a0a0a';
@@ -32,25 +49,20 @@ export function generateResultCanvas(slots, result, formation) {
   const px = 18, py = 72, pw = W - 36, ph = 330;
 
   ctx.fillStyle = '#1a4a1a';
-  ctx.beginPath();
-  ctx.roundRect(px, py, pw, ph, 6);
+  roundRect(ctx, px, py, pw, ph, 6);
   ctx.fill();
 
   // pitch lines
   ctx.strokeStyle = 'rgba(255,255,255,0.18)';
   ctx.lineWidth = 1;
 
-  // outer border
   ctx.strokeRect(px + 2, py + 2, pw - 4, ph - 4);
-  // centre line
   ctx.beginPath(); ctx.moveTo(px, py + ph / 2); ctx.lineTo(px + pw, py + ph / 2); ctx.stroke();
-  // centre circle
   ctx.beginPath(); ctx.arc(px + pw / 2, py + ph / 2, 30, 0, Math.PI * 2); ctx.stroke();
 
-  // penalty boxes
   const boxW = 180, boxH = 50;
-  ctx.strokeRect(px + (pw - boxW) / 2, py + 2,       boxW, boxH); // top
-  ctx.strokeRect(px + (pw - boxW) / 2, py + ph - boxH - 2, boxW, boxH); // bottom
+  ctx.strokeRect(px + (pw - boxW) / 2, py + 2,           boxW, boxH);
+  ctx.strokeRect(px + (pw - boxW) / 2, py + ph - boxH - 2, boxW, boxH);
 
   // ── Player tokens ─────────────────────────────────────────────────────────
   slots.forEach(slot => {
@@ -66,7 +78,7 @@ export function generateResultCanvas(slots, result, formation) {
     ctx.stroke();
 
     ctx.fillStyle = slot.player ? '#fff' : 'rgba(255,255,255,0.4)';
-    ctx.font = `bold 9px system-ui, sans-serif`;
+    ctx.font = 'bold 9px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const label = slot.player ? shortName(slot.player.name).slice(0, 8) : slot.label;
@@ -84,7 +96,7 @@ export function generateResultCanvas(slots, result, formation) {
   y += 22;
 
   ctx.fillStyle = '#e3000b';
-  ctx.font = `bold 28px system-ui, sans-serif`;
+  ctx.font = 'bold 28px system-ui, sans-serif';
   ctx.fillText(`${pts} pts`, 20, y);
   y += 8;
 
@@ -94,13 +106,12 @@ export function generateResultCanvas(slots, result, formation) {
   y += 42;
 
   // ── Achievements ──────────────────────────────────────────────────────────
-  const achievements = getAchievements({ W: wins, D: draws, L: losses, GF: gf, GA: ga, pts });
-  if (achievements.length) {
+  if (achs.length) {
     ctx.fillStyle = '#f0f0f0';
     ctx.font = 'bold 13px system-ui, sans-serif';
     ctx.fillText('Achievements', 20, y);
     y += 18;
-    achievements.forEach(a => {
+    achs.forEach(a => {
       ctx.fillStyle = '#f5c518';
       ctx.font = 'bold 12px system-ui, sans-serif';
       ctx.fillText(`★ ${a.label}`, 20, y);

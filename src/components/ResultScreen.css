@@ -309,8 +309,121 @@
   color: var(--red);
 }
 
+/* ── League table ── */
+.league-table {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 0 8px;
+  overflow: hidden;
+}
+
+.lt-player-pos {
+  margin-left: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--red);
+  letter-spacing: 0.5px;
+}
+
+.lt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px 5px 13px;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+
+.lt-row-player {
+  background: rgba(227, 0, 11, 0.07);
+}
+
+.lt-zone-champion  { border-left-color: var(--gold); }
+.lt-zone-ucl       { border-left-color: var(--blue); }
+.lt-zone-uel       { border-left-color: #00bcd4; }
+.lt-zone-playoff   { border-left-color: #ff9800; }
+.lt-zone-relegated { border-left-color: var(--red); }
+.lt-zone-mid       { border-left-color: transparent; }
+
+.lt-pos {
+  width: 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lt-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.lt-row-player .lt-name {
+  font-weight: 700;
+  color: var(--red);
+}
+
+.lt-wdl {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+.lt-gd {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lt-pts {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lt-row-player .lt-pts {
+  color: var(--red);
+}
+
+.lt-legend {
+  display: flex;
+  gap: 14px;
+  padding: 10px 16px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.lt-legend-item {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding-left: 8px;
+  border-left: 2px solid transparent;
+}
+
+.lt-legend-champion  { border-left-color: var(--gold); color: var(--gold); }
+.lt-legend-ucl       { border-left-color: var(--blue); color: var(--blue); }
+.lt-legend-uel       { border-left-color: #00bcd4; color: #00bcd4; }
+.lt-legend-relegated { border-left-color: var(--red); color: var(--red); }
+
 @media (max-width: 800px) {
   .result-body    { flex-direction: column; padding: 16px; }
   .result-left    { width: 100%; position: static; }
   .result-pitch-wrap { height: 340px; }
+  .lt-wdl, .lt-gd { display: none; }
 }

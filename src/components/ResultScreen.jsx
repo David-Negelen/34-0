@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import FormationBoard from './FormationBoard';
 import { generateResultCanvas, shareResult, downloadResult } from '../utils/export';
-import { buildShareText } from '../utils/simulation';
+import { buildShareText, simulateLeagueTable } from '../utils/simulation';
 import './ResultScreen.css';
 
 const ACHIEVEMENT_ICONS = {
-  perfect:    '🏆',
-  invincible: '🛡️',
-  champions:  '🥇',
-  top4:       '🎯',
-  tophalf:    '📊',
-  midtable:   '✅',
-  relegated:  '📉',
-  derby:      '💀',
-  century:    '⚡',
-  fortress:   '🔒',
-  dominant:   '💪',
+  perfect:        '🏆',
+  invincible:     '🛡️',
+  champions:      '🥇',
+  top4:           '🎯',
+  europe:         '🌍',
+  tophalf:        '📊',
+  midtable:       '✅',
+  relegated:      '📉',
+  derby:          '💀',
+  century:        '⚡',
+  goalflood:      '⚽',
+  fortress:       '🔒',
+  bunker:         '🏰',
+  dominant:       '💪',
+  mister_draw:    '🤝',
+  one_club:       '❤️',
+  all_stars:      '⭐',
 };
 
 export default function ResultScreen({ state, onPlayAgain }) {
@@ -23,6 +29,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
   const { slots } = draft;
   const { W, D, L, GF, GA, pts, achievements } = result;
   const [sharing, setSharing] = useState(false);
+  const [leagueTable] = useState(() => simulateLeagueTable(result));
 
   const GD = GF - GA;
   const topAchievement = achievements?.[0];
@@ -30,7 +37,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
   async function handleShare() {
     setSharing(true);
     try {
-      const canvas = generateResultCanvas(slots, result, setup.formation);
+      const canvas = generateResultCanvas(slots, result, setup.formation, achievements);
       const text = buildShareText(slots, result, setup.formation);
       await shareResult(canvas, text);
     } catch (e) {
@@ -43,7 +50,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
   async function handleDownload() {
     setSharing(true);
     try {
-      const canvas = generateResultCanvas(slots, result, setup.formation);
+      const canvas = generateResultCanvas(slots, result, setup.formation, achievements);
       await downloadResult(canvas);
     } catch (e) {
       console.error('Download failed:', e);
@@ -144,6 +151,9 @@ export default function ResultScreen({ state, onPlayAgain }) {
             </div>
           </div>
 
+          {/* League table */}
+          <LeagueTable table={leagueTable} />
+
           {/* Additional achievements */}
           {achievements?.length > 1 && (
             <div className="result-extra-achievements">
@@ -179,6 +189,54 @@ export default function ResultScreen({ state, onPlayAgain }) {
           </div>
 
         </div>
+      </div>
+    </div>
+  );
+}
+
+function tableZone(pos) {
+  if (pos === 1)  return 'champion';
+  if (pos <= 4)   return 'ucl';
+  if (pos <= 6)   return 'uel';
+  if (pos === 16) return 'playoff';
+  if (pos >= 17)  return 'relegated';
+  return 'mid';
+}
+
+function LeagueTable({ table }) {
+  if (!table?.length) return null;
+  const playerRow = table.find(r => r.isPlayer);
+
+  return (
+    <div className="league-table">
+      <div className="result-section-label" style={{ padding: '0 16px', marginBottom: 10 }}>
+        Liga-Tabelle — Simulierte Saison
+        {playerRow && (
+          <span className="lt-player-pos">
+            {playerRow.pos}. Platz
+          </span>
+        )}
+      </div>
+      {table.map(row => {
+        const gd = row.GF - row.GA;
+        return (
+          <div
+            key={row.name}
+            className={`lt-row lt-zone-${tableZone(row.pos)} ${row.isPlayer ? 'lt-row-player' : ''}`}
+          >
+            <span className="lt-pos">{row.pos}</span>
+            <span className="lt-name">{row.name}</span>
+            <span className="lt-wdl">{row.W}-{row.D}-{row.L}</span>
+            <span className="lt-gd">{gd > 0 ? '+' : ''}{gd}</span>
+            <span className="lt-pts">{row.pts}</span>
+          </div>
+        );
+      })}
+      <div className="lt-legend">
+        <span className="lt-legend-item lt-legend-champion">Meister</span>
+        <span className="lt-legend-item lt-legend-ucl">Champions League</span>
+        <span className="lt-legend-item lt-legend-uel">Europa League</span>
+        <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
       </div>
     </div>
   );

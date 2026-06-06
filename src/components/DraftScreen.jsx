@@ -28,7 +28,7 @@ export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
       const season = simulateSeason(updatedSlots);
-      setResult({ ...season, achievements: getAchievements(season) });
+      setResult({ ...season, achievements: getAchievements(season, updatedSlots) });
     }
   }
 
@@ -88,6 +88,7 @@ export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
             selectedSlotId={selectedSlotId}
             onPlayerPlaced={handlePlayerPlaced}
             onReroll={useReroll}
+            onClearSlot={() => setSelectedSlotId(null)}
           />
         </div>
 
