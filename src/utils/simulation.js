@@ -7,6 +7,41 @@ function poisson(lambda) {
   return k - 1;
 }
 
+// ── Player event simulation ───────────────────────────────────────────────────
+
+const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, SS:22, ST:32 };
+const ASSIST_WEIGHTS = { GK:0, RB:5, CB:2, LB:5, DM:8, CM:16, AM:22, RW:14, LW:14, SS:8, ST:6 };
+const CARD_WEIGHTS   = { GK:2, RB:8, CB:10, LB:8, DM:12, CM:9, AM:6, RW:5, LW:5, SS:5, ST:8 };
+
+function weightedPick(pool, weights) {
+  const total = pool.reduce((s, p) => s + (weights[p.slotType] ?? 1), 0);
+  let r = Math.random() * total;
+  for (const p of pool) {
+    r -= weights[p.slotType] ?? 1;
+    if (r <= 0) return p;
+  }
+  return pool[pool.length - 1];
+}
+
+function generateMatchEvents(goalsFor, squad) {
+  const events = [];
+  for (let i = 0; i < goalsFor; i++) {
+    const scorer   = weightedPick(squad, SCORE_WEIGHTS);
+    const hasAssist = Math.random() < 0.62;
+    const pool2    = squad.filter(p => p !== scorer);
+    const assister = hasAssist && pool2.length ? weightedPick(pool2, ASSIST_WEIGHTS) : null;
+    events.push({ type: 'goal', minute: Math.floor(Math.random() * 90) + 1, scorer, assister });
+  }
+  const yellows = poisson(1.7);
+  for (let i = 0; i < yellows; i++) {
+    events.push({ type: 'yellow', minute: Math.floor(Math.random() * 90) + 1, player: weightedPick(squad, CARD_WEIGHTS) });
+  }
+  if (Math.random() < 0.055) {
+    events.push({ type: 'red', minute: Math.floor(Math.random() * 80) + 10, player: weightedPick(squad, CARD_WEIGHTS) });
+  }
+  return events.sort((a, b) => a.minute - b.minute);
+}
+
 // ── Match simulation ──────────────────────────────────────────────────────────
 
 // Simulate a single match with separate attack/defense ratings.
@@ -21,23 +56,23 @@ function simulateMatch(hAtt, hDef, aAtt, aDef) {
 // ── League teams ──────────────────────────────────────────────────────────────
 
 const LEAGUE_TEAMS = [
-  { name: 'Bayern München',           strength: 86 },
-  { name: 'Borussia Dortmund',         strength: 80 },
-  { name: 'Bayer 04 Leverkusen',       strength: 79 },
-  { name: 'RB Leipzig',                strength: 77 },
-  { name: 'Eintracht Frankfurt',       strength: 72 },
-  { name: 'VfB Stuttgart',             strength: 71 },
-  { name: 'SC Freiburg',               strength: 68 },
-  { name: 'Borussia Mönchengladbach',  strength: 67 },
-  { name: 'TSG Hoffenheim',            strength: 66 },
-  { name: 'VfL Wolfsburg',             strength: 65 },
-  { name: 'Werder Bremen',             strength: 63 },
-  { name: '1. FC Union Berlin',        strength: 62 },
-  { name: 'FC Augsburg',               strength: 61 },
-  { name: '1. FSV Mainz 05',           strength: 60 },
-  { name: 'FC St. Pauli',              strength: 58 },
-  { name: '1. FC Köln',                strength: 57 },
-  { name: '1. FC Heidenheim',          strength: 55 },
+  { name: 'FC Bayern München',          strength: 88 },
+  { name: 'Borussia Dortmund',          strength: 81 },
+  { name: 'Bayer 04 Leverkusen',        strength: 79 },
+  { name: 'VfB Stuttgart',              strength: 74 },
+  { name: 'TSG 1899 Hoffenheim',        strength: 67 },
+  { name: 'SC Freiburg',                strength: 68 },
+  { name: 'Eintracht Frankfurt',        strength: 72 },
+  { name: 'Borussia Mönchengladbach',   strength: 66 },
+  { name: 'FC Augsburg',                strength: 62 },
+  { name: '1. FSV Mainz 05',            strength: 61 },
+  { name: '1. FC Union Berlin',         strength: 62 },
+  { name: 'Hamburger SV',               strength: 64 },
+  { name: '1. FC Köln',                 strength: 63 },
+  { name: 'Werder Bremen',              strength: 63 },
+  { name: 'FC Schalke 04',              strength: 60 },
+  { name: 'SV Elversberg',              strength: 56 },
+  { name: 'SC Paderborn 07',            strength: 54 },
 ];
 
 // ── Full league simulation ────────────────────────────────────────────────────
@@ -45,9 +80,9 @@ const LEAGUE_TEAMS = [
 // Simulates all 18×17 = 306 fixtures as proper head-to-head matches.
 // Each goal scored is the opponent's conceded goal — GD is consistent.
 // Returns { result, table, playerMatches } where:
-//   result        — { W, D, L, GF, GA, pts, ratings } for "Dein XI"
+//   result        — { W, D, L, GF, GA, pts, ratings } for "Deine 11"
 //   table         — sorted 18-row array with pos field
-//   playerMatches — [{day, home, away, hg, ag}, ...] for "Dein XI"'s 34 games
+//   playerMatches — [{day, home, away, hg, ag}, ...] for "Deine 11"'s 34 games
 export function simulateFullLeague(slots) {
   const ratings = calcSquadRatings(slots);
   // Separate attack/defense strengths derived from positional ratings.
@@ -98,6 +133,27 @@ export function simulateFullLeague(slots) {
   // Number player's 34 matches in simulation order
   playerMatches.forEach((m, i) => { m.day = i + 1; });
 
+  // Generate per-player events and aggregate season stats
+  const squad = slots
+    .filter(s => s.player)
+    .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label }));
+
+  const statsMap = {};
+  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, goals: 0, assists: 0, yellows: 0, reds: 0 }; });
+
+  playerMatches.forEach(m => {
+    const goalsFor = m.home === 'Deine 11' ? m.hg : m.ag;
+    const events = squad.length ? generateMatchEvents(goalsFor, squad) : [];
+    m.events = events;
+    events.forEach(e => {
+      if (e.type === 'goal')   { statsMap[e.scorer.name].goals++; if (e.assister) statsMap[e.assister.name].assists++; }
+      if (e.type === 'yellow') { statsMap[e.player.name].yellows++; }
+      if (e.type === 'red')    { statsMap[e.player.name].reds++; }
+    });
+  });
+
+  const playerStats = squad.map(p => statsMap[p.name]);
+
   // Build sorted table
   const table = teams.map((t, i) => ({
     name: t.name,
@@ -120,7 +176,7 @@ export function simulateFullLeague(slots) {
     ratings,
   };
 
-  return { result, table, playerMatches };
+  return { result, table, playerMatches, playerStats };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────

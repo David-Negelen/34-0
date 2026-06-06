@@ -72,7 +72,7 @@ export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries 
 // German position label mapping
 const LABEL_DE = {
   GK: 'TW', RB: 'RV', CB: 'IV', LB: 'LV',
-  DM: 'DM', CM: 'ZM', AM: 'OM',
+  DM: 'ZDM', CM: 'ZM', AM: 'ZOM',
   RW: 'RF', LW: 'LF', SS: 'HS', ST: 'ST',
   RM: 'RM', LM: 'LM', RWB: 'RAV', LWB: 'LAV',
 };

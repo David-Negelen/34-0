@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import FormationBoard from './FormationBoard';
 import { generateResultCanvas, shareResult, downloadResult } from '../utils/export';
 import { buildShareText } from '../utils/simulation';
@@ -28,7 +28,7 @@ const ACHIEVEMENT_ICONS = {
 export default function ResultScreen({ state, onPlayAgain }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
-  const { W, D, L, GF, GA, pts, achievements, table, playerMatches } = result;
+  const { W, D, L, GF, GA, pts, achievements, table, playerMatches, playerStats } = result;
   const [sharing, setSharing] = useState(false);
   const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
 
@@ -162,6 +162,9 @@ export default function ResultScreen({ state, onPlayAgain }) {
               {/* League table */}
               <LeagueTable table={table} />
 
+              {/* Player statistics */}
+              <PlayerStats stats={playerStats} />
+
               {/* Additional achievements */}
               {achievements?.length > 1 && (
                 <div className="result-extra-achievements">
@@ -210,33 +213,43 @@ function MatchLog({ matches, onDone }) {
   const listRef = useRef(null);
   const doneCalled = useRef(false);
 
-  useEffect(() => {
-    if (visible >= matches.length) {
-      if (!doneCalled.current) {
-        doneCalled.current = true;
-        onDone?.();
+  const items = useMemo(() => {
+    const out = [];
+    for (const m of matches) {
+      const isHome = m.home === 'Deine 11';
+      const own = isHome ? m.hg : m.ag;
+      const opp = isHome ? m.ag : m.hg;
+      const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
+      out.push({ kind: 'match', m, res, isHome, own, opp });
+      for (const ev of (m.events ?? [])) {
+        if (ev.type === 'goal') out.push({ kind: 'goal', ev });
       }
+    }
+    return out;
+  }, [matches]);
+
+  useEffect(() => {
+    if (visible >= items.length) {
+      if (!doneCalled.current) { doneCalled.current = true; onDone?.(); }
       return;
     }
-    const t = setTimeout(() => setVisible(v => v + 1), 150);
+    const delay = items[visible]?.kind === 'goal' ? 220 : 400;
+    const t = setTimeout(() => setVisible(v => v + 1), delay);
     return () => clearTimeout(t);
-  }, [visible, matches.length]);
+  }, [visible, items]);
 
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-    }
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [visible]);
 
-  let runW = 0, runD = 0, runL = 0, runGF = 0, runGA = 0;
+  let runW = 0, runD = 0, runL = 0, runGF = 0, runGA = 0, matchCount = 0;
   for (let i = 0; i < visible; i++) {
-    const m = matches[i];
-    const isHome = m.home === 'Deine 11';
-    const own = isHome ? m.hg : m.ag;
-    const opp = isHome ? m.ag : m.hg;
+    if (items[i].kind !== 'match') continue;
+    matchCount++;
+    const { own, opp, res } = items[i];
     runGF += own; runGA += opp;
-    if (own > opp) runW++;
-    else if (own < opp) runL++;
+    if (res === 'w') runW++;
+    else if (res === 'l') runL++;
     else runD++;
   }
   const runPts = runW * 3 + runD;
@@ -246,27 +259,67 @@ function MatchLog({ matches, onDone }) {
       <div className="ml-header">
         <span className="result-section-label" style={{ margin: 0 }}>Spieltagsergebnisse</span>
         <span className="ml-running">
-          {visible}/{matches.length} · <strong>{runPts} Pkt</strong> · {runW}S {runD}U {runL}N · {runGF}:{runGA}
+          {matchCount}/{matches.length} · <strong>{runPts} Pkt</strong> · {runW}S {runD}U {runL}N · {runGF}:{runGA}
         </span>
       </div>
       <div className="ml-list" ref={listRef}>
-        {matches.map((m, i) => {
+        {items.map((item, i) => {
           if (i >= visible) return null;
-          const isHome = m.home === 'Deine 11';
-          const own = isHome ? m.hg : m.ag;
-          const opp = isHome ? m.ag : m.hg;
-          const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
-          return (
-            <div key={i} className={`ml-row ml-row-${res}`}>
-              <span className="ml-day">{i + 1}.</span>
-              <span className={`ml-team ml-home${isHome ? ' ml-player' : ''}`}>{m.home}</span>
-              <span className="ml-score">{m.hg}:{m.ag}</span>
-              <span className={`ml-team ml-away${!isHome ? ' ml-player' : ''}`}>{m.away}</span>
-              <span className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</span>
-            </div>
-          );
+          if (item.kind === 'match') {
+            const { m, res, isHome } = item;
+            return (
+              <div key={i} className={`ml-row ml-row-${res}`}>
+                <span className="ml-day">{m.day}.</span>
+                <span className={`ml-team ml-home${isHome ? ' ml-player' : ''}`}>{m.home}</span>
+                <span className="ml-score">{m.hg}:{m.ag}</span>
+                <span className={`ml-team ml-away${!isHome ? ' ml-player' : ''}`}>{m.away}</span>
+                <span className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</span>
+              </div>
+            );
+          }
+          if (item.kind === 'goal') {
+            const { ev } = item;
+            return (
+              <div key={i} className="ml-event">
+                <span className="ml-event-icon">⚽</span>
+                <span className="ml-event-minute">{ev.minute}'</span>
+                <span className="ml-event-scorer">{ev.scorer.name}</span>
+                {ev.assister && <span className="ml-event-assist">↗ {ev.assister.name}</span>}
+              </div>
+            );
+          }
+          return null;
         })}
       </div>
+    </div>
+  );
+}
+
+function PlayerStats({ stats }) {
+  if (!stats?.length) return null;
+  const sorted = [...stats].sort((a, b) => b.goals - a.goals || b.assists - a.assists);
+  return (
+    <div className="player-stats-card">
+      <div className="result-section-label" style={{ padding: '0 16px', marginBottom: 8 }}>Spielerstatistiken</div>
+      <div className="ps-header">
+        <span className="ps-name"></span>
+        <span className="ps-col" title="Tore">⚽</span>
+        <span className="ps-col" title="Vorlagen">🅰️</span>
+        <span className="ps-col" title="Gelbe Karten">🟨</span>
+        <span className="ps-col" title="Rote Karten">🟥</span>
+      </div>
+      {sorted.map(p => (
+        <div key={p.name} className={`ps-row ${p.goals > 0 ? 'ps-row-scorer' : ''}`}>
+          <span className="ps-name">
+            <span className="ps-pos">{labelDE(p.slotLabel)}</span>
+            <span className="ps-pname">{p.name}</span>
+          </span>
+          <span className="ps-col">{p.goals  || '—'}</span>
+          <span className="ps-col">{p.assists || '—'}</span>
+          <span className="ps-col">{p.yellows || '—'}</span>
+          <span className={`ps-col ${p.reds > 0 ? 'ps-red' : ''}`}>{p.reds || '—'}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -315,6 +368,7 @@ function LeagueTable({ table }) {
         <span className="lt-legend-item lt-legend-ucl">Champions League</span>
         <span className="lt-legend-item lt-legend-uel">Europa League</span>
         <span className="lt-legend-item lt-legend-conference">Conference League</span>
+        <span className="lt-legend-item lt-legend-playoff">Relegation</span>
         <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
       </div>
     </div>

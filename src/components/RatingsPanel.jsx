@@ -2,7 +2,7 @@ import { calcSquadRatings } from '../utils/ratingCalc';
 import './RatingsPanel.css';
 
 function RatingBar({ label, value }) {
-  const pct = value ? Math.max(0, Math.min(100, ((value - 60) / 40) * 100)) : 0;
+  const pct = value ? Math.max(0, Math.min(100, value)) : 0;
   return (
     <div className="rating-row">
       <span className="rating-row-label">{label}</span>
