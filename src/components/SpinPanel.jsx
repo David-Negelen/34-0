@@ -253,7 +253,7 @@ export default function SpinPanel({
 
       {/* ── Action buttons ── */}
       <div className="spin-actions">
-        {(phase === 'idle' || (phase === 'spun' && !deadSpin) || phase === 'picking') && (
+        {(phase === 'idle' || (phase === 'spun' && !deadSpin)) && (
           <button
             className="btn btn-primary btn-lg spin-btn"
             onClick={() => doSpin(false)}
