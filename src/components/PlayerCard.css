@@ -1,0 +1,68 @@
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+
+.player-card:hover:not(.disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--red);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(227, 0, 11, 0.15);
+}
+
+.player-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.player-rating {
+  flex-shrink: 0;
+}
+
+.player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.player-nat {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.player-pos-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  letter-spacing: 0.3px;
+}

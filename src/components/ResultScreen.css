@@ -1,0 +1,316 @@
+.result-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.result-header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  flex-shrink: 0;
+}
+
+.result-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.result-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.result-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.result-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── Body ── */
+.result-body {
+  flex: 1;
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  gap: 24px;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.result-left {
+  width: 38%;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: 20px;
+}
+
+.result-pitch-wrap {
+  height: 420px;
+}
+
+.result-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.result-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* ── Primary achievement ── */
+.result-achievement-primary {
+  background: linear-gradient(135deg, rgba(245,197,24,0.12), rgba(245,197,24,0.04));
+  border: 1px solid rgba(245, 197, 24, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ach-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.ach-label {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--gold);
+}
+
+.ach-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Stats card ── */
+.result-stats-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.season-wdl {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.stat-pill-val {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.stat-pill-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.season-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.season-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.season-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.season-stat-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.season-stat-val.big {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--red);
+}
+
+/* ── League position bar ── */
+.league-position-bar {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.lp-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.lp-bar {
+  position: relative;
+  height: 8px;
+  background: var(--border-accent);
+  border-radius: 4px;
+  overflow: visible;
+  margin-bottom: 6px;
+}
+
+.lp-zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.lp-relegation { background: rgba(227, 0, 11, 0.4); left: 0; }
+.lp-midtable   { background: rgba(255,255,255,0.08); }
+.lp-europe     { background: rgba(33, 150, 243, 0.35); }
+.lp-title      { background: rgba(245, 197, 24, 0.5); border-radius: 0 4px 4px 0; }
+
+.lp-marker {
+  position: absolute;
+  top: -3px;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: var(--text);
+  border: 2px solid var(--bg-card);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.lp-key {
+  display: flex;
+  gap: 14px;
+  font-size: 10px;
+}
+
+.lp-key-item { color: var(--text-muted); }
+.lp-key-item.relegation { color: #e3000b; }
+.lp-key-item.europe     { color: var(--blue); }
+.lp-key-item.title      { color: var(--gold); }
+
+/* ── Extra achievements ── */
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ach-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 18px;
+}
+
+.ach-item-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ach-item-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Squad list ── */
+.result-squad-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+
+.squad-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.squad-row:last-child { border-bottom: none; }
+
+.squad-pos {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.squad-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.squad-rating {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--red);
+}
+
+@media (max-width: 800px) {
+  .result-body    { flex-direction: column; padding: 16px; }
+  .result-left    { width: 100%; position: static; }
+  .result-pitch-wrap { height: 340px; }
+}

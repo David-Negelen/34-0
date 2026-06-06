@@ -1,0 +1,112 @@
+.board-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.pitch {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  background: linear-gradient(
+    to bottom,
+    #1a4a1a 0%,   #1e5420 12.5%,
+    #1a4a1a 12.5%, #1e5420 25%,
+    #1a4a1a 25%,   #1e5420 37.5%,
+    #1a4a1a 37.5%, #1e5420 50%,
+    #1a4a1a 50%,   #1e5420 62.5%,
+    #1a4a1a 62.5%, #1e5420 75%,
+    #1a4a1a 75%,   #1e5420 87.5%,
+    #1a4a1a 87.5%, #1e5420 100%
+  );
+  border-radius: var(--radius-lg);
+  min-height: 380px;
+  overflow: hidden;
+}
+
+.pitch-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Slot tokens ── */
+.slot-token {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border: 2px solid transparent;
+  cursor: default;
+  transition: var(--transition);
+  padding: 0;
+  font-family: inherit;
+  z-index: 1;
+}
+
+.slot-empty {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.slot-filled {
+  background: #e3000b;
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.slot-selected {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.4);
+}
+
+.slot-clickable {
+  cursor: pointer;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.slot-clickable:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--gold);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.slot-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+.slot-player-name {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  text-align: center;
+  max-width: 46px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-rating {
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  opacity: 0.9;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 4px;
+  border-radius: 6px;
+  line-height: 1;
+}

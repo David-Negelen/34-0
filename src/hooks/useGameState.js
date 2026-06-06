@@ -1,0 +1,99 @@
+import { useReducer, useEffect } from 'react';
+import { FORMATIONS } from '../data/formations';
+
+const STORAGE_KEY = 'bundesliga_draft_v1';
+
+const REROLLS = { easy: 3, normal: 1, hard: 0 };
+
+const defaultSetup = {
+  formation: '4-3-3',
+  difficulty: 'normal',
+  showRatings: true,
+  draftMode: 'squad-first',
+  ratingMode: 'career',
+};
+
+const defaultState = {
+  phase: 'setup',     // 'setup' | 'draft' | 'result'
+  setup: defaultSetup,
+  draft: null,
+  result: null,
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return defaultState;
+}
+
+function buildSlots(formationKey) {
+  return FORMATIONS[formationKey].slots.map(s => ({ ...s, player: null }));
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+
+    case 'UPDATE_SETUP':
+      return { ...state, setup: { ...state.setup, ...action.payload } };
+
+    case 'START_DRAFT': {
+      const { setup } = state;
+      return {
+        ...state,
+        phase: 'draft',
+        draft: {
+          slots: buildSlots(setup.formation),
+          rerollsLeft: REROLLS[setup.difficulty],
+          filledCount: 0,
+        },
+        result: null,
+      };
+    }
+
+    case 'FILL_SLOT': {
+      const { slotId, player, displayRating } = action.payload;
+      const slots = state.draft.slots.map(s =>
+        s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
+      );
+      const filledCount = slots.filter(s => s.player !== null).length;
+      return { ...state, draft: { ...state.draft, slots, filledCount } };
+    }
+
+    case 'USE_REROLL':
+      return {
+        ...state,
+        draft: { ...state.draft, rerollsLeft: Math.max(0, state.draft.rerollsLeft - 1) },
+      };
+
+    case 'SET_RESULT':
+      return { ...state, phase: 'result', result: action.payload };
+
+    case 'RESET':
+      return { ...defaultState, setup: state.setup };
+
+    default:
+      return state;
+  }
+}
+
+export function useGameState() {
+  const [state, dispatch] = useReducer(reducer, null, loadState);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
+
+  const actions = {
+    updateSetup: payload => dispatch({ type: 'UPDATE_SETUP', payload }),
+    startDraft: () => dispatch({ type: 'START_DRAFT' }),
+    fillSlot: (slotId, player, displayRating) =>
+      dispatch({ type: 'FILL_SLOT', payload: { slotId, player, displayRating } }),
+    useReroll: () => dispatch({ type: 'USE_REROLL' }),
+    setResult: payload => dispatch({ type: 'SET_RESULT', payload }),
+    reset: () => dispatch({ type: 'RESET' }),
+  };
+
+  return { state, ...actions };
+}

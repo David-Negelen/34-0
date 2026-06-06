@@ -1,0 +1,165 @@
+.spin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+}
+
+.position-hint {
+  background: rgba(245, 197, 24, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.25);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--gold);
+  text-align: center;
+}
+
+/* ── Spin display box ── */
+.spin-display {
+  background: var(--bg-card);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.spin-idle {
+  text-align: center;
+}
+
+.spin-idle-label {
+  font-size: 15px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.spin-animating {
+  text-align: center;
+}
+
+.spin-club-anim {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.spin-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  width: 100%;
+}
+
+.spin-season {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.spin-club {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--club-color, var(--text));
+  line-height: 1.1;
+  text-shadow: 0 0 20px rgba(0,0,0,0.5);
+  /* fallback color if club-color is too dark */
+  text-stroke: 0.5px rgba(255,255,255,0.1);
+}
+
+/* Ensure dark club colors are readable */
+.spin-club {
+  -webkit-text-stroke: 0;
+  filter: brightness(1.3);
+}
+
+.spin-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.spin-dead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.spin-dead-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.spin-dead-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ── Actions ── */
+.spin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spin-btn {
+  flex: 1;
+}
+
+.reroll-btn {
+  font-size: 12px;
+}
+
+/* ── Candidate list ── */
+.candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.candidates-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.candidates-header h4 {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.no-candidates {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ── Slot choice ── */
+.slot-choice-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.slot-choice-btn {
+  min-width: 70px;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 12px 16px;
+}
