@@ -18,11 +18,17 @@ function gauss(sigma) {
 const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, SS:22, ST:32 };
 const ASSIST_WEIGHTS = { GK:0, RB:5, CB:2, LB:5, DM:8, CM:16, AM:22, RW:14, LW:14, SS:8, ST:6 };
 
+// Scale each player's weight by their rating relative to a baseline of 75.
+// A 90-rated player gets ~1.7x the baseline weight; a 60-rated player gets ~0.51x.
+function ratingFactor(rating) {
+  return Math.pow((rating ?? 75) / 75, 3);
+}
+
 function weightedPick(pool, weights) {
-  const total = pool.reduce((s, p) => s + (weights[p.slotType] ?? 1), 0);
+  const total = pool.reduce((s, p) => s + (weights[p.slotType] ?? 1) * ratingFactor(p.rating), 0);
   let r = Math.random() * total;
   for (const p of pool) {
-    r -= weights[p.slotType] ?? 1;
+    r -= (weights[p.slotType] ?? 1) * ratingFactor(p.rating);
     if (r <= 0) return p;
   }
   return pool[pool.length - 1];
@@ -160,7 +166,7 @@ export function simulateFullLeague(slots) {
   // Generate per-player events and aggregate season stats
   const squad = slots
     .filter(s => s.player)
-    .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label }));
+    .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
 
   const statsMap = {};
   squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0 }; });
