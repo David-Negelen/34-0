@@ -157,7 +157,18 @@ export function simulateFullLeague(slots, league = 'bl') {
   // Every team plays exactly once per round → player's 34 games come out in order.
   const hinRunde  = buildRoundRobinRounds(n);
   const ruckRunde = hinRunde.map(round => round.map(([h, a]) => [a, h]));
-  const allRounds = [...hinRunde, ...ruckRunde];
+
+  // Soft-sort matchdays so the player faces weaker opponents early and stronger ones later.
+  // Noise (σ=8) keeps it feeling natural — not perfectly predictable, but a clear trend.
+  const allRounds = [...hinRunde, ...ruckRunde]
+    .map(round => {
+      const pm     = round.find(([hi, ai]) => hi === playerIdx || ai === playerIdx);
+      const oppIdx = pm ? (pm[0] === playerIdx ? pm[1] : pm[0]) : -1;
+      const oppStr = oppIdx >= 0 ? teams[oppIdx].att : 70;
+      return { round, sortKey: oppStr + gauss(8) };
+    })
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .map(r => r.round);
 
   const playerMatches = [];
   const tableHistory  = [];
