@@ -15,7 +15,7 @@ function gauss(sigma) {
 
 // ── Player event simulation ───────────────────────────────────────────────────
 
-const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, SS:22, ST:32 };
+const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, SS:22, ST:22 };
 const ASSIST_WEIGHTS = { GK:0, RB:5, CB:2, LB:5, DM:8, CM:16, AM:22, RW:14, LW:14, SS:8, ST:6 };
 
 // Scale each player's weight by their rating relative to a baseline of 75.
