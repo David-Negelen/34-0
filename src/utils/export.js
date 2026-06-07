@@ -16,7 +16,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 export function generateResultCanvas(slots, result, formation, achievements) {
-  const W = 540, H = 740;
+  const W = 540, H = 800;
   const canvas = document.createElement('canvas');
   canvas.width  = W * 2;
   canvas.height = H * 2;
@@ -29,87 +29,149 @@ export function generateResultCanvas(slots, result, formation, achievements) {
   const restAch = achs.slice(1);
 
   // ── Background
-  ctx.fillStyle = '#0c0c0c';
+  const bgGrad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, H * 0.6, H);
+  bgGrad.addColorStop(0,   '#1c0404');
+  bgGrad.addColorStop(0.2, '#0f0f0f');
+  bgGrad.addColorStop(1,   '#080808');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
   // ── Header
-  ctx.fillStyle = '#e3000b';
-  ctx.fillRect(0, 0, W, 52);
+  const headerH = 72;
+  const hGrad = ctx.createLinearGradient(0, 0, W, 0);
+  hGrad.addColorStop(0,   '#b80007');
+  hGrad.addColorStop(0.5, '#e3000b');
+  hGrad.addColorStop(1,   '#b80007');
+  ctx.fillStyle = hGrad;
+  ctx.fillRect(0, 0, W, headerH);
+
+  // Stripe texture on header
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  for (let i = 0; i < W; i += 3) {
+    ctx.fillRect(i, 0, 1.5, headerH);
+  }
+
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle    = '#fff';
-  ctx.font         = 'bold 18px system-ui, sans-serif';
-  ctx.fillText('BUNDESLIGA DREAM XI', W / 2, 29);
-  ctx.fillStyle = 'rgba(255,255,255,0.68)';
-  ctx.font      = '11px system-ui, sans-serif';
-  ctx.fillText(formation, W / 2, 45);
+  ctx.font         = 'bold 19px system-ui, sans-serif';
+  ctx.fillText('BUNDESLIGA DREAM XI', W / 2, 36);
+  ctx.fillStyle = 'rgba(255,255,255,0.58)';
+  ctx.font      = '12px system-ui, sans-serif';
+  ctx.fillText(formation, W / 2, 56);
 
   // ── Pitch
-  const px = 16, py = 60, pw = W - 32, ph = 288;
+  const px = 16, py = headerH + 14, pw = W - 32, ph = 272;
+
+  ctx.save();
+  roundRect(ctx, px, py, pw, ph, 10);
+  ctx.clip();
 
   // Striped grass
-  for (let i = 0; i < 8; i++) {
-    ctx.fillStyle = i % 2 === 0 ? '#1e5421' : '#1b4e1e';
-    ctx.fillRect(px + i * (pw / 8), py, pw / 8, ph);
+  for (let i = 0; i < 9; i++) {
+    ctx.fillStyle = i % 2 === 0 ? '#1d5820' : '#1a521d';
+    ctx.fillRect(px + i * (pw / 9), py, pw / 9, ph);
   }
 
-  // Lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  // Field markings
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
   ctx.lineWidth   = 1;
-  ctx.strokeRect(px + 1, py + 1, pw - 2, ph - 2);
+
+  // Outer border
+  ctx.strokeRect(px + 2, py + 2, pw - 4, ph - 4);
+
+  // Center line
   ctx.beginPath(); ctx.moveTo(px, py + ph / 2); ctx.lineTo(px + pw, py + ph / 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(px + pw / 2, py + ph / 2, 32, 0, Math.PI * 2); ctx.stroke();
-  const bw = 160, bh = 50;
-  ctx.strokeRect(px + (pw - bw) / 2, py + 1,          bw, bh);
-  ctx.strokeRect(px + (pw - bw) / 2, py + ph - bh - 1, bw, bh);
+
+  // Center circle
+  ctx.beginPath(); ctx.arc(px + pw / 2, py + ph / 2, 34, 0, Math.PI * 2); ctx.stroke();
+
+  // Center spot
+  ctx.beginPath(); ctx.arc(px + pw / 2, py + ph / 2, 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fill();
+
+  // Penalty boxes
+  const bw = 158, bh = 52;
+  ctx.strokeRect(px + (pw - bw) / 2, py + 2, bw, bh);
+  ctx.strokeRect(px + (pw - bw) / 2, py + ph - bh - 2, bw, bh);
+
+  // Small boxes
+  const sbw = 78, sbh = 24;
+  ctx.strokeRect(px + (pw - sbw) / 2, py + 2, sbw, sbh);
+  ctx.strokeRect(px + (pw - sbw) / 2, py + ph - sbh - 2, sbw, sbh);
+
+  // Penalty spots
+  const spotX = px + pw / 2;
+  const spotOff = 46;
+  [[spotX, py + spotOff], [spotX, py + ph - spotOff]].forEach(([sx, sy]) => {
+    ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fill();
+  });
+
+  // Corner arcs
+  const ca = 10;
+  [[px, py], [px + pw, py], [px, py + ph], [px + pw, py + ph]].forEach(([cx, cy], i) => {
+    const aStart = [0, Math.PI, -Math.PI / 2, Math.PI / 2][i];
+    ctx.beginPath();
+    ctx.arc(cx, cy, ca, aStart, aStart + Math.PI / 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.stroke();
+  });
+
+  ctx.restore();
+
+  // Pitch outline
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth   = 1;
+  roundRect(ctx, px, py, pw, ph, 10);
+  ctx.stroke();
 
   // ── Player tokens
-  const TR = 16;
+  const TR = 17;
   slots.forEach(slot => {
     const tx = px + (slot.x / 100) * pw;
     const ty = py + (slot.y / 100) * ph;
 
     if (slot.player) {
-      ctx.shadowColor   = 'rgba(0,0,0,0.65)';
-      ctx.shadowBlur    = 8;
-      ctx.shadowOffsetY = 2;
+      ctx.shadowColor   = 'rgba(0,0,0,0.75)';
+      ctx.shadowBlur    = 10;
+      ctx.shadowOffsetY = 3;
       ctx.beginPath();
       ctx.arc(tx, ty, TR, 0, Math.PI * 2);
       ctx.fillStyle = '#e3000b';
       ctx.fill();
       ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.88)';
       ctx.lineWidth   = 1.5;
       ctx.stroke();
 
       ctx.fillStyle    = '#fff';
-      ctx.font         = 'bold 8px system-ui, sans-serif';
+      ctx.font         = 'bold 7.5px system-ui, sans-serif';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(shortName(slot.player.name).slice(0, 9), tx, ty);
+      ctx.fillText(shortName(slot.player.name).slice(0, 10), tx, ty);
 
-      // Rating badge
       const rating = slot.player.seasonRating ?? slot.player.primeRating;
       if (rating) {
-        const bx = tx - 11, by = ty + TR - 2;
-        roundRect(ctx, bx, by, 22, 12, 3);
-        ctx.fillStyle = '#0c0c0c';
+        const bx = tx - 12, by = ty + TR - 3;
+        roundRect(ctx, bx, by, 24, 13, 3);
+        ctx.fillStyle = '#0a0a0a';
         ctx.fill();
-        ctx.fillStyle    = rating >= 85 ? '#f5c518' : rating >= 78 ? '#7cfc9f' : '#bbb';
+        ctx.fillStyle    = rating >= 85 ? '#f5c518' : rating >= 78 ? '#7cfc9f' : '#aaa';
         ctx.font         = 'bold 8px system-ui, sans-serif';
         ctx.textBaseline = 'middle';
-        ctx.fillText(rating, tx, by + 6);
+        ctx.fillText(rating, tx, by + 6.5);
       }
     } else {
       ctx.beginPath();
       ctx.arc(tx, ty, TR, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)';
       ctx.lineWidth   = 1;
       ctx.stroke();
-      ctx.fillStyle    = 'rgba(255,255,255,0.28)';
-      ctx.font         = '8px system-ui, sans-serif';
+      ctx.fillStyle    = 'rgba(255,255,255,0.22)';
+      ctx.font         = '7px system-ui, sans-serif';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(slot.label, tx, ty);
@@ -119,53 +181,54 @@ export function generateResultCanvas(slots, result, formation, achievements) {
   ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
   // ── Stats card
-  let cy = py + ph + 12; // ~360
+  let cy = py + ph + 16;
 
-  roundRect(ctx, 16, cy, W - 32, 64, 8);
-  ctx.fillStyle = '#141414';
+  roundRect(ctx, 16, cy, W - 32, 80, 10);
+  ctx.fillStyle = '#111111';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
   ctx.lineWidth   = 1;
   ctx.stroke();
 
-  const cols  = [wins, draws, losses, pts];
-  const clbls = ['S', 'U', 'N', 'PTS'];
-  const ccols = ['#4ade80', '#888888', '#f87171', '#e3000b'];
-  const csecW = (W - 32) / 4;
+  const statVals  = [wins, draws, losses, pts];
+  const statLbls  = ['S', 'U', 'N', 'PTS'];
+  const statColors = ['#4ade80', '#888', '#f87171', '#e3000b'];
+  const secW      = (W - 32) / 4;
 
-  cols.forEach((v, i) => {
-    const sx = 16 + i * csecW + csecW / 2;
+  statVals.forEach((v, i) => {
+    const sx = 16 + i * secW + secW / 2;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle    = ccols[i];
-    ctx.font         = 'bold 26px system-ui, sans-serif';
-    ctx.fillText(v, sx, cy + 38);
+    ctx.fillStyle    = statColors[i];
+    ctx.font         = 'bold 32px system-ui, sans-serif';
+    ctx.fillText(v, sx, cy + 48);
     ctx.fillStyle = 'rgba(255,255,255,0.28)';
     ctx.font      = '9px system-ui, sans-serif';
-    ctx.fillText(clbls[i], sx, cy + 54);
+    ctx.fillText(statLbls[i], sx, cy + 64);
     if (i < 3) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
       ctx.lineWidth   = 1;
-      const lx = 16 + (i + 1) * csecW;
-      ctx.beginPath(); ctx.moveTo(lx, cy + 10); ctx.lineTo(lx, cy + 54); ctx.stroke();
+      const lx = 16 + (i + 1) * secW;
+      ctx.beginPath(); ctx.moveTo(lx, cy + 14); ctx.lineTo(lx, cy + 66); ctx.stroke();
     }
   });
 
-  cy += 76;
+  cy += 92;
+
   ctx.fillStyle    = 'rgba(255,255,255,0.22)';
   ctx.font         = '11px system-ui, sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(`${gf}:${ga} Tore   ·   ${pos}. Platz`, W / 2, cy);
-  cy += 14;
+  cy += 16;
 
   // ── Primary achievement
   if (topAch) {
-    cy += 10;
-    roundRect(ctx, 16, cy, W - 32, 60, 8);
-    ctx.fillStyle = '#161208';
+    cy += 12;
+    roundRect(ctx, 16, cy, W - 32, 64, 10);
+    ctx.fillStyle = '#130f02';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(245,197,24,0.4)';
+    ctx.strokeStyle = 'rgba(245,197,24,0.32)';
     ctx.lineWidth   = 1;
     ctx.stroke();
 
@@ -173,51 +236,43 @@ export function generateResultCanvas(slots, result, formation, achievements) {
     ctx.font         = 'bold 14px system-ui, sans-serif';
     ctx.textAlign    = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(`★  ${topAch.label}`, 26, cy + 26);
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText(`★  ${topAch.label}`, 28, cy + 28);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font      = '11px system-ui, sans-serif';
-    ctx.fillText(topAch.desc, 26, cy + 44);
-    cy += 68;
+    ctx.fillText(topAch.desc, 28, cy + 46);
+    cy += 74;
   }
 
   // ── Extra achievement chips
   if (restAch.length > 0) {
-    cy += 4;
+    cy += 6;
     let chipX = 16;
-
     restAch.forEach(a => {
-      ctx.font = 'bold 10px system-ui, sans-serif';
-      const text = `★ ${a.label}`;
-      const cw   = ctx.measureText(text).width + 18;
-
-      if (chipX + cw > W - 16) {
-        chipX = 16;
-        cy   += 28;
-      }
-
+      ctx.font      = '10px system-ui, sans-serif';
+      const text    = `★ ${a.label}`;
+      const cw      = ctx.measureText(text).width + 20;
+      if (chipX + cw > W - 16) { chipX = 16; cy += 28; }
       roundRect(ctx, chipX, cy, cw, 22, 5);
-      ctx.fillStyle   = '#181818';
+      ctx.fillStyle = '#191919';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth   = 1;
       ctx.stroke();
-
-      ctx.fillStyle    = 'rgba(255,255,255,0.55)';
+      ctx.fillStyle    = 'rgba(255,255,255,0.5)';
       ctx.textBaseline = 'middle';
       ctx.textAlign    = 'left';
-      ctx.fillText(text, chipX + 9, cy + 11);
-
+      ctx.fillText(text, chipX + 10, cy + 11);
       chipX += cw + 8;
     });
-    cy += 30;
+    cy += 28;
   }
 
   // ── Footer
-  ctx.fillStyle    = 'rgba(255,255,255,0.18)';
+  ctx.fillStyle    = 'rgba(255,255,255,0.16)';
   ctx.font         = '10px system-ui, sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('#BundesligaDraftXI', W / 2, H - 12);
+  ctx.fillText('34-0.app  ·  #BundesligaDraftXI', W / 2, H - 14);
 
   return canvas;
 }
