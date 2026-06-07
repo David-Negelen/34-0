@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 /* ── Header ── */
@@ -686,7 +687,7 @@
   .result-header-actions { gap: 6px; }
   .result-header-actions .btn { padding: 8px 14px; font-size: 13px; min-height: 40px; }
 
-  .result-body   { padding: 12px 0; gap: 14px; }
+  .result-body   { padding: 12px 10px; gap: 14px; }
   .result-pitch-wrap { height: 300px; }
 
   /* Match log: shorter on phones so it doesn't eat the whole screen */
@@ -726,7 +727,7 @@
 @media (max-width: 400px) {
   .result-header-inner { gap: 8px; }
   .result-title { font-size: 17px; }
-  .result-body  { padding: 10px 0; gap: 12px; }
+  .result-body  { padding: 10px 8px; gap: 12px; }
   .result-pitch-wrap { height: 260px; }
   .ml-list { height: 260px; }
   .stat-pill-val { font-size: 24px; }
