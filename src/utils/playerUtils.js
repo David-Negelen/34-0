@@ -67,7 +67,7 @@ export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries 
       const pool = getPlayersForClubSeason(players, club, season)
         .filter(p => !excludeIds.has(p.id));
       if (!pool.length) continue;
-      const avg = pool.reduce((s, p) => s + p.primeRating, 0) / pool.length;
+      const avg = pool.reduce((s, p) => s + (p.seasonRating ?? p.primeRating), 0) / pool.length;
       const weight = Math.exp((avg - WEIGHT_CENTER) / WEIGHT_TEMP);
       pairs.push({ club, season, pool, weight });
     }
