@@ -134,9 +134,9 @@ export function simulateFullLeague(slots, league = 'bl') {
   // Hidden OVR boost: rewards good drafts exponentially above 80.
   // 85 OVR → +11 (effective ~95, dominates); 80 and below → no boost.
   const overall  = ratings.overall ?? 75;
-  const ovrBoost = overall > 80 ? Math.pow(overall - 80, 1.5) : 0;
-  const attStr = Math.min(95, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
-  const defStr = Math.min(95, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
+  const ovrBoost = overall > 82 ? Math.pow(overall - 82, 1.5) : 0;
+  const attStr = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
+  const defStr = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
 
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
