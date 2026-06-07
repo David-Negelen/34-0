@@ -28,9 +28,10 @@ const ACHIEVEMENT_ICONS = {
 export default function ResultScreen({ state, onPlayAgain }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
-  const { W, D, L, GF, GA, pts, pos = 18, achievements, table, playerMatches, playerStats } = result;
+  const { W, D, L, GF, GA, pts, pos = 18, achievements, table, playerMatches, playerStats, tableHistory } = result;
   const [sharing, setSharing] = useState(false);
   const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
+  const [tableTab, setTableTab] = useState('table');
 
   const GD = GF - GA;
   const topAchievement = achievements?.[0];
@@ -156,8 +157,14 @@ export default function ResultScreen({ state, onPlayAgain }) {
                 </div>
               </div>
 
-              {/* League table */}
-              <LeagueTable table={table} />
+              {/* League table / Fever curve */}
+              <div>
+                <div className="table-tabs">
+                  <button className={`tab-btn${tableTab === 'table' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('table')}>Tabelle</button>
+                  <button className={`tab-btn${tableTab === 'curve' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('curve')}>Fieberkurve</button>
+                </div>
+                {tableTab === 'table' ? <LeagueTable table={table} /> : <FeverCurve tableHistory={tableHistory} />}
+              </div>
 
               {/* Player statistics */}
               <PlayerStats stats={playerStats} />
@@ -353,6 +360,89 @@ function LeagueTable({ table }) {
         <span className="lt-legend-item lt-legend-playoff">Relegation</span>
         <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
       </div>
+    </div>
+  );
+}
+
+function FeverCurve({ tableHistory }) {
+  if (!tableHistory?.length) return null;
+
+  const W = 460, H = 220;
+  const pL = 22, pR = 36, pT = 10, pB = 22;
+  const cW = W - pL - pR, cH = H - pT - pB;
+  const N = tableHistory.length;
+  const bandH = cH / 17;
+
+  const xi = i  => pL + (i       / (N - 1)) * cW;
+  const yp = p  => pT + ((p - 1) / 17)      * cH;
+
+  const teamNames = tableHistory[0].map(t => t.name);
+  const paths = teamNames.map(name => {
+    const positions = tableHistory.map(snap => snap.find(t => t.name === name)?.pos ?? 18);
+    return {
+      name,
+      isPlayer: name === 'Deine 11',
+      finalPos: positions[N - 1],
+      d: positions.map((p, i) => `${i === 0 ? 'M' : 'L'}${xi(i).toFixed(1)},${yp(p).toFixed(1)}`).join(' '),
+    };
+  });
+  const sorted = [...paths.filter(p => !p.isPlayer), ...paths.filter(p => p.isPlayer)];
+  const divX = xi(16.5);
+
+  return (
+    <div className="fever-curve-wrap">
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
+        {/* Zone bands */}
+        <rect x={pL} y={yp(1) - bandH / 2} width={cW} height={bandH}        fill="rgba(245,197,24,0.07)" />
+        <rect x={pL} y={yp(2) - bandH / 2} width={cW} height={3 * bandH}    fill="rgba(59,130,246,0.06)" />
+        <rect x={pL} y={yp(5) - bandH / 2} width={cW} height={2 * bandH}    fill="rgba(249,115,22,0.05)" />
+        <rect x={pL} y={yp(17) - bandH / 2} width={cW} height={2 * bandH}   fill="rgba(239,68,68,0.07)" />
+
+        {/* Hinrunde / Rückrunde divider */}
+        <line x1={divX} y1={pT} x2={divX} y2={pT + cH}
+          stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3,2" />
+        <text x={divX - 4} y={pT + 9} fill="rgba(255,255,255,0.25)" fontSize="6.5" textAnchor="end">H</text>
+        <text x={divX + 4} y={pT + 9} fill="rgba(255,255,255,0.25)" fontSize="6.5" textAnchor="start">R</text>
+
+        {/* Horizontal rules */}
+        {[1, 4, 6, 16, 18].map(p => (
+          <line key={p} x1={pL} y1={yp(p)} x2={pL + cW} y2={yp(p)}
+            stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+        ))}
+
+        {/* Y-axis labels */}
+        {[1, 4, 6, 10, 16, 18].map(p => (
+          <text key={p} x={pL - 4} y={yp(p) + 3}
+            fill="rgba(255,255,255,0.28)" fontSize="7" textAnchor="end">{p}</text>
+        ))}
+
+        {/* X-axis labels */}
+        {[1, 5, 10, 17, 20, 25, 30, 34].map(day => (
+          <text key={day} x={xi(day - 1)} y={H - 4}
+            fill="rgba(255,255,255,0.2)" fontSize="7" textAnchor="middle">{day}</text>
+        ))}
+
+        {/* Team lines */}
+        {sorted.map(({ name, d, isPlayer, finalPos }) => (
+          <g key={name}>
+            <path d={d} fill="none"
+              stroke={isPlayer ? '#e3000b' : 'rgba(255,255,255,0.09)'}
+              strokeWidth={isPlayer ? 2.5 : 1}
+              strokeLinejoin="round" />
+            {isPlayer && (
+              <>
+                <circle cx={xi(N - 1)} cy={yp(finalPos)} r="3.5" fill="#e3000b" />
+                <text x={xi(N - 1) + 6} y={yp(finalPos) + 3.5}
+                  fill="#e3000b" fontSize="9" fontWeight="bold">{finalPos}.</text>
+              </>
+            )}
+          </g>
+        ))}
+
+        {/* Border */}
+        <rect x={pL} y={pT} width={cW} height={cH}
+          fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      </svg>
     </div>
   );
 }

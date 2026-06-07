@@ -74,14 +74,28 @@ const LEAGUE_TEAMS = [
   { name: 'SC Paderborn 07',            strength: 54 },
 ];
 
+// ── Schedule builder ─────────────────────────────────────────────────────────
+
+// Standard polygon/circle algorithm: fix team 0, rotate teams 1..n-1.
+// Returns (n-1) rounds, each with n/2 [homeIdx, awayIdx] pairs.
+// n=18 → 17 rounds × 9 games; every team plays exactly once per round.
+function buildRoundRobinRounds(n) {
+  const rotating = Array.from({ length: n - 1 }, (_, i) => i + 1);
+  const rounds = [];
+  for (let r = 0; r < n - 1; r++) {
+    const round = [[0, rotating[0]]];
+    for (let i = 1; i < n / 2; i++) round.push([rotating[i], rotating[n - 1 - i]]);
+    rotating.unshift(rotating.pop());
+    rounds.push(round);
+  }
+  return rounds;
+}
+
 // ── Full league simulation ────────────────────────────────────────────────────
 
-// Simulates all 18×17 = 306 fixtures as proper head-to-head matches.
-// Each goal scored is the opponent's conceded goal — GD is consistent.
-// Returns { result, table, playerMatches } where:
-//   result        — { W, D, L, GF, GA, pts, ratings } for "Deine 11"
-//   table         — sorted 18-row array with pos field
-//   playerMatches — [{day, home, away, hg, ag}, ...] for "Deine 11"'s 34 games
+// 34-round proper Bundesliga schedule (17 Hinrunde + 17 Rückrunde).
+// Returns { result, table, playerMatches, playerStats, tableHistory } where:
+//   tableHistory — 34 sorted table snapshots (one per matchday)
 export function simulateFullLeague(slots) {
   const ratings = calcSquadRatings(slots);
   // Separate attack/defense strengths derived from positional ratings.
@@ -103,50 +117,44 @@ export function simulateFullLeague(slots) {
 
   const stats = Array.from({ length: n }, () => ({ W: 0, D: 0, L: 0, GF: 0, GA: 0 }));
 
-  // All ordered pairs (home, away) — each pair plays twice total
-  const fixtures = [];
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      if (i !== j) fixtures.push([i, j]);
-    }
-  }
-
-  // Fisher-Yates shuffle so match order is random
-  for (let i = fixtures.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [fixtures[i], fixtures[j]] = [fixtures[j], fixtures[i]];
-  }
+  // Proper 34-round schedule: Hinrunde rounds then Rückrunde (home/away flipped).
+  // Every team plays exactly once per round → player's 34 games come out in order.
+  const hinRunde  = buildRoundRobinRounds(n);
+  const ruckRunde = hinRunde.map(round => round.map(([h, a]) => [a, h]));
+  const allRounds = [...hinRunde, ...ruckRunde];
 
   const playerMatches = [];
+  const tableHistory  = [];
 
-  for (const [hi, ai] of fixtures) {
-    const { hg, ag } = simulateMatch(teams[hi].att, teams[hi].def, teams[ai].att, teams[ai].def);
+  for (const round of allRounds) {
+    for (const [hi, ai] of round) {
+      const { hg, ag } = simulateMatch(teams[hi].att, teams[hi].def, teams[ai].att, teams[ai].def);
 
-    if (hg > ag) { stats[hi].W++; stats[ai].L++; }
-    else if (hg < ag) { stats[hi].L++; stats[ai].W++; }
-    else { stats[hi].D++; stats[ai].D++; }
+      if (hg > ag) { stats[hi].W++; stats[ai].L++; }
+      else if (hg < ag) { stats[hi].L++; stats[ai].W++; }
+      else { stats[hi].D++; stats[ai].D++; }
 
-    stats[hi].GF += hg; stats[hi].GA += ag;
-    stats[ai].GF += ag; stats[ai].GA += hg;
+      stats[hi].GF += hg; stats[hi].GA += ag;
+      stats[ai].GF += ag; stats[ai].GA += hg;
 
-    if (hi === playerIdx || ai === playerIdx) {
-      playerMatches.push({ home: teams[hi].name, away: teams[ai].name, hg, ag });
+      if (hi === playerIdx || ai === playerIdx) {
+        playerMatches.push({ home: teams[hi].name, away: teams[ai].name, hg, ag });
+      }
     }
+
+    // Snapshot the league table after each completed round
+    tableHistory.push(
+      teams.map((t, i) => ({
+        name: t.name, isPlayer: !!t.isPlayer,
+        pts: stats[i].W * 3 + stats[i].D, GF: stats[i].GF, GA: stats[i].GA,
+      })).sort((a, b) => {
+        const pd = b.pts - a.pts; if (pd) return pd;
+        const gd = (b.GF - b.GA) - (a.GF - a.GA); if (gd) return gd;
+        return b.GF - a.GF;
+      }).map((r, i) => ({ ...r, pos: i + 1 }))
+    );
   }
 
-  // Hinrunde (first 17, one per opponent) then Rückrunde mirroring that order,
-  // so game N+17 is always the return fixture of game N.
-  {
-    const first = new Map(), second = new Map();
-    const h1 = [];
-    for (const m of playerMatches) {
-      const opp = m.home === 'Deine 11' ? m.away : m.home;
-      if (!first.has(opp)) { first.set(opp, m); h1.push(m); }
-      else second.set(opp, m);
-    }
-    const h2 = h1.map(m => second.get(m.home === 'Deine 11' ? m.away : m.home));
-    playerMatches.splice(0, playerMatches.length, ...h1, ...h2);
-  }
   playerMatches.forEach((m, i) => { m.day = i + 1; });
 
   // Generate per-player events and aggregate season stats
@@ -198,7 +206,7 @@ export function simulateFullLeague(slots) {
     ratings,
   };
 
-  return { result, table, playerMatches, playerStats };
+  return { result, table, playerMatches, playerStats, tableHistory };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────
