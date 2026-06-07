@@ -17,7 +17,7 @@ ROOT = Path(__file__).parent.parent
 DB_PATH = ROOT / "bundesliga_draft.db"
 OUT_PATH = ROOT / "src" / "data" / "players.js"
 
-MIN_YEAR = 2007  # earliest season in DB
+MIN_YEAR = 2004  # earliest season in DB
 
 POSITION_MAP = {
     "Torwart":               "GK",
@@ -67,6 +67,11 @@ CLUB_NAME_MAP = {
     "VfL Bochum":               "VfL Bochum",
     "VfL Wolfsburg":            "VfL Wolfsburg",
     "Arminia Bielefeld":        "Arminia Bielefeld",
+    "1.FC Kaiserslautern":      "1. FC Kaiserslautern",
+    "Alemannia Aachen":         "Alemannia Aachen",
+    "FC Energie Cottbus":       "FC Energie Cottbus",
+    "FC Hansa Rostock":         "FC Hansa Rostock",
+    "MSV Duisburg":             "MSV Duisburg",
 }
 
 CLUBS_META = {
@@ -101,6 +106,11 @@ CLUBS_META = {
     "Holstein Kiel":            {"color": "#003A8C", "text": "#fff"},
     "SpVgg Greuther Fürth":     {"color": "#006D3B", "text": "#fff"},
     "VfL Bochum":               {"color": "#005CA8", "text": "#fff"},
+    "1. FC Kaiserslautern":     {"color": "#C5001A", "text": "#fff"},
+    "Alemannia Aachen":         {"color": "#FFCC00", "text": "#000"},
+    "FC Energie Cottbus":       {"color": "#004F9E", "text": "#fff"},
+    "FC Hansa Rostock":         {"color": "#0066A2", "text": "#fff"},
+    "MSV Duisburg":             {"color": "#003399", "text": "#fff"},
 }
 
 PLACEHOLDER_RATING = 50
