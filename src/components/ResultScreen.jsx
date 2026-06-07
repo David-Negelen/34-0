@@ -450,8 +450,8 @@ function LeagueTable({ table, league = 'bl' }) {
           <>
             <span className="lt-legend-item lt-legend-champion">Meister</span>
             <span className="lt-legend-item lt-legend-ucl">Aufstieg</span>
-            <span className="lt-legend-item lt-legend-uel">Relegation (Aufstieg)</span>
-            <span className="lt-legend-item lt-legend-playoff">Relegation (Abstieg)</span>
+            <span className="lt-legend-item lt-legend-uel">Relegation Aufstieg</span>
+            <span className="lt-legend-item lt-legend-playoff">Relegation Abstieg</span>
             <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
           </>
         ) : (
