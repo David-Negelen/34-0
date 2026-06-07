@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useGameState } from './hooks/useGameState';
 import HomeScreen from './components/HomeScreen';
 import SetupScreen from './components/SetupScreen';
@@ -8,28 +8,16 @@ import LeaderboardScreen from './components/LeaderboardScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
 import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
 
-export default function App() {
-  const [league, setLeague] = useState(null);           // null = home screen
-  const [lbLeague, setLbLeague] = useState(null);       // which league's leaderboard to show
-
+function LeagueGame() {
+  const { league } = useParams();
+  const navigate = useNavigate();
   const { state, updateSetup, startDraft, fillSlot, useReroll, setPendingSpin, setResult, reset } =
-    useGameState(league ?? 'bl');
+    useGameState(league);
+
+  if (league !== 'bl' && league !== '2bl') return <Navigate to="/" replace />;
 
   const players = league === '2bl' ? BL2_PLAYERS : BL_PLAYERS;
   const clubs   = league === '2bl' ? BL2_CLUBS   : BL_CLUBS;
-
-  if (lbLeague !== null) {
-    return <LeaderboardScreen league={lbLeague} onBack={() => setLbLeague(null)} />;
-  }
-
-  if (!league) {
-    return (
-      <HomeScreen
-        onPickLeague={setLeague}
-        onLeaderboard={setLbLeague}
-      />
-    );
-  }
 
   if (state.phase === 'setup') {
     return (
@@ -40,8 +28,8 @@ export default function App() {
           window.umami?.track('game-started', { formation: state.setup.formation, difficulty: state.setup.difficulty, league });
           startDraft();
         }}
-        onLeaderboard={() => setLbLeague(league)}
-        onBack={() => { reset(); setLeague(null); }}
+        onLeaderboard={() => navigate(`/leaderboard/${league}`)}
+        onBack={() => { reset(); navigate('/'); }}
       />
     );
   }
@@ -57,7 +45,7 @@ export default function App() {
         useReroll={useReroll}
         setPendingSpin={setPendingSpin}
         setResult={setResult}
-        onGoHome={() => { reset(); setLeague(null); }}
+        onGoHome={() => { reset(); navigate('/'); }}
         onReset={reset}
       />
     );
@@ -69,10 +57,27 @@ export default function App() {
         state={state}
         league={league}
         onPlayAgain={reset}
-        onHome={() => { reset(); setLeague(null); }}
+        onHome={() => { reset(); navigate('/'); }}
       />
     );
   }
 
   return null;
+}
+
+function LeaderboardPage() {
+  const { league } = useParams();
+  const navigate = useNavigate();
+  return <LeaderboardScreen league={league} onBack={() => navigate(-1)} />;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomeScreen />} />
+      <Route path="/:league" element={<LeagueGame />} />
+      <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
