@@ -34,15 +34,22 @@ function weightedPick(pool, weights) {
   return pool[pool.length - 1];
 }
 
-function generateMatchEvents(goalsFor, squad) {
+function generateMatchEvents(goalsFor, goalsAgainst, squad) {
   const events = [];
   const gk = squad.find(p => p.slotType === 'GK');
+
+  // GK last-minute heroics: only when losing by exactly 1 and team scored at least once.
+  // ~2% per qualifying match → roughly 1-in-20 full seasons has a GK goal.
+  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < 0.02;
+
   for (let i = 0; i < goalsFor; i++) {
-    const scorer = gk && Math.random() < 0.0005 ? gk : weightedPick(squad, SCORE_WEIGHTS);
+    const isLast = i === goalsFor - 1;
+    const scorer = gkLateGoal && isLast ? gk : weightedPick(squad, SCORE_WEIGHTS);
     const hasAssist = Math.random() < 0.62;
     const pool2    = squad.filter(p => p !== scorer);
     const assister = hasAssist && pool2.length ? weightedPick(pool2, ASSIST_WEIGHTS) : null;
-    events.push({ type: 'goal', minute: Math.floor(Math.random() * 90) + 1, scorer, assister });
+    const minute   = gkLateGoal && isLast ? Math.floor(Math.random() * 6) + 90 : Math.floor(Math.random() * 90) + 1;
+    events.push({ type: 'goal', minute, scorer, assister });
   }
   return events.sort((a, b) => a.minute - b.minute);
 }
@@ -174,7 +181,7 @@ export function simulateFullLeague(slots) {
   playerMatches.forEach(m => {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
     const goalsAgainst = m.home === 'Deine 11' ? m.ag : m.hg;
-    const events = squad.length ? generateMatchEvents(goalsFor, squad) : [];
+    const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
     m.oppMinutes = Array.from({ length: goalsAgainst }, () =>
       Math.floor(Math.random() * 90) + 1

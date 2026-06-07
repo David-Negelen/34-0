@@ -150,9 +150,11 @@ def main():
     ).fetchone() is not None
 
     ratings_lookup: dict[tuple[int, int], int] = {}
+    player_all_ratings: dict[int, list[tuple[int, int]]] = {}  # tm_id → [(year, rating)]
     if ratings_exist:
         for r in con.execute("SELECT player_id, season_year, rating FROM player_ratings").fetchall():
             ratings_lookup[(r["player_id"], r["season_year"])] = r["rating"]
+            player_all_ratings.setdefault(r["player_id"], []).append((r["season_year"], r["rating"]))
         print(f"  {len(ratings_lookup)} rating entries loaded from DB")
 
     # One row per (player, club, season_year, position). All seasons >= MIN_YEAR.
@@ -226,11 +228,16 @@ def main():
             for (_, year) in season_entries
         ]
 
-        # Fill placeholder years with the nearest known rating from the same player
-        # so a player like Malen doesn't show 50 for one missing season.
-        # Players with zero real ratings keep 50 everywhere.
+        # Fill placeholder years with the nearest known rating from the same player.
+        # "known" includes ratings from ALL years, not just squad-entry years, so a player
+        # who moved clubs and doesn't appear in FIFA for their squad year still gets filled.
         years = [year for (_, year) in season_entries]
         known = [(y, r) for y, r in zip(years, season_ratings) if r != PLACEHOLDER_RATING]
+        # Extend with ratings from years not covered by squad entries
+        squad_year_set = set(years)
+        for y, r in player_all_ratings.get(tm_id, []):
+            if y not in squad_year_set and r != PLACEHOLDER_RATING:
+                known.append((y, r))
         if known:
             filled = []
             for y, r in zip(years, season_ratings):
