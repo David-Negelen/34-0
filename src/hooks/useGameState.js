@@ -47,6 +47,7 @@ function reducer(state, action) {
           slots: buildSlots(setup.formation),
           rerollsLeft: REROLLS[setup.difficulty],
           filledCount: 0,
+          pendingSpin: null,
         },
         result: null,
       };
@@ -58,14 +59,17 @@ function reducer(state, action) {
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
       const filledCount = slots.filter(s => s.player !== null).length;
-      return { ...state, draft: { ...state.draft, slots, filledCount } };
+      return { ...state, draft: { ...state.draft, slots, filledCount, pendingSpin: null } };
     }
 
     case 'USE_REROLL':
       return {
         ...state,
-        draft: { ...state.draft, rerollsLeft: Math.max(0, state.draft.rerollsLeft - 1) },
+        draft: { ...state.draft, rerollsLeft: Math.max(0, state.draft.rerollsLeft - 1), pendingSpin: null },
       };
+
+    case 'SET_PENDING_SPIN':
+      return { ...state, draft: { ...state.draft, pendingSpin: action.payload } };
 
     case 'SET_RESULT':
       return { ...state, phase: 'result', result: action.payload };
@@ -91,6 +95,7 @@ export function useGameState() {
     fillSlot: (slotId, player, displayRating) =>
       dispatch({ type: 'FILL_SLOT', payload: { slotId, player, displayRating } }),
     useReroll: () => dispatch({ type: 'USE_REROLL' }),
+    setPendingSpin: payload => dispatch({ type: 'SET_PENDING_SPIN', payload }),
     setResult: payload => dispatch({ type: 'SET_RESULT', payload }),
     reset: () => dispatch({ type: 'RESET' }),
   };

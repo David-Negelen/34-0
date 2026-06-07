@@ -186,6 +186,13 @@ def name_score(a: str, b: str) -> float:
 
 # ── Clubs file ─────────────────────────────────────────────────────────────────
 
+# Some clubs have different URL slugs across FIFA editions.
+# If the primary slug returns 404, try these alternatives in order.
+_SLUG_ALTERNATIVES: dict[int, list[str]] = {
+    23: ["monchengladbach", "bor-monchengladbach"],  # old editions use different slug
+}
+
+
 def load_clubs() -> list[tuple[int, str]]:
     """Parse fifaindex_clubs.txt → [(fi_club_id, fi_slug), …]"""
     if not CLUBS_FILE.exists():
@@ -272,10 +279,35 @@ def run(con: sqlite3.Connection):
     THRESHOLD          = 0.80   # confident match
     FALLBACK_THRESHOLD = 0.55   # close result — use but accept some noise
 
+    # Build last-name → list of (tm_id, full_normalized) for abbreviation matching
+    lastname_index: dict[str, list[tuple[int, str]]] = {}
+    for _, tm_id, nk in norm_list:
+        last = nk.split()[-1]
+        lastname_index.setdefault(last, []).append((tm_id, nk))
+
     def find_tm_id(scraped_name: str) -> tuple[int | None, float]:
         key = normalize(scraped_name)
         if key in norm_exact:
             return norm_exact[key], 1.0
+
+        tokens = key.split()
+
+        # Handle "X. Lastname" abbreviations from team pages (e.g. "D. Grammozis" → "d grammozis").
+        # If the first token is a single letter, treat it as a first-name initial and match on
+        # last name uniqueness + initial confirmation.
+        if len(tokens) >= 2 and len(tokens[0]) == 1:
+            last = tokens[-1]
+            candidates = lastname_index.get(last, [])
+            # Filter to those whose first name starts with the initial
+            initial_hits = [(tid, nk) for tid, nk in candidates if nk.split()[0][0] == tokens[0]]
+            if len(initial_hits) == 1:
+                return initial_hits[0][0], 0.90
+            # Unique last name even without initial filter
+            if len(candidates) == 1:
+                db_initial = candidates[0][1].split()[0][0]
+                if db_initial == tokens[0]:
+                    return candidates[0][0], 0.90
+
         best_id, best_score = None, 0.0
         for raw_name, tm_id, nk in norm_list:
             s = name_score(scraped_name, raw_name)
@@ -299,15 +331,25 @@ def run(con: sqlite3.Connection):
             if already:
                 continue
 
-            url = f"{BASE}/de/teams/{fi_club_id}-{fi_slug}/{game_slug}/"
             label = f"{season_year}-{str(season_year + 1)[-2:]}"
             print(f"  {game_slug:7s} ({label}) … ", end="", flush=True)
 
-            try:
-                soup = fetch(url)
-            except Exception as e:
-                print(f"ERROR: {e}")
-                continue
+            # Try primary slug, then any alternatives (e.g. Gladbach slug change by era)
+            slugs_to_try = list(dict.fromkeys(
+                [fi_slug] + _SLUG_ALTERNATIVES.get(fi_club_id, [])
+            ))
+            soup = None
+            used_slug = fi_slug
+            for slug in slugs_to_try:
+                url = f"{BASE}/de/teams/{fi_club_id}-{slug}/{game_slug}/"
+                try:
+                    soup = fetch(url)
+                except Exception as e:
+                    print(f"ERROR: {e}")
+                    break
+                if soup is not None:
+                    used_slug = slug
+                    break
 
             if DEBUG and soup:
                 dump = ROOT / "data" / "debug_page.html"

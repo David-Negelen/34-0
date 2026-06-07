@@ -30,9 +30,11 @@ export default function SpinPanel({
   slots,
   setup,
   rerollsLeft,
+  pendingSpin,
   selectedSlotId,
   onPlayerPlaced,
   onReroll,
+  onSetPendingSpin,
   onClearSlot,
 }) {
   const { draftMode, showRatings, ratingMode } = setup;
@@ -103,6 +105,7 @@ export default function SpinPanel({
 
         setCandidates(sorted);
         setPhase('picking');
+        onSetPendingSpin({ club, season, candidates: sorted });
       }
     }
     next();
@@ -140,7 +143,18 @@ export default function SpinPanel({
     setCandidates([]);
     setDeadSpin(false);
     setPendingPlayer(null);
+    onSetPendingSpin(null);
   }
+
+  // Restore spin result after a page reload
+  useEffect(() => {
+    if (pendingSpin && phase === 'idle') {
+      setCurrentSpin({ club: pendingSpin.club, season: pendingSpin.season });
+      setCandidates(pendingSpin.candidates);
+      setPhase('picking');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (openSlots.length === 0) resetToIdle();

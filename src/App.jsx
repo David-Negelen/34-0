@@ -6,7 +6,7 @@ import ResultScreen from './components/ResultScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 
 export default function App() {
-  const { state, updateSetup, startDraft, fillSlot, useReroll, setResult, reset } = useGameState();
+  const { state, updateSetup, startDraft, fillSlot, useReroll, setPendingSpin, setResult, reset } = useGameState();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   if (showLeaderboard) {
@@ -33,6 +33,7 @@ export default function App() {
         state={state}
         fillSlot={fillSlot}
         useReroll={useReroll}
+        setPendingSpin={setPendingSpin}
         setResult={setResult}
       />
     );

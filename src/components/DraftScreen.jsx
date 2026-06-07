@@ -5,9 +5,9 @@ import RatingsPanel from './RatingsPanel';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
-export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
+export default function DraftScreen({ state, fillSlot, useReroll, setPendingSpin, setResult }) {
   const { setup, draft } = state;
-  const { slots, rerollsLeft, filledCount } = draft;
+  const { slots, rerollsLeft, filledCount, pendingSpin } = draft;
   const { draftMode, showRatings } = setup;
 
   // Position-first: which slot the user has selected on the pitch
@@ -85,9 +85,11 @@ export default function DraftScreen({ state, fillSlot, useReroll, setResult }) {
             slots={slots}
             setup={setup}
             rerollsLeft={rerollsLeft}
+            pendingSpin={pendingSpin}
             selectedSlotId={selectedSlotId}
             onPlayerPlaced={handlePlayerPlaced}
             onReroll={useReroll}
+            onSetPendingSpin={setPendingSpin}
             onClearSlot={() => setSelectedSlotId(null)}
           />
         </div>
