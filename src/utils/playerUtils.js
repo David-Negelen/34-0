@@ -73,7 +73,7 @@ export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries 
 const LABEL_DE = {
   GK: 'TW', RB: 'RV', CB: 'IV', LB: 'LV',
   DM: 'ZDM', CM: 'ZM', AM: 'ZOM',
-  RW: 'RF', LW: 'LF', SS: 'HS', ST: 'ST',
+  RW: 'RF', LW: 'LF', ST: 'ST',
   RM: 'RM', LM: 'LM', RWB: 'RAV', LWB: 'LAV',
 };
 export const labelDE = label => LABEL_DE[label] ?? label;

@@ -30,7 +30,7 @@ POSITION_MAP = {
     "Linkes Mittelfeld":     "LW",
     "Rechtes Mittelfeld":    "RW",
     "Offensives Mittelfeld": "AM",
-    "Hängende Spitze":       "SS",
+    "Hängende Spitze":       "AM",
     "Linksaußen":            "LW",
     "Rechtsaußen":           "RW",
     "Mittelstürmer":         "ST",
