@@ -63,7 +63,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
       doSubmit(saved);
     } else {
       setNameInput(randomGuestName());
-      setShowNameModal(true);
+      setTimeout(() => setShowNameModal(true), 1400);
     }
   }, [matchLogDone]);
 
