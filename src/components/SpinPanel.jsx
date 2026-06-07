@@ -36,6 +36,7 @@ export default function SpinPanel({
   onReroll,
   onSetPendingSpin,
   onClearSlot,
+  league = 'bl',
 }) {
   const { draftMode, showRatings, ratingMode } = setup;
   const openSlots = getOpenSlots(slots);
@@ -303,6 +304,7 @@ export default function SpinPanel({
                 showRatings={showRatings}
                 ratingMode={ratingMode}
                 onClick={() => handlePlayerClick(player)}
+                league={league}
               />
             ))
           )}

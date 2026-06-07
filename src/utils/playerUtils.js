@@ -104,8 +104,14 @@ export function getDisplayRating(player, ratingMode) {
   return ratingMode === 'prime' ? player.primeRating : player.seasonRating;
 }
 
-// CSS class for a rating value
-export function ratingClass(rating) {
+// CSS class for a rating value (thresholds differ per league)
+export function ratingClass(rating, league = 'bl') {
+  if (league === '2bl') {
+    if (rating >= 76) return 'rating-high';
+    if (rating >= 71) return 'rating-good';
+    if (rating >= 66) return 'rating-mid';
+    return 'rating-low';
+  }
   if (rating >= 90) return 'rating-high';
   if (rating >= 84) return 'rating-good';
   if (rating >= 78) return 'rating-mid';

@@ -88,23 +88,23 @@ const BUNDESLIGA_TEAMS = [
 ];
 
 const ZWEITE_LIGA_TEAMS = [
-  { name: 'Hamburger SV',               strength: 73 },
-  { name: '1. FC Köln',                 strength: 70 },
   { name: 'FC Schalke 04',              strength: 68 },
   { name: 'Hannover 96',                strength: 67 },
   { name: 'Fortuna Düsseldorf',         strength: 66 },
   { name: 'Hertha BSC',                 strength: 65 },
-  { name: '1. FC Kaiserslautern',       strength: 64 },
-  { name: 'SC Paderborn 07',            strength: 63 },
-  { name: '1. FC Nürnberg',             strength: 62 },
-  { name: 'SpVgg Greuther Fürth',       strength: 62 },
-  { name: 'Karlsruher SC',              strength: 61 },
-  { name: 'SV Elversberg',              strength: 60 },
-  { name: 'Eintracht Braunschweig',     strength: 59 },
-  { name: 'SSV Ulm 1846',               strength: 57 },
-  { name: 'Preußen Münster',            strength: 57 },
-  { name: 'Jahn Regensburg',            strength: 56 },
-  { name: 'FC Energie Cottbus',         strength: 55 },
+  { name: 'VfL Bochum',                 strength: 65 },
+  { name: 'SV Darmstadt 98',            strength: 64 },
+  { name: '1. FC Kaiserslautern',       strength: 63 },
+  { name: 'Arminia Bielefeld',          strength: 62 },
+  { name: 'SC Paderborn 07',            strength: 62 },
+  { name: '1. FC Nürnberg',             strength: 61 },
+  { name: 'SpVgg Greuther Fürth',       strength: 61 },
+  { name: 'Holstein Kiel',              strength: 60 },
+  { name: 'Karlsruher SC',              strength: 60 },
+  { name: 'SV Elversberg',              strength: 59 },
+  { name: '1. FC Magdeburg',            strength: 58 },
+  { name: 'Eintracht Braunschweig',     strength: 57 },
+  { name: 'Preußen Münster',            strength: 56 },
 ];
 
 // ── Schedule builder ─────────────────────────────────────────────────────────

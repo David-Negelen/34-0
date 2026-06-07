@@ -7,6 +7,7 @@ export default function FormationBoard({
   selectedSlotId,
   onSlotClick,
   draftMode,
+  league = 'bl',
 }) {
   return (
     <div className="board-wrap">
@@ -57,7 +58,7 @@ export default function FormationBoard({
                     {(() => { const [a, b] = tokenName(slot.player.name); return b ? <>{a}<br />{b}</> : a; })()}
                   </span>
                   {showRatings && (
-                    <span className={`slot-rating ${ratingClass(slot.player.displayRating)}`}>
+                    <span className={`slot-rating ${ratingClass(slot.player.displayRating, league)}`}>
                       {slot.player.displayRating}
                     </span>
                   )}

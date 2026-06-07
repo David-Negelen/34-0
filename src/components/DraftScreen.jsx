@@ -83,6 +83,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             selectedSlotId={selectedSlotId}
             onSlotClick={draftMode === 'position-first' ? handleSlotClick : undefined}
             draftMode={draftMode}
+            league={league}
           />
           <RatingsPanel slots={slots} showRatings={showRatings} />
         </div>
@@ -101,6 +102,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             onReroll={useReroll}
             onSetPendingSpin={setPendingSpin}
             onClearSlot={() => setSelectedSlotId(null)}
+            league={league}
           />
         </div>
 
