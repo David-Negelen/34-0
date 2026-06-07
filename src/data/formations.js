@@ -11,7 +11,7 @@ export const SLOT_COMPAT = {
   LW: ['LW'],
   RM: ['RM', 'RW', 'CM'],
   LM: ['LM', 'LW', 'CM'],
-  ST: ['ST', 'AM'],
+  ST: ['ST'],
 };
 
 // x/y are percentage positions on the pitch (0% = left/top, 100% = right/bottom)
