@@ -11,6 +11,8 @@
 /* ── Header ── */
 .setup-header {
   position: relative;
+  width: 100%;
+  max-width: 480px;
   text-align: center;
   margin-bottom: 48px;
 }

@@ -1,6 +1,6 @@
 import './HomeScreen.css';
 
-export default function HomeScreen({ onPickLeague, onLeaderboard }) {
+export default function HomeScreen({ onPickLeague }) {
   return (
     <div className="home-screen">
       <header className="home-header">
@@ -22,10 +22,6 @@ export default function HomeScreen({ onPickLeague, onLeaderboard }) {
           <span className="league-card-sub">2. Bundesliga · 34 Spieltage · 18 Teams</span>
         </button>
       </div>
-
-      <button className="home-lb-link" onClick={() => onLeaderboard(null)}>
-        Rangliste ansehen
-      </button>
     </div>
   );
 }
