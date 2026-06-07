@@ -671,7 +671,6 @@
   .result-left    { width: 100%; position: static; min-width: 0; }
   .result-right   { width: 100%; min-width: 0; }
   .result-pitch-wrap { height: 340px; }
-  .lt-wdl, .lt-gd { display: none; }
   .lt-legend      { flex-wrap: wrap; gap: 8px 14px; }
   .lp-key         { flex-wrap: wrap; gap: 4px 14px; }
 }
@@ -687,7 +686,7 @@
   .result-header-actions { gap: 6px; }
   .result-header-actions .btn { padding: 8px 14px; font-size: 13px; min-height: 40px; }
 
-  .result-body   { padding: 12px; gap: 14px; }
+  .result-body   { padding: 12px 0; gap: 14px; }
   .result-pitch-wrap { height: 300px; }
 
   /* Match log: shorter on phones so it doesn't eat the whole screen */
@@ -727,7 +726,7 @@
 @media (max-width: 400px) {
   .result-header-inner { gap: 8px; }
   .result-title { font-size: 17px; }
-  .result-body  { padding: 10px; gap: 12px; }
+  .result-body  { padding: 10px 0; gap: 12px; }
   .result-pitch-wrap { height: 260px; }
   .ml-list { height: 260px; }
   .stat-pill-val { font-size: 24px; }
