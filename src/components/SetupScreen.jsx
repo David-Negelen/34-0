@@ -1,4 +1,5 @@
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
+import { labelDE } from '../utils/playerUtils';
 import './SetupScreen.css';
 
 const DIFFICULTIES = [
@@ -151,7 +152,7 @@ function PitchMini({ slots }) {
           className="pm-dot"
           style={{ left: `${s.x}%`, top: `${s.y}%` }}
         >
-          {s.label}
+          {labelDE(s.label)}
         </span>
       ))}
     </div>
