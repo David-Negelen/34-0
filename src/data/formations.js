@@ -1,15 +1,15 @@
 // Which player positions are eligible for each slot type
 export const SLOT_COMPAT = {
   GK: ['GK'],
-  RB: ['RB', 'CB'],
-  CB: ['CB', 'RB', 'LB'],
-  LB: ['LB', 'CB'],
+  RB: ['RB'],
+  CB: ['CB'],
+  LB: ['LB'],
   DM: ['DM', 'CM'],
   CM: ['CM', 'DM', 'AM'],
   AM: ['AM', 'CM', 'SS'],
-  RW: ['RW', 'LW'],
-  LW: ['LW', 'RW'],
-  SS: ['SS', 'ST', 'AM'],
+  RW: ['RW'],
+  LW: ['LW'],
+  SS: ['SS', 'AM'],
   ST: ['ST', 'SS'],
 };
 
