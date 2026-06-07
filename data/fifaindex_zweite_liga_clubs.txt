@@ -1,0 +1,9 @@
+# 2. Bundesliga clubs on fifaindex.com
+# Format: {fi_club_id}-{fi_slug}
+# Find the ID and slug from the URL on fifaindex.com:
+#   https://fifaindex.com/de/teams/{id}-{slug}/fc26/
+#
+# Example: https://fifaindex.com/de/teams/112-hamburger-sv/fc26/
+#          → 112-hamburger-sv
+#
+# Add one club per line. Lines starting with # are ignored.
