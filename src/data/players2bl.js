@@ -1330,8 +1330,8 @@ export const PLAYERS = [
     id: 'tobias_mueller_19483',
     name: 'Tobias Müller',
     positions: ['CB'],
-    seasons: [{ club: '1. FC Magdeburg', season: '2018-19', rating: 65 }, { club: 'SC Paderborn 07', season: '2022-23', rating: 65 }, { club: 'SC Paderborn 07', season: '2023-24', rating: 65 }, { club: '1. FC Magdeburg', season: '2023-24', rating: 65 }, { club: '1. FC Magdeburg', season: '2024-25', rating: 65 }, { club: '1. FC Magdeburg', season: '2025-26', rating: 65 }],
-    primeRating: 65,
+    seasons: [{ club: '1. FC Magdeburg', season: '2018-19', rating: 67 }, { club: 'SC Paderborn 07', season: '2022-23', rating: 66 }, { club: 'SC Paderborn 07', season: '2023-24', rating: 68 }, { club: '1. FC Magdeburg', season: '2023-24', rating: 68 }, { club: '1. FC Magdeburg', season: '2024-25', rating: 67 }, { club: '1. FC Magdeburg', season: '2025-26', rating: 68 }],
+    primeRating: 68,
   },
   {
     id: 'dominik_stroh_engel_19736',
@@ -21361,6 +21361,13 @@ export const PLAYERS = [
     primeRating: 58,
   },
   {
+    id: 'kennet_eichhorn_1214123',
+    name: 'Kennet Eichhorn',
+    positions: ['DM', 'CM'],
+    seasons: [{ club: 'Hertha BSC', season: '2025-26', rating: 75 }],
+    primeRating: 75,
+  },
+  {
     id: 'eyyueb_yasar_1259900',
     name: 'Eyyüb Yasar',
     positions: ['CM', 'DM'],
@@ -21368,10 +21375,24 @@ export const PLAYERS = [
     primeRating: 56,
   },
   {
+    id: 'dion_hofmeister_1290366',
+    name: 'Dion Hofmeister',
+    positions: ['DM', 'CM'],
+    seasons: [{ club: '1. FC Kaiserslautern', season: '2025-26', rating: 61 }],
+    primeRating: 61,
+  },
+  {
     id: 'steve_noode_1302766',
     name: 'Steve Noode',
     positions: ['CB'],
     seasons: [{ club: 'FC Schalke 04', season: '2024-25', rating: 60 }],
+    primeRating: 60,
+  },
+  {
+    id: 'marko_soldic_1361784',
+    name: 'Marko Soldic',
+    positions: ['CM', 'AM'],
+    seasons: [{ club: '1. FC Nürnberg', season: '2025-26', rating: 60 }],
     primeRating: 60,
   },
   {
