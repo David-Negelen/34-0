@@ -8,7 +8,8 @@ const DIFFICULTIES = [
   { key: 'hard',   label: 'Schwer' },
 ];
 
-export default function LeaderboardScreen({ onBack }) {
+export default function LeaderboardScreen({ league = 'bl', onBack }) {
+  const [tab, setTab] = useState('alltime');
   const [difficulty, setDifficulty] = useState('easy');
   const [ratingMode, setRatingMode] = useState('prime');
   const [rows, setRows] = useState([]);
@@ -17,7 +18,7 @@ export default function LeaderboardScreen({ onBack }) {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(getSavedName() ?? '');
   const myName = getSavedName();
-  const mode = `${difficulty}_${ratingMode}`;
+  const mode = `${league === '2bl' ? '2bl_' : ''}${difficulty}_${ratingMode}`;
 
   useEffect(() => {
     setLoading(true);
@@ -32,7 +33,7 @@ export default function LeaderboardScreen({ onBack }) {
     <div className="lb-screen slide-up">
       <header className="lb-header">
         <button className="btn btn-ghost btn-sm" onClick={onBack}>← Zurück</button>
-        <h1 className="lb-title">Rangliste</h1>
+        <h1 className="lb-title">{league === '2bl' ? '2. Liga' : 'Bundesliga'}</h1>
         <button className="btn btn-ghost btn-sm" onClick={() => { setNameInput(getSavedName() ?? ''); setEditingName(true); }}>
           {myName ? `@${myName}` : 'Name setzen'}
         </button>

@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { CLUBS } from '../data/players';
-import { PLAYERS } from '../data/players';
 import {
   getClubsInDb,
   getEligiblePlayers,
@@ -29,6 +27,8 @@ function shuffle(arr) {
 export default function SpinPanel({
   slots,
   setup,
+  players,
+  clubs,
   rerollsLeft,
   pendingSpin,
   selectedSlotId,
@@ -36,10 +36,11 @@ export default function SpinPanel({
   onReroll,
   onSetPendingSpin,
   onClearSlot,
+  league = 'bl',
 }) {
   const { draftMode, showRatings, ratingMode } = setup;
   const openSlots = getOpenSlots(slots);
-  const allClubs = getClubsInDb(PLAYERS);
+  const allClubs = getClubsInDb(players);
 
   const [phase, setPhase] = useState('idle');
   const [displayedClub, setDisplayedClub] = useState('');
@@ -63,7 +64,7 @@ export default function SpinPanel({
     if (!spinSlots.length) return;
 
     const placedIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
-    const result = randomSpin(PLAYERS, spinSlots, placedIds);
+    const result = randomSpin(players, spinSlots, placedIds);
 
     setPhase('animating');
     const clubFrames = Array.from({ length: SPIN_FRAMES }, (_, i) =>
@@ -163,7 +164,7 @@ export default function SpinPanel({
   useEffect(() => () => clearTimeout(animRef.current), []);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const clubMeta = currentSpin ? (CLUBS[currentSpin.club] ?? { color: '#e3000b', text: '#fff' }) : null;
+  const clubMeta = currentSpin ? (clubs[currentSpin.club] ?? { color: '#e3000b', text: '#fff' }) : null;
 
   const spinReady = draftMode === 'position-first'
     ? selectedSlotId !== null
@@ -303,6 +304,7 @@ export default function SpinPanel({
                 showRatings={showRatings}
                 ratingMode={ratingMode}
                 onClick={() => handlePlayerClick(player)}
+                league={league}
               />
             ))
           )}

@@ -1,17 +1,23 @@
-import { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useGameState } from './hooks/useGameState';
+import HomeScreen from './components/HomeScreen';
 import SetupScreen from './components/SetupScreen';
 import DraftScreen from './components/DraftScreen';
 import ResultScreen from './components/ResultScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
+import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
+import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
 
-export default function App() {
-  const { state, updateSetup, startDraft, fillSlot, useReroll, setPendingSpin, setResult, reset } = useGameState();
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
+function LeagueGame() {
+  const { league } = useParams();
+  const navigate = useNavigate();
+  const { state, updateSetup, startDraft, fillSlot, useReroll, setPendingSpin, setResult, reset } =
+    useGameState(league);
 
-  if (showLeaderboard) {
-    return <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />;
-  }
+  if (league !== 'bl' && league !== '2bl') return <Navigate to="/" replace />;
+
+  const players = league === '2bl' ? BL2_PLAYERS : BL_PLAYERS;
+  const clubs   = league === '2bl' ? BL2_CLUBS   : BL_CLUBS;
 
   if (state.phase === 'setup') {
     return (
@@ -19,10 +25,11 @@ export default function App() {
         setup={state.setup}
         onUpdate={updateSetup}
         onStart={() => {
-          window.umami?.track('game-started', { formation: state.setup.formation, difficulty: state.setup.difficulty });
+          window.umami?.track('game-started', { formation: state.setup.formation, difficulty: state.setup.difficulty, league });
           startDraft();
         }}
-        onLeaderboard={() => setShowLeaderboard(true)}
+        onLeaderboard={() => navigate(`/leaderboard/${league}`)}
+        onBack={() => { reset(); navigate('/'); }}
       />
     );
   }
@@ -31,10 +38,15 @@ export default function App() {
     return (
       <DraftScreen
         state={state}
+        league={league}
+        players={players}
+        clubs={clubs}
         fillSlot={fillSlot}
         useReroll={useReroll}
         setPendingSpin={setPendingSpin}
         setResult={setResult}
+        onGoHome={() => { reset(); navigate('/'); }}
+        onReset={reset}
       />
     );
   }
@@ -43,10 +55,29 @@ export default function App() {
     return (
       <ResultScreen
         state={state}
+        league={league}
         onPlayAgain={reset}
+        onHome={() => { reset(); navigate('/'); }}
       />
     );
   }
 
   return null;
+}
+
+function LeaderboardPage() {
+  const { league } = useParams();
+  const navigate = useNavigate();
+  return <LeaderboardScreen league={league} onBack={() => navigate(-1)} />;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomeScreen />} />
+      <Route path="/:league" element={<LeagueGame />} />
+      <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }

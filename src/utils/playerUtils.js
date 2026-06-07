@@ -51,22 +51,37 @@ export function getCompatibleSlots(player, openSlots) {
   return openSlots.filter(slot => canPlayerFillSlot(player, slot.type));
 }
 
+// Weighting parameters: pairs with avg prime rating above WEIGHT_CENTER
+// get exponentially higher weight, pulling stronger clubs into the spin more often.
+const WEIGHT_CENTER = 78;
+const WEIGHT_TEMP   = 8;
+
 // Pick a random club and season that has eligible candidates for the open slots.
+// Weighted by avg prime rating so stronger squads appear more often.
 // excludeIds: Set of player IDs already placed in the squad — excluded from pool and eligibility check.
-// Returns { club, season, candidates } or null if nothing found after maxTries.
-export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries = 30) {
-  const clubs = getClubsInDb(players);
-  for (let i = 0; i < maxTries; i++) {
-    const club = clubs[Math.floor(Math.random() * clubs.length)];
-    const seasons = getSeasonsForClub(players, club);
-    if (!seasons.length) continue;
-    const season = seasons[Math.floor(Math.random() * seasons.length)];
-    const pool = getPlayersForClubSeason(players, club, season)
-      .filter(p => !excludeIds.has(p.id));
-    const eligible = getEligiblePlayers(pool, openSlots);
-    if (eligible.length > 0) return { club, season, candidates: pool };
+// Returns { club, season, candidates } or null if no eligible pair exists.
+export function randomSpin(players, openSlots, excludeIds = new Set()) {
+  const pairs = [];
+  for (const club of getClubsInDb(players)) {
+    for (const season of getSeasonsForClub(players, club)) {
+      const pool = getPlayersForClubSeason(players, club, season)
+        .filter(p => !excludeIds.has(p.id));
+      if (!getEligiblePlayers(pool, openSlots).length) continue;
+      const avg = pool.reduce((s, p) => s + (p.seasonRating ?? p.primeRating), 0) / pool.length;
+      const weight = Math.exp((avg - WEIGHT_CENTER) / WEIGHT_TEMP);
+      pairs.push({ club, season, pool, weight });
+    }
   }
-  return null;
+  if (!pairs.length) return null;
+
+  const totalWeight = pairs.reduce((s, p) => s + p.weight, 0);
+  let r = Math.random() * totalWeight;
+  let picked = pairs[pairs.length - 1];
+  for (const p of pairs) {
+    r -= p.weight;
+    if (r <= 0) { picked = p; break; }
+  }
+  return { club: picked.club, season: picked.season, candidates: picked.pool };
 }
 
 // German position label mapping
@@ -83,8 +98,14 @@ export function getDisplayRating(player, ratingMode) {
   return ratingMode === 'prime' ? player.primeRating : player.seasonRating;
 }
 
-// CSS class for a rating value
-export function ratingClass(rating) {
+// CSS class for a rating value (thresholds differ per league)
+export function ratingClass(rating, league = 'bl') {
+  if (league === '2bl') {
+    if (rating >= 76) return 'rating-high';
+    if (rating >= 71) return 'rating-good';
+    if (rating >= 66) return 'rating-mid';
+    return 'rating-low';
+  }
   if (rating >= 90) return 'rating-high';
   if (rating >= 84) return 'rating-good';
   if (rating >= 78) return 'rating-mid';

@@ -8,12 +8,17 @@ const DIFFICULTIES = [
   { key: 'hard',   label: 'Schwer', sub: 'Kein Joker · Bewertungen verborgen' },
 ];
 
-export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard }) {
+export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, onBack }) {
   const { formation, difficulty, showRatings, draftMode, ratingMode } = setup;
 
   return (
     <div className="setup-screen">
       <header className="setup-header">
+        <div>
+          {onBack && (
+            <button className="btn btn-ghost btn-sm" onClick={onBack}>← Liga</button>
+          )}
+        </div>
         <div className="setup-title">
           <span className="title-num">34</span>
           <span className="title-dash">-</span>

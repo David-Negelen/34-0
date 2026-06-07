@@ -1,9 +1,9 @@
 import { ratingClass, getDisplayRating, labelDE } from '../utils/playerUtils';
 import './PlayerCard.css';
 
-export default function PlayerCard({ player, showRatings, ratingMode, onClick, disabled }) {
+export default function PlayerCard({ player, showRatings, ratingMode, onClick, disabled, league = 'bl' }) {
   const displayRating = getDisplayRating(player, ratingMode);
-  const rcls = showRatings ? ratingClass(displayRating) : 'rating-hidden';
+  const rcls = showRatings ? ratingClass(displayRating, league) : 'rating-hidden';
 
   return (
     <button
