@@ -261,7 +261,7 @@ export function buildShareText(slots, result, formation) {
   const lines = filled.map(s => `${s.label}: ${s.player.name}`).join('\n');
   const achs = achievements ?? getAchievements(result);
   return [
-    '🏟️ Bundesliga Dream XI',
+    '🏟️ 34-0',
     `Formation: ${formation}`,
     '',
     lines,
@@ -269,6 +269,6 @@ export function buildShareText(slots, result, formation) {
     `📊 ${W}W ${D}D ${L}L | ${GF}:${GA} | ${pts} pts`,
     achs.map(a => `🏆 ${a.label}`).join(' · '),
     '',
-    '#BundesligaDraftXI',
+    '#34dash0',
   ].join('\n');
 }

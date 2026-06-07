@@ -55,7 +55,7 @@ export function generateResultCanvas(slots, result, formation, achievements) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle    = '#fff';
   ctx.font         = 'bold 19px system-ui, sans-serif';
-  ctx.fillText('BUNDESLIGA DREAM XI', W / 2, 36);
+  ctx.fillText('34-0', W / 2, 36);
   ctx.fillStyle = 'rgba(255,255,255,0.58)';
   ctx.font      = '12px system-ui, sans-serif';
   ctx.fillText(formation, W / 2, 56);
@@ -272,7 +272,7 @@ export function generateResultCanvas(slots, result, formation, achievements) {
   ctx.font         = '10px system-ui, sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('34-0.app  ·  #BundesligaDraftXI', W / 2, H - 14);
+  ctx.fillText('34-0.app', W / 2, H - 14);
 
   return canvas;
 }
@@ -282,19 +282,19 @@ export async function downloadResult(canvas) {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = 'bundesliga-dream-xi.png';
+  a.download = '34-0.png';
   a.click();
   URL.revokeObjectURL(url);
 }
 
 export async function shareResult(canvas, text) {
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-  const file = new File([blob], 'bundesliga-dream-xi.png', { type: 'image/png' });
+  const file = new File([blob], '34-0.png', { type: 'image/png' });
 
   if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: 'Bundesliga Dream XI', text });
+    await navigator.share({ files: [file], title: '34-0', text });
   } else if (navigator.share) {
-    await navigator.share({ title: 'Bundesliga Dream XI', text });
+    await navigator.share({ title: '34-0', text });
   } else {
     await downloadResult(canvas);
   }

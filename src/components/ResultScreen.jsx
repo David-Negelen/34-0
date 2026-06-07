@@ -103,7 +103,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
       <header className="result-header">
         <div className="result-header-inner">
           <div className="result-title-group">
-            <span className="result-eyebrow">Bundesliga Dream XI</span>
+            <span className="result-eyebrow">34-0</span>
             <h1 className="result-title">Saison abgeschlossen</h1>
           </div>
           <div className="result-header-actions">
