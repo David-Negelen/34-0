@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scrape 2. Bundesliga squads from Transfermarkt for seasons 2025/26 → 2004/05.
+Scrape 2. Bundesliga squads from Transfermarkt for seasons 2025/26 → 2012/13.
 Positions are fetched from each player's individual profile page using the
 "Detailposition" panel (dd.detail-position__position).
 
@@ -293,7 +293,7 @@ def main():
     con = sqlite3.connect(DB_PATH)
     init_db(con)
 
-    seasons = list(range(2025, 2003, -1))
+    seasons = list(range(2025, 2011, -1))
     total = len(seasons)
 
     for i, year in enumerate(seasons, 1):

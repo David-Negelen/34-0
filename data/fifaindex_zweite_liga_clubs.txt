@@ -2,8 +2,47 @@
 # Format: {fi_club_id}-{fi_slug}
 # Find the ID and slug from the URL on fifaindex.com:
 #   https://fifaindex.com/de/teams/{id}-{slug}/fc26/
-#
-# Example: https://fifaindex.com/de/teams/112-hamburger-sv/fc26/
-#          → 112-hamburger-sv
-#
-# Add one club per line. Lines starting with # are ignored.
+# Lines starting with # are ignored. Replace ??? with the ID.
+
+# ── IDs known (were in Bundesliga) ──
+28-hamburger-sv
+34-fc-schalke-04
+166-hertha-bsc
+1831-1-fc-union-berlin
+110329-fc-st-pauli
+31-1-fc-koln
+36-vfb-stuttgart
+25-sc-freiburg
+38-werder-bremen
+112172-rb-leipzig
+485-hannover-96
+171-1-fc-nurnberg
+159-arminia-bielefeld
+111239-fc-ingolstadt-04
+10030-sc-paderborn-07
+110502-sv-darmstadt-98
+110636-fortuna-dusseldorf
+576-holstein-kiel
+165-spvgg-greuther-furth
+160-vfl-bochum
+29-1-fc-kaiserslautern
+110500-eintracht-braunschweig
+162-energie-cottbus
+27-hansa-rostock
+1825-msv-duisburg
+1832-karlsruher-sc
+111235-1-fc-heidenheim
+110588-1-fc-magdeburg
+506-erzgebirge-aue
+110596-fsv-frankfurt
+531-preu-en-munster
+503-dynamo-dresden
+543-jahn-regensburg
+110176-ssv-ulm-1846
+580-sv-elversberg
+110178-sv-sandhausen
+492-sv-wehen-wiesbaden
+33-tsv-1860-munchen
+487-vfl-osnabruck
+550-vfr-aalen
+110197-wurzburger-kickers
