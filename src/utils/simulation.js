@@ -53,8 +53,8 @@ function generateMatchEvents(goalsFor, squad) {
 // lambdaH is driven by home attack vs away defense; lambdaA vice-versa.
 // Home advantage baked in as +0.18 / -0.18.
 function simulateMatch(hAtt, hDef, aAtt, aDef) {
-  const lambdaH = Math.max(0.40, 1.40 + 0.15 + (hAtt - aDef) * 0.035);
-  const lambdaA = Math.max(0.40, 1.40 - 0.15 + (aAtt - hDef) * 0.035);
+  const lambdaH = Math.max(0.40, 1.40 + 0.15 + (hAtt - aDef) * 0.040);
+  const lambdaA = Math.max(0.40, 1.40 - 0.15 + (aAtt - hDef) * 0.040);
   return { hg: poisson(lambdaH), ag: poisson(lambdaA) };
 }
 

@@ -8,3 +8,5 @@ bundesliga_draft.db-journal
 data/fifaindex_session.txt
 pb_data/
 umami_data/
+scripts/find_only50.js
+data/only50.json
