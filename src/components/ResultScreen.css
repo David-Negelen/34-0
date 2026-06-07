@@ -470,13 +470,10 @@
   height: 480px;
   overflow-y: scroll;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.12) transparent;
+  scrollbar-width: none;
 }
 
-.ml-list::-webkit-scrollbar { width: 4px; }
-.ml-list::-webkit-scrollbar-track { background: transparent; }
-.ml-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+.ml-list::-webkit-scrollbar { display: none; }
 
 .ml-card {
   display: flex;

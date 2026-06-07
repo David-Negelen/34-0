@@ -166,8 +166,17 @@
   .draft-left .pitch {
     flex: none;
     min-height: 0;
-    height: 196px;
+    height: 220px;
   }
+
+  /* Smaller tokens so they don't cluster on a short pitch */
+  .draft-left .slot-token {
+    width: 38px;
+    height: 38px;
+  }
+  .draft-left .slot-label       { font-size: 9px; }
+  .draft-left .slot-player-name { font-size: 7.5px; max-width: 34px; }
+  .draft-left .slot-rating      { font-size: 7.5px; }
 
   /* Ratings bars not useful during picking; reclaim vertical space */
   .draft-left .ratings-panel { display: none; }
@@ -190,6 +199,6 @@
 }
 
 @media (max-width: 400px) {
-  .draft-left .pitch { height: 172px; }
+  .draft-left .pitch { height: 192px; }
   .draft-header { height: 44px; }
 }
