@@ -37,18 +37,35 @@
   line-height: 1;
 }
 
-.home-sub {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-}
 
 .home-leagues {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
   max-width: 400px;
+}
+
+.league-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.league-lb-link {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  text-align: right;
+  align-self: flex-end;
+  transition: color 0.15s;
+}
+
+.league-lb-link:hover {
+  color: var(--text-muted);
 }
 
 .league-card {

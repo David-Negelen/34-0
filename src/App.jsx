@@ -26,6 +26,7 @@ export default function App() {
     return (
       <HomeScreen
         onPickLeague={setLeague}
+        onLeaderboard={setLbLeague}
       />
     );
   }
@@ -56,6 +57,8 @@ export default function App() {
         useReroll={useReroll}
         setPendingSpin={setPendingSpin}
         setResult={setResult}
+        onGoHome={() => { reset(); setLeague(null); }}
+        onReset={reset}
       />
     );
   }

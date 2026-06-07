@@ -5,7 +5,7 @@ import RatingsPanel from './RatingsPanel';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
-export default function DraftScreen({ state, league, players, clubs, fillSlot, useReroll, setPendingSpin, setResult }) {
+export default function DraftScreen({ state, league, players, clubs, fillSlot, useReroll, setPendingSpin, setResult, onGoHome, onReset }) {
   const { setup, draft } = state;
   const { slots, rerollsLeft, filledCount, pendingSpin } = draft;
   const { draftMode, showRatings } = setup;
@@ -41,6 +41,10 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
       {/* ── Top bar ── */}
       <header className="draft-header">
         <div className="draft-header-left">
+          <button
+            className="btn btn-ghost btn-sm draft-nav-btn"
+            onClick={() => window.confirm('Draft abbrechen und zum Menü?') && onGoHome()}
+          >← <span className="draft-nav-label">Menü</span></button>
           <span className="draft-title">{league === '2bl' ? '2. BUNDESLIGA' : 'BUNDESLIGA'} DREAM XI</span>
           <span className="draft-formation badge badge-muted">{setup.formation}</span>
           {!showRatings && <span className="badge badge-gold">Blind-Modus</span>}
@@ -61,6 +65,10 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             ))}
             <span className="rerolls-label">{rerollsLeft} Joker</span>
           </div>
+          <button
+            className="btn btn-ghost btn-sm draft-nav-btn"
+            onClick={() => window.confirm('Draft neu starten?') && onReset()}
+          >↺</button>
         </div>
       </header>
 

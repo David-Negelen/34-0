@@ -23,6 +23,14 @@
   gap: 10px;
 }
 
+.draft-nav-btn {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 .draft-title {
   font-size: 13px;
   font-weight: 900;
@@ -196,6 +204,8 @@
   .progress-bar  { width: 48px; }
   .rerolls-label { display: none; }
   .draft-formation { display: none; }
+  .draft-nav-label { display: none; }
+  .draft-nav-btn { padding: 4px 8px; }
 }
 
 @media (max-width: 400px) {
