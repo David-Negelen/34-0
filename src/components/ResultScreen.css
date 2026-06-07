@@ -70,6 +70,11 @@
 
 .result-pitch-wrap {
   height: 420px;
+  overflow: hidden;
+}
+
+.result-pitch-wrap .pitch {
+  min-height: 0;
 }
 
 .result-right {
@@ -662,10 +667,13 @@
 
 /* ── Mobile ── */
 @media (max-width: 800px) {
-  .result-body    { flex-direction: column; padding: 16px; }
+  .result-body    { flex-direction: column; padding: 16px; align-items: stretch; }
   .result-left    { width: 100%; position: static; min-width: 0; }
+  .result-right   { width: 100%; min-width: 0; }
   .result-pitch-wrap { height: 340px; }
   .lt-wdl, .lt-gd { display: none; }
+  .lt-legend      { flex-wrap: wrap; gap: 8px 14px; }
+  .lp-key         { flex-wrap: wrap; gap: 4px 14px; }
 }
 
 @media (max-width: 600px) {
