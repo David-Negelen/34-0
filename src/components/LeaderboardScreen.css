@@ -28,22 +28,37 @@
 .lb-filters {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 20px 0;
+  gap: 5px;
+  padding: 10px 20px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 14px;
 }
 
 .lb-filter-row {
   display: flex;
   gap: 4px;
+  align-items: center;
 }
 
-/* ── Tabs ── */
-.lb-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 10px 20px 0;
+.lb-filter-spacer { flex: 1; }
+
+.filter-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-btn-active {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
 }
 
 /* ── Body ── */
@@ -132,10 +147,9 @@
 }
 
 @media (max-width: 480px) {
-  .lb-header     { padding: 10px 14px; }
-  .lb-body       { padding: 10px 12px; }
-  .lb-filters    { padding: 10px 12px 10px; }
-  .lb-tabs       { padding: 8px 12px 0; }
+  .lb-header  { padding: 10px 14px; }
+  .lb-body    { padding: 10px 12px; }
+  .lb-filters { padding: 8px 12px; }
 
   .lb-row {
     grid-template-columns: 32px 1fr 40px 64px 40px;

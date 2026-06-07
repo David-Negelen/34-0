@@ -26,7 +26,9 @@ export async function submitScore({ name, ovr, formation, pts, pos, w, d, l, mod
 }
 
 export async function fetchLeaderboard({ week = false, mode = 'easy_prime' } = {}) {
-  const filters = [`mode='${mode}'`];
+  // Old entries have no mode set — treat them as easy_prime
+  const modeFilter = mode === 'easy_prime' ? `(mode='easy_prime'||mode='')` : `mode='${mode}'`;
+  const filters = [modeFilter];
   if (week) {
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19);
     filters.push(`created>='${since}'`);

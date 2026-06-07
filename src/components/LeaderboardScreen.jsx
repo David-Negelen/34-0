@@ -44,7 +44,7 @@ export default function LeaderboardScreen({ onBack }) {
           {DIFFICULTIES.map(d => (
             <button
               key={d.key}
-              className={`tab-btn${difficulty === d.key ? ' tab-btn-active' : ''}`}
+              className={`filter-btn${difficulty === d.key ? ' filter-btn-active' : ''}`}
               onClick={() => setDifficulty(d.key)}
             >
               {d.label}
@@ -52,24 +52,12 @@ export default function LeaderboardScreen({ onBack }) {
           ))}
         </div>
         <div className="lb-filter-row">
-          <button
-            className={`tab-btn${ratingMode === 'prime' ? ' tab-btn-active' : ''}`}
-            onClick={() => setRatingMode('prime')}
-          >
-            Prime
-          </button>
-          <button
-            className={`tab-btn${ratingMode === 'career' ? ' tab-btn-active' : ''}`}
-            onClick={() => setRatingMode('career')}
-          >
-            Saisonstärke
-          </button>
+          <button className={`filter-btn${ratingMode === 'prime' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('prime')}>Prime</button>
+          <button className={`filter-btn${ratingMode === 'career' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('career')}>Saisonstärke</button>
+          <div className="lb-filter-spacer" />
+          <button className={`filter-btn${tab === 'alltime' ? ' filter-btn-active' : ''}`} onClick={() => setTab('alltime')}>Allzeit</button>
+          <button className={`filter-btn${tab === 'week' ? ' filter-btn-active' : ''}`} onClick={() => setTab('week')}>Woche</button>
         </div>
-      </div>
-
-      <div className="lb-tabs">
-        <button className={`tab-btn${tab === 'alltime' ? ' tab-btn-active' : ''}`} onClick={() => setTab('alltime')}>Allzeit</button>
-        <button className={`tab-btn${tab === 'week' ? ' tab-btn-active' : ''}`} onClick={() => setTab('week')}>Diese Woche</button>
       </div>
 
       <div className="lb-body">
