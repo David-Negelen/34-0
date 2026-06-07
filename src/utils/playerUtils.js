@@ -59,14 +59,14 @@ const WEIGHT_TEMP   = 8;
 // Pick a random club and season that has eligible candidates for the open slots.
 // Weighted by avg prime rating so stronger squads appear more often.
 // excludeIds: Set of player IDs already placed in the squad — excluded from pool and eligibility check.
-// Returns { club, season, candidates } or null if nothing found after maxTries.
-export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries = 30) {
+// Returns { club, season, candidates } or null if no eligible pair exists.
+export function randomSpin(players, openSlots, excludeIds = new Set()) {
   const pairs = [];
   for (const club of getClubsInDb(players)) {
     for (const season of getSeasonsForClub(players, club)) {
       const pool = getPlayersForClubSeason(players, club, season)
         .filter(p => !excludeIds.has(p.id));
-      if (!pool.length) continue;
+      if (!getEligiblePlayers(pool, openSlots).length) continue;
       const avg = pool.reduce((s, p) => s + (p.seasonRating ?? p.primeRating), 0) / pool.length;
       const weight = Math.exp((avg - WEIGHT_CENTER) / WEIGHT_TEMP);
       pairs.push({ club, season, pool, weight });
@@ -75,19 +75,13 @@ export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries 
   if (!pairs.length) return null;
 
   const totalWeight = pairs.reduce((s, p) => s + p.weight, 0);
-
-  for (let i = 0; i < maxTries; i++) {
-    let r = Math.random() * totalWeight;
-    let picked = pairs[pairs.length - 1];
-    for (const p of pairs) {
-      r -= p.weight;
-      if (r <= 0) { picked = p; break; }
-    }
-    if (getEligiblePlayers(picked.pool, openSlots).length > 0) {
-      return { club: picked.club, season: picked.season, candidates: picked.pool };
-    }
+  let r = Math.random() * totalWeight;
+  let picked = pairs[pairs.length - 1];
+  for (const p of pairs) {
+    r -= p.weight;
+    if (r <= 0) { picked = p; break; }
   }
-  return null;
+  return { club: picked.club, season: picked.season, candidates: picked.pool };
 }
 
 // German position label mapping
