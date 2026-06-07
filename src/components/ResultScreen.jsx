@@ -184,7 +184,7 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                       className="lp-marker"
                       style={{ left: `${Math.max(2, Math.min(96, 2 + ((18 - pos) / 17) * 94))}%` }}
                     />
-                    <div className="lp-zone lp-relegation" style={{ width: '22%' }} title="Relegation zone" />
+                    <div className="lp-zone lp-relegation" style={{ width: '22%' }} />
                     <div className="lp-zone lp-midtable" style={{ width: '44%', left: '22%' }} />
                     <div className="lp-zone lp-europe" style={{ width: '22%', left: '66%' }} />
                     <div className="lp-zone lp-title" style={{ width: '12%', left: '88%' }} />
@@ -192,7 +192,7 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                   <div className="lp-key">
                     <span className="lp-key-item relegation">Abstieg</span>
                     <span className="lp-key-item midtable">Mittelfeld</span>
-                    <span className="lp-key-item europe">Europa</span>
+                    <span className="lp-key-item europe">{league === '2bl' ? 'Aufstieg' : 'Europa'}</span>
                     <span className="lp-key-item title">Meister</span>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                   <button className={`tab-btn${tableTab === 'table' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('table')}>Tabelle</button>
                   <button className={`tab-btn${tableTab === 'curve' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('curve')}>Fieberkurve</button>
                 </div>
-                {tableTab === 'table' ? <LeagueTable table={table} /> : <FeverCurve tableHistory={tableHistory} />}
+                {tableTab === 'table' ? <LeagueTable table={table} league={league} /> : <FeverCurve tableHistory={tableHistory} league={league} />}
               </div>
 
               {/* Player statistics */}
@@ -398,7 +398,15 @@ function PlayerStats({ stats }) {
   );
 }
 
-function tableZone(pos) {
+function tableZone(pos, league = 'bl') {
+  if (league === '2bl') {
+    if (pos === 1)  return 'champion';
+    if (pos === 2)  return 'ucl';
+    if (pos === 3)  return 'uel';
+    if (pos === 16) return 'playoff';
+    if (pos >= 17)  return 'relegated';
+    return 'mid';
+  }
   if (pos === 1)  return 'champion';
   if (pos <= 4)   return 'ucl';
   if (pos <= 6)   return 'uel';
@@ -408,7 +416,7 @@ function tableZone(pos) {
   return 'mid';
 }
 
-function LeagueTable({ table }) {
+function LeagueTable({ table, league = 'bl' }) {
   if (!table?.length) return null;
   const playerRow = table.find(r => r.isPlayer);
 
@@ -427,7 +435,7 @@ function LeagueTable({ table }) {
         return (
           <div
             key={row.name}
-            className={`lt-row lt-zone-${tableZone(row.pos)} ${row.isPlayer ? 'lt-row-player' : ''}`}
+            className={`lt-row lt-zone-${tableZone(row.pos, league)} ${row.isPlayer ? 'lt-row-player' : ''}`}
           >
             <span className="lt-pos">{row.pos}</span>
             <span className="lt-name">{row.name}</span>
@@ -438,18 +446,30 @@ function LeagueTable({ table }) {
         );
       })}
       <div className="lt-legend">
-        <span className="lt-legend-item lt-legend-champion">Meister</span>
-        <span className="lt-legend-item lt-legend-ucl">Champions League</span>
-        <span className="lt-legend-item lt-legend-uel">Europa League</span>
-        <span className="lt-legend-item lt-legend-conference">Conference League</span>
-        <span className="lt-legend-item lt-legend-playoff">Relegation</span>
-        <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
+        {league === '2bl' ? (
+          <>
+            <span className="lt-legend-item lt-legend-champion">Meister</span>
+            <span className="lt-legend-item lt-legend-ucl">Aufstieg</span>
+            <span className="lt-legend-item lt-legend-uel">Relegation (Aufstieg)</span>
+            <span className="lt-legend-item lt-legend-playoff">Relegation (Abstieg)</span>
+            <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
+          </>
+        ) : (
+          <>
+            <span className="lt-legend-item lt-legend-champion">Meister</span>
+            <span className="lt-legend-item lt-legend-ucl">Champions League</span>
+            <span className="lt-legend-item lt-legend-uel">Europa League</span>
+            <span className="lt-legend-item lt-legend-conference">Conference League</span>
+            <span className="lt-legend-item lt-legend-playoff">Relegation</span>
+            <span className="lt-legend-item lt-legend-relegated">Abstieg</span>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function FeverCurve({ tableHistory }) {
+function FeverCurve({ tableHistory, league = 'bl' }) {
   if (!tableHistory?.length) return null;
 
   const W = 460, H = 220;
@@ -478,10 +498,21 @@ function FeverCurve({ tableHistory }) {
     <div className="fever-curve-wrap">
       <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
         {/* Zone bands */}
-        <rect x={pL} y={yp(1) - bandH / 2} width={cW} height={bandH}        fill="rgba(245,197,24,0.07)" />
-        <rect x={pL} y={yp(2) - bandH / 2} width={cW} height={3 * bandH}    fill="rgba(59,130,246,0.06)" />
-        <rect x={pL} y={yp(5) - bandH / 2} width={cW} height={2 * bandH}    fill="rgba(249,115,22,0.05)" />
-        <rect x={pL} y={yp(17) - bandH / 2} width={cW} height={2 * bandH}   fill="rgba(239,68,68,0.07)" />
+        {league === '2bl' ? (
+          <>
+            <rect x={pL} y={yp(1) - bandH / 2} width={cW} height={bandH}      fill="rgba(245,197,24,0.07)" />
+            <rect x={pL} y={yp(2) - bandH / 2} width={cW} height={2 * bandH}  fill="rgba(59,130,246,0.06)" />
+            <rect x={pL} y={yp(16) - bandH / 2} width={cW} height={bandH}     fill="rgba(249,115,22,0.06)" />
+            <rect x={pL} y={yp(17) - bandH / 2} width={cW} height={2 * bandH} fill="rgba(239,68,68,0.07)" />
+          </>
+        ) : (
+          <>
+            <rect x={pL} y={yp(1) - bandH / 2} width={cW} height={bandH}      fill="rgba(245,197,24,0.07)" />
+            <rect x={pL} y={yp(2) - bandH / 2} width={cW} height={3 * bandH}  fill="rgba(59,130,246,0.06)" />
+            <rect x={pL} y={yp(5) - bandH / 2} width={cW} height={2 * bandH}  fill="rgba(249,115,22,0.05)" />
+            <rect x={pL} y={yp(17) - bandH / 2} width={cW} height={2 * bandH} fill="rgba(239,68,68,0.07)" />
+          </>
+        )}
 
         {/* Hinrunde / Rückrunde divider */}
         <line x1={divX} y1={pT} x2={divX} y2={pT + cH}
@@ -490,13 +521,13 @@ function FeverCurve({ tableHistory }) {
         <text x={divX + 4} y={pT + 9} fill="rgba(255,255,255,0.25)" fontSize="6.5" textAnchor="start">R</text>
 
         {/* Horizontal rules */}
-        {[1, 4, 6, 16, 18].map(p => (
+        {(league === '2bl' ? [1, 2, 3, 16, 18] : [1, 4, 6, 16, 18]).map(p => (
           <line key={p} x1={pL} y1={yp(p)} x2={pL + cW} y2={yp(p)}
             stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
         ))}
 
         {/* Y-axis labels */}
-        {[1, 4, 6, 10, 16, 18].map(p => (
+        {(league === '2bl' ? [1, 2, 3, 10, 16, 18] : [1, 4, 6, 10, 16, 18]).map(p => (
           <text key={p} x={pL - 4} y={yp(p) + 3}
             fill="rgba(255,255,255,0.28)" fontSize="7" textAnchor="end">{p}</text>
         ))}
