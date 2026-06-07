@@ -32,7 +32,7 @@ export async function fetchLeaderboard({ week = false } = {}) {
     filter = `&filter=(created>='${since}')`;
   }
   const res = await fetch(
-    `${PB_URL}/api/collections/scores/records?sort=-ovr&perPage=100${filter}`
+    `${PB_URL}/api/collections/scores/records?sort=-pts&perPage=100${filter}`
   );
   if (!res.ok) throw new Error('Fetch failed');
   const data = await res.json();
