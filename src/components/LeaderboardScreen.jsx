@@ -9,7 +9,6 @@ const DIFFICULTIES = [
 ];
 
 export default function LeaderboardScreen({ onBack }) {
-  const [tab, setTab] = useState('alltime');
   const [difficulty, setDifficulty] = useState('easy');
   const [ratingMode, setRatingMode] = useState('prime');
   const [rows, setRows] = useState([]);
@@ -23,11 +22,11 @@ export default function LeaderboardScreen({ onBack }) {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetchLeaderboard({ week: tab === 'week', mode })
+    fetchLeaderboard({ mode })
       .then(setRows)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [tab, mode]);
+  }, [mode]);
 
   return (
     <div className="lb-screen slide-up">
@@ -54,9 +53,6 @@ export default function LeaderboardScreen({ onBack }) {
         <div className="lb-filter-row">
           <button className={`filter-btn${ratingMode === 'prime' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('prime')}>Prime</button>
           <button className={`filter-btn${ratingMode === 'career' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('career')}>Saisonstärke</button>
-          <div className="lb-filter-spacer" />
-          <button className={`filter-btn${tab === 'alltime' ? ' filter-btn-active' : ''}`} onClick={() => setTab('alltime')}>Allzeit</button>
-          <button className={`filter-btn${tab === 'week' ? ' filter-btn-active' : ''}`} onClick={() => setTab('week')}>Woche</button>
         </div>
       </div>
 

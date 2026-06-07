@@ -25,17 +25,11 @@ export async function submitScore({ name, ovr, formation, pts, pos, w, d, l, mod
   return res.json();
 }
 
-export async function fetchLeaderboard({ week = false, mode = 'easy_prime' } = {}) {
+export async function fetchLeaderboard({ mode = 'easy_prime' } = {}) {
   // Old entries have no mode set — treat them as easy_prime
   const modeFilter = mode === 'easy_prime' ? `(mode='easy_prime'||mode='')` : `mode='${mode}'`;
-  const filters = [modeFilter];
-  if (week) {
-    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19);
-    filters.push(`created>='${since}'`);
-  }
-  const filter = `&filter=(${filters.join('&&')})`;
   const res = await fetch(
-    `${PB_URL}/api/collections/scores/records?sort=-pts&perPage=100${filter}`
+    `${PB_URL}/api/collections/scores/records?sort=-pts&perPage=100&filter=(${modeFilter})`
   );
   if (!res.ok) throw new Error('Fetch failed');
   const data = await res.json();
