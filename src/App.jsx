@@ -18,7 +18,10 @@ export default function App() {
       <SetupScreen
         setup={state.setup}
         onUpdate={updateSetup}
-        onStart={startDraft}
+        onStart={() => {
+          window.umami?.track('game-started', { formation: state.setup.formation, difficulty: state.setup.difficulty });
+          startDraft();
+        }}
         onLeaderboard={() => setShowLeaderboard(true)}
       />
     );

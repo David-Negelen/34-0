@@ -58,6 +58,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
     if (!matchLogDone) return;
     const ovr = calcOvr();
     scoreRef.current = { ovr };
+    window.umami?.track('game-completed', { pts, pos, w: W, d: D, l: L, ovr });
     const saved = getSavedName();
     if (saved) {
       doSubmit(saved);
