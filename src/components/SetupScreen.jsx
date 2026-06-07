@@ -14,9 +14,11 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
   return (
     <div className="setup-screen">
       <header className="setup-header">
-        {onBack && (
-          <button className="btn btn-ghost btn-sm setup-back" onClick={onBack}>← Liga</button>
-        )}
+        <div>
+          {onBack && (
+            <button className="btn btn-ghost btn-sm" onClick={onBack}>← Liga</button>
+          )}
+        </div>
         <div className="setup-title">
           <span className="title-num">34</span>
           <span className="title-dash">-</span>

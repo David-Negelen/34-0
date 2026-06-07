@@ -10,18 +10,15 @@
 
 /* ── Header ── */
 .setup-header {
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   width: 100%;
-  max-width: 480px;
-  text-align: center;
   margin-bottom: 48px;
 }
 
 .setup-back {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  justify-self: start;
 }
 
 .setup-title {
