@@ -15,22 +15,23 @@ export function randomGuestName() {
   return prefix + (Math.floor(Math.random() * 900) + 100);
 }
 
-export async function submitScore({ name, ovr, formation, pts, pos, w, d, l }) {
+export async function submitScore({ name, ovr, formation, pts, pos, w, d, l, mode }) {
   const res = await fetch(`${PB_URL}/api/collections/scores/records`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, ovr, formation, pts, pos, w, d, l }),
+    body: JSON.stringify({ name, ovr, formation, pts, pos, w, d, l, mode }),
   });
   if (!res.ok) throw new Error('Submit failed');
   return res.json();
 }
 
-export async function fetchLeaderboard({ week = false } = {}) {
-  let filter = '';
+export async function fetchLeaderboard({ week = false, mode = 'easy_prime' } = {}) {
+  const filters = [`mode='${mode}'`];
   if (week) {
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19);
-    filter = `&filter=(created>='${since}')`;
+    filters.push(`created>='${since}'`);
   }
+  const filter = `&filter=(${filters.join('&&')})`;
   const res = await fetch(
     `${PB_URL}/api/collections/scores/records?sort=-pts&perPage=100${filter}`
   );

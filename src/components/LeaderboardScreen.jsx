@@ -2,23 +2,32 @@ import { useState, useEffect } from 'react';
 import { fetchLeaderboard, getSavedName, saveName } from '../utils/leaderboard';
 import './LeaderboardScreen.css';
 
+const DIFFICULTIES = [
+  { key: 'easy',   label: 'Leicht' },
+  { key: 'normal', label: 'Normal' },
+  { key: 'hard',   label: 'Schwer' },
+];
+
 export default function LeaderboardScreen({ onBack }) {
   const [tab, setTab] = useState('alltime');
+  const [difficulty, setDifficulty] = useState('easy');
+  const [ratingMode, setRatingMode] = useState('prime');
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(getSavedName() ?? '');
   const myName = getSavedName();
+  const mode = `${difficulty}_${ratingMode}`;
 
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetchLeaderboard({ week: tab === 'week' })
+    fetchLeaderboard({ week: tab === 'week', mode })
       .then(setRows)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [tab]);
+  }, [tab, mode]);
 
   return (
     <div className="lb-screen slide-up">
@@ -29,6 +38,34 @@ export default function LeaderboardScreen({ onBack }) {
           {myName ? `@${myName}` : 'Name setzen'}
         </button>
       </header>
+
+      <div className="lb-filters">
+        <div className="lb-filter-row">
+          {DIFFICULTIES.map(d => (
+            <button
+              key={d.key}
+              className={`tab-btn${difficulty === d.key ? ' tab-btn-active' : ''}`}
+              onClick={() => setDifficulty(d.key)}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+        <div className="lb-filter-row">
+          <button
+            className={`tab-btn${ratingMode === 'prime' ? ' tab-btn-active' : ''}`}
+            onClick={() => setRatingMode('prime')}
+          >
+            Prime
+          </button>
+          <button
+            className={`tab-btn${ratingMode === 'career' ? ' tab-btn-active' : ''}`}
+            onClick={() => setRatingMode('career')}
+          >
+            Saisonstärke
+          </button>
+        </div>
+      </div>
 
       <div className="lb-tabs">
         <button className={`tab-btn${tab === 'alltime' ? ' tab-btn-active' : ''}`} onClick={() => setTab('alltime')}>Allzeit</button>

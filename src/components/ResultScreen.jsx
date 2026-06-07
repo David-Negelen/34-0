@@ -46,7 +46,8 @@ export default function ResultScreen({ state, onPlayAgain }) {
   async function doSubmit(name) {
     const ovr = scoreRef.current?.ovr ?? calcOvr();
     try {
-      await submitScore({ name, ovr, formation: setup.formation, pts, pos, w: W, d: D, l: L });
+      const mode = `${setup.difficulty}_${setup.ratingMode}`;
+      await submitScore({ name, ovr, formation: setup.formation, pts, pos, w: W, d: D, l: L, mode });
       setSubmitToast('saved');
     } catch {
       setSubmitToast('error');
