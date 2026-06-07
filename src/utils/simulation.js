@@ -47,31 +47,31 @@ function generateMatchEvents(goalsFor, squad) {
 // lambdaH is driven by home attack vs away defense; lambdaA vice-versa.
 // Home advantage baked in as +0.18 / -0.18.
 function simulateMatch(hAtt, hDef, aAtt, aDef) {
-  const lambdaH = Math.max(0.50, 1.50 + 0.18 + (hAtt - aDef) * 0.06);
-  const lambdaA = Math.max(0.50, 1.50 - 0.18 + (aAtt - hDef) * 0.06);
+  const lambdaH = Math.max(0.40, 1.40 + 0.15 + (hAtt - aDef) * 0.035);
+  const lambdaA = Math.max(0.40, 1.40 - 0.15 + (aAtt - hDef) * 0.035);
   return { hg: poisson(lambdaH), ag: poisson(lambdaA) };
 }
 
 // ── League teams ──────────────────────────────────────────────────────────────
 
 const LEAGUE_TEAMS = [
-  { name: 'FC Bayern München',          strength: 88 },
-  { name: 'Borussia Dortmund',          strength: 81 },
-  { name: 'Bayer 04 Leverkusen',        strength: 79 },
-  { name: 'VfB Stuttgart',              strength: 74 },
-  { name: 'TSG 1899 Hoffenheim',        strength: 67 },
-  { name: 'SC Freiburg',                strength: 68 },
-  { name: 'Eintracht Frankfurt',        strength: 72 },
-  { name: 'Borussia Mönchengladbach',   strength: 66 },
-  { name: 'FC Augsburg',                strength: 62 },
-  { name: '1. FSV Mainz 05',            strength: 61 },
-  { name: '1. FC Union Berlin',         strength: 62 },
-  { name: 'Hamburger SV',               strength: 64 },
-  { name: '1. FC Köln',                 strength: 63 },
-  { name: 'Werder Bremen',              strength: 63 },
-  { name: 'FC Schalke 04',              strength: 60 },
-  { name: 'SV Elversberg',              strength: 56 },
-  { name: 'SC Paderborn 07',            strength: 54 },
+  { name: 'FC Bayern München',          strength: 90 },
+  { name: 'Borussia Dortmund',          strength: 82 },
+  { name: 'Bayer 04 Leverkusen',        strength: 81 },
+  { name: 'VfB Stuttgart',              strength: 76 },
+  { name: 'Eintracht Frankfurt',        strength: 74 },
+  { name: 'TSG 1899 Hoffenheim',        strength: 71 },
+  { name: 'SC Freiburg',                strength: 71 },
+  { name: 'Borussia Mönchengladbach',   strength: 70 },
+  { name: 'Werder Bremen',              strength: 68 },
+  { name: 'Hamburger SV',               strength: 68 },
+  { name: '1. FC Union Berlin',         strength: 67 },
+  { name: '1. FC Köln',                 strength: 67 },
+  { name: 'FC Augsburg',                strength: 66 },
+  { name: '1. FSV Mainz 05',            strength: 66 },
+  { name: 'FC Schalke 04',              strength: 63 },
+  { name: 'SV Elversberg',              strength: 60 },
+  { name: 'SC Paderborn 07',            strength: 58 },
 ];
 
 // ── Schedule builder ─────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ export function simulateFullLeague(slots) {
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
-      const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(6))));
+      const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
       return { ...t, att: eff, def: eff };
     }),
     { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true },
