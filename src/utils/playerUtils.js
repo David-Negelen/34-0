@@ -102,7 +102,7 @@ export function shortName(name) {
 // Names ≤ 8 chars are shown whole; longer ones are split at a syllable boundary.
 export function tokenName(name) {
   const surname = name.split(' ').pop();
-  if (surname.length <= 8) return [surname, null];
+  if (surname.length <= 10) return [surname, null];
   return syllableSplit(surname);
 }
 
