@@ -81,6 +81,7 @@
 
 .formation-btn {
   padding: 9px 18px;
+  min-height: 44px;
   border-radius: 5px;
   border: 1px solid #2a2a2a;
   background: #141414;
@@ -90,6 +91,7 @@
   cursor: pointer;
   transition: border-color 0.12s ease, color 0.12s ease;
   letter-spacing: 0.5px;
+  touch-action: manipulation;
 }
 
 .formation-btn:hover {
@@ -185,12 +187,14 @@
   align-items: flex-start;
   gap: 5px;
   padding: 14px 13px;
+  min-height: 60px;
   border-radius: 6px;
   border: 1px solid #222;
   background: #141414;
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
   text-align: left;
+  touch-action: manipulation;
 }
 
 .diff-card:hover {
@@ -241,6 +245,7 @@
   align-items: flex-start;
   gap: 5px;
   padding: 14px 16px;
+  min-height: 60px;
   border-radius: 6px;
   border: 1px solid #222;
   background: #141414;
@@ -329,8 +334,17 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 500px) {
-  .title-num, .title-dash { font-size: 76px; letter-spacing: -4px; }
+@media (max-width: 600px) {
+  .setup-screen { padding: 36px 16px max(56px, env(safe-area-inset-bottom)); }
+  .setup-header { margin-bottom: 32px; }
+  .title-num, .title-dash { font-size: 88px; letter-spacing: -5px; }
+  .setup-body { gap: 22px; }
+  .pitch-mini { height: 220px; }
+}
+
+@media (max-width: 400px) {
+  .title-num, .title-dash { font-size: 68px; letter-spacing: -4px; }
   .diff-cards { grid-template-columns: 1fr; }
-  .pitch-mini { height: 200px; }
+  .pitch-mini { height: 180px; }
+  .setup-body { gap: 18px; }
 }

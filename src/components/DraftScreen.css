@@ -127,9 +127,72 @@
 }
 
 @media (max-width: 720px) {
-  .draft-screen { height: auto; overflow: auto; }
-  .draft-layout { flex-direction: column; }
-  .draft-left { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
-  .draft-left .pitch { min-height: 300px; }
-  .progress-bar { width: 50px; }
+  /* Page scrolls; header and pitch both stick */
+  .draft-screen {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .draft-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 48px;
+    padding: 0 14px;
+    /* fill in safe-area if phone is in landscape */
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+
+  .draft-layout {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+    min-height: 0;
+  }
+
+  /* Compact formation board sticks below the header */
+  .draft-left {
+    position: sticky;
+    top: 48px;
+    z-index: 10;
+    background: var(--bg);
+    width: 100%;
+    min-width: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    gap: 0;
+  }
+
+  .draft-left .board-wrap { height: auto; }
+
+  .draft-left .pitch {
+    flex: none;
+    min-height: 0;
+    height: 196px;
+  }
+
+  /* Ratings bars not useful during picking; reclaim vertical space */
+  .draft-left .ratings-panel { display: none; }
+
+  /* Spin panel fills page below the sticky pitch */
+  .draft-right {
+    padding: 14px 12px max(20px, env(safe-area-inset-bottom));
+    overflow: visible;
+    align-items: stretch;
+  }
+
+  /* Compact header elements */
+  .draft-title   { font-size: 11px; letter-spacing: 1.5px; }
+  .progress-bar  { width: 48px; }
+  .rerolls-label { display: none; }
+  .draft-formation { display: none; }
+}
+
+@media (max-width: 400px) {
+  .draft-left .pitch { height: 172px; }
+  .draft-header { height: 44px; }
+  .draft-left { top: 44px; }
 }

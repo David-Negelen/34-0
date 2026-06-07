@@ -3,6 +3,7 @@
   align-items: center;
   gap: 12px;
   padding: 11px 14px;
+  min-height: 56px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -11,6 +12,7 @@
   text-align: left;
   width: 100%;
   font-family: inherit;
+  touch-action: manipulation;
 }
 
 .player-card:hover:not(.disabled) {

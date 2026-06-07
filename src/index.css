@@ -42,6 +42,8 @@ body {
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
 }
 
 #root {
@@ -63,6 +65,7 @@ h1, h2, h3, h4 {
   justify-content: center;
   gap: 6px;
   padding: 10px 20px;
+  min-height: 44px;
   border-radius: var(--radius);
   border: 1px solid transparent;
   font-size: 14px;
@@ -72,6 +75,7 @@ h1, h2, h3, h4 {
   white-space: nowrap;
   text-decoration: none;
   user-select: none;
+  touch-action: manipulation;
 }
 
 .btn:disabled {
@@ -246,6 +250,18 @@ h1, h2, h3, h4 {
   max-width: 420px;
   animation: slideUp 0.25s ease both;
   box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .overlay-card {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+    max-width: 100%;
+  }
 }
 
 /* ── Toggle ── */

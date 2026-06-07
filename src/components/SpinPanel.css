@@ -268,3 +268,18 @@
   font-weight: 800;
   padding: 12px 16px;
 }
+
+/* ── Mobile ── */
+@media (max-width: 720px) {
+  .spin-panel  { max-width: 100%; }
+
+  .slot-reel--season { width: 110px; }
+  .slot-reel--season .reel-val { font-size: 15px; }
+  .slot-reel--club   .reel-val { font-size: 14px; }
+
+  .spin-actions { gap: 8px; }
+  .spin-btn     { min-height: 52px; font-size: 16px; }
+  .reroll-btn   { min-height: 44px; }
+
+  .candidates-list { gap: 5px; }
+}
