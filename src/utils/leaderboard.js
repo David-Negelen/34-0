@@ -15,11 +15,11 @@ export function randomGuestName() {
   return prefix + (Math.floor(Math.random() * 900) + 100);
 }
 
-export async function submitScore({ name, ovr, formation, pts, pos }) {
+export async function submitScore({ name, ovr, formation, pts, pos, w, d, l }) {
   const res = await fetch(`${PB_URL}/api/collections/scores/records`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, ovr, formation, pts, pos }),
+    body: JSON.stringify({ name, ovr, formation, pts, pos, w, d, l }),
   });
   if (!res.ok) throw new Error('Submit failed');
   return res.json();

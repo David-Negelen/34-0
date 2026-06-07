@@ -47,7 +47,7 @@ export default function LeaderboardScreen({ onBack }) {
               <span className="lb-col-rank">#</span>
               <span className="lb-col-name">Name</span>
               <span className="lb-col-ovr">OVR</span>
-              <span className="lb-col-form">Formation</span>
+              <span className="lb-col-form">S-U-N</span>
               <span className="lb-col-pts">Pkt</span>
             </div>
             {rows.map((row, i) => (
@@ -58,7 +58,7 @@ export default function LeaderboardScreen({ onBack }) {
                 <span className="lb-col-rank">{rankEmoji(i + 1)}</span>
                 <span className="lb-col-name">{row.name}</span>
                 <span className="lb-col-ovr">{row.ovr}</span>
-                <span className="lb-col-form">{row.formation}</span>
+                <span className="lb-col-form">{row.w}-{row.d}-{row.l}</span>
                 <span className="lb-col-pts">{row.pts}</span>
               </div>
             ))}
