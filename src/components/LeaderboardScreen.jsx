@@ -53,10 +53,10 @@ export default function LeaderboardScreen({ onBack }) {
             {rows.map((row, i) => (
               <div
                 key={row.id}
-                className={`lb-row${row.name === myName ? ' lb-row-mine' : ''}`}
+                className={`lb-row${row.name?.toUpperCase() === myName?.toUpperCase() ? ' lb-row-mine' : ''}`}
               >
                 <span className="lb-col-rank">{rankEmoji(i + 1)}</span>
-                <span className="lb-col-name">{row.name}</span>
+                <span className="lb-col-name">{row.name?.toUpperCase()}</span>
                 <span className="lb-col-ovr">{row.ovr}</span>
                 <span className="lb-col-form">{row.w}-{row.d}-{row.l}</span>
                 <span className="lb-col-pts">{row.pts}</span>

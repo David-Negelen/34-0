@@ -297,7 +297,7 @@ export default function SpinPanel({
 
       {/* ── Slot choice overlay ── */}
       {phase === 'slot-choice' && pendingPlayer && (
-        <div className="overlay">
+        <div className="overlay overlay-subtle">
           <div className="overlay-card">
             <h3 style={{ marginBottom: 6 }}>Position wählen</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>

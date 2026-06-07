@@ -7,7 +7,7 @@ export function getSavedName() {
 }
 
 export function saveName(name) {
-  localStorage.setItem('lb_name', name.trim());
+  localStorage.setItem('lb_name', name.trim().toUpperCase());
 }
 
 export function randomGuestName() {
