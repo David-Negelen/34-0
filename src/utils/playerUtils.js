@@ -51,20 +51,41 @@ export function getCompatibleSlots(player, openSlots) {
   return openSlots.filter(slot => canPlayerFillSlot(player, slot.type));
 }
 
+// Weighting parameters: pairs with avg prime rating above WEIGHT_CENTER
+// get exponentially higher weight, pulling stronger clubs into the spin more often.
+const WEIGHT_CENTER = 78;
+const WEIGHT_TEMP   = 8;
+
 // Pick a random club and season that has eligible candidates for the open slots.
+// Weighted by avg prime rating so stronger squads appear more often.
 // excludeIds: Set of player IDs already placed in the squad — excluded from pool and eligibility check.
 // Returns { club, season, candidates } or null if nothing found after maxTries.
 export function randomSpin(players, openSlots, excludeIds = new Set(), maxTries = 30) {
-  const clubs = getClubsInDb(players);
+  const pairs = [];
+  for (const club of getClubsInDb(players)) {
+    for (const season of getSeasonsForClub(players, club)) {
+      const pool = getPlayersForClubSeason(players, club, season)
+        .filter(p => !excludeIds.has(p.id));
+      if (!pool.length) continue;
+      const avg = pool.reduce((s, p) => s + p.primeRating, 0) / pool.length;
+      const weight = Math.exp((avg - WEIGHT_CENTER) / WEIGHT_TEMP);
+      pairs.push({ club, season, pool, weight });
+    }
+  }
+  if (!pairs.length) return null;
+
+  const totalWeight = pairs.reduce((s, p) => s + p.weight, 0);
+
   for (let i = 0; i < maxTries; i++) {
-    const club = clubs[Math.floor(Math.random() * clubs.length)];
-    const seasons = getSeasonsForClub(players, club);
-    if (!seasons.length) continue;
-    const season = seasons[Math.floor(Math.random() * seasons.length)];
-    const pool = getPlayersForClubSeason(players, club, season)
-      .filter(p => !excludeIds.has(p.id));
-    const eligible = getEligiblePlayers(pool, openSlots);
-    if (eligible.length > 0) return { club, season, candidates: pool };
+    let r = Math.random() * totalWeight;
+    let picked = pairs[pairs.length - 1];
+    for (const p of pairs) {
+      r -= p.weight;
+      if (r <= 0) { picked = p; break; }
+    }
+    if (getEligiblePlayers(picked.pool, openSlots).length > 0) {
+      return { club: picked.club, season: picked.season, candidates: picked.pool };
+    }
   }
   return null;
 }
