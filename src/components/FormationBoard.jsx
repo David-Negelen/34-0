@@ -1,4 +1,4 @@
-import { shortName, ratingClass, labelDE } from '../utils/playerUtils';
+import { tokenName, ratingClass, labelDE } from '../utils/playerUtils';
 import './FormationBoard.css';
 
 export default function FormationBoard({
@@ -53,7 +53,9 @@ export default function FormationBoard({
                 <span className="slot-label">{labelDE(slot.label)}</span>
               ) : (
                 <>
-                  <span className="slot-player-name">{shortName(slot.player.name)}</span>
+                  <span className="slot-player-name">
+                    {(() => { const [a, b] = tokenName(slot.player.name); return b ? <>{a}<br />{b}</> : a; })()}
+                  </span>
                   {showRatings && (
                     <span className={`slot-rating ${ratingClass(slot.player.displayRating)}`}>
                       {slot.player.displayRating}

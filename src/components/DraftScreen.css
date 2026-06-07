@@ -175,7 +175,7 @@
     height: 38px;
   }
   .draft-left .slot-label       { font-size: 9px; }
-  .draft-left .slot-player-name { font-size: 7.5px; max-width: 34px; }
+  .draft-left .slot-player-name { font-size: 7.5px; max-width: 36px; }
   .draft-left .slot-rating      { font-size: 7.5px; }
 
   /* Ratings bars not useful during picking; reclaim vertical space */

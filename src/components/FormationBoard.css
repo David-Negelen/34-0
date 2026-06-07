@@ -93,14 +93,10 @@
   font-size: 9.5px;
   font-weight: 700;
   color: #fff;
-  line-height: 1.15;
+  line-height: 1.2;
   text-align: center;
-  max-width: 46px;
+  max-width: 48px;
   overflow: hidden;
-  word-break: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .slot-rating {

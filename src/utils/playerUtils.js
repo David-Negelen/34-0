@@ -97,3 +97,38 @@ export function shortName(name) {
   if (parts.length === 1) return name.slice(0, 10);
   return parts[parts.length - 1].slice(0, 10);
 }
+
+// Returns [line1, line2|null] for pitch token display.
+// Names ≤ 8 chars are shown whole; longer ones are split at a syllable boundary.
+export function tokenName(name) {
+  const surname = name.split(' ').pop();
+  if (surname.length <= 8) return [surname, null];
+  return syllableSplit(surname);
+}
+
+function syllableSplit(word) {
+  const VOWELS = 'aeiouäöüáéíóúàèìòùAEIOUÄÖÜÁÉÍÓÚÀÈÌÒÙ';
+  const isV = c => VOWELS.includes(c);
+  const mid = Math.floor(word.length / 2);
+
+  const positions = [mid];
+  for (let d = 1; d <= 4; d++) positions.push(mid + d, mid - d);
+
+  // V|C boundary: if the consonant is surrounded by vowels (V|C|V), keep C with
+  // the following syllable (e.g. "Mertes|acker" not "Merte|sacker")
+  for (const pos of positions) {
+    if (pos <= 1 || pos >= word.length - 1) continue;
+    const prev = word[pos - 1], curr = word[pos], next = word[pos + 1] ?? '';
+    if (isV(prev) && !isV(curr)) {
+      const splitAt = isV(next) ? pos + 1 : pos;
+      return [word.slice(0, splitAt), word.slice(splitAt)];
+    }
+  }
+  // Fallback: C|C boundary
+  for (const pos of positions) {
+    if (pos <= 1 || pos >= word.length - 1) continue;
+    const prev = word[pos - 1], curr = word[pos];
+    if (!isV(prev) && !isV(curr)) return [word.slice(0, pos), word.slice(pos)];
+  }
+  return [word.slice(0, mid), word.slice(mid)];
+}
