@@ -300,7 +300,9 @@ function MatchLog({ matches, onDone }) {
       if (!doneCalled.current) { doneCalled.current = true; onDone?.(); }
       return;
     }
-    const t = setTimeout(() => setVisible(v => v + 1), 480);
+    const progress = visible / Math.max(1, matches.length - 1);
+    const delay = 500 + Math.pow(progress, 2) * 300;
+    const t = setTimeout(() => setVisible(v => v + 1), delay);
     return () => clearTimeout(t);
   }, [visible, matches]);
 
