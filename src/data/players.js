@@ -288,8 +288,8 @@ export const PLAYERS = [
     id: 'l_cio_77',
     name: 'Lúcio',
     positions: ['CB'],
-    seasons: [{ club: 'Bayern München', season: '2004-05', rating: 50 }, { club: 'Bayern München', season: '2005-06', rating: 50 }, { club: 'Bayern München', season: '2006-07', rating: 50 }, { club: 'Bayern München', season: '2007-08', rating: 50 }, { club: 'Bayern München', season: '2008-09', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Bayern München', season: '2004-05', rating: 93 }, { club: 'Bayern München', season: '2005-06', rating: 90 }, { club: 'Bayern München', season: '2006-07', rating: 88 }, { club: 'Bayern München', season: '2007-08', rating: 87 }, { club: 'Bayern München', season: '2008-09', rating: 87 }],
+    primeRating: 93,
   },
   {
     id: 'tom_starke_80',
@@ -330,8 +330,8 @@ export const PLAYERS = [
     id: 'z_roberto_89',
     name: 'Zé Roberto',
     positions: ['LW', 'LB', 'CM'],
-    seasons: [{ club: 'Bayern München', season: '2004-05', rating: 50 }, { club: 'Bayern München', season: '2005-06', rating: 50 }, { club: 'Bayern München', season: '2007-08', rating: 50 }, { club: 'Bayern München', season: '2008-09', rating: 50 }, { club: 'Hamburger SV', season: '2009-10', rating: 50 }, { club: 'Hamburger SV', season: '2010-11', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Bayern München', season: '2004-05', rating: 89 }, { club: 'Bayern München', season: '2005-06', rating: 92 }, { club: 'Bayern München', season: '2007-08', rating: 88 }, { club: 'Bayern München', season: '2008-09', rating: 83 }, { club: 'Hamburger SV', season: '2009-10', rating: 84 }, { club: 'Hamburger SV', season: '2010-11', rating: 82 }],
+    primeRating: 92,
   },
   {
     id: 'bernd_schneider_90',
@@ -395,13 +395,6 @@ export const PLAYERS = [
     positions: ['RB', 'RW'],
     seasons: [{ club: 'Borussia Dortmund', season: '2004-05', rating: 76 }, { club: '1. FC Köln', season: '2005-06', rating: 76 }],
     primeRating: 76,
-  },
-  {
-    id: 'matthias_kleinsteiber_117',
-    name: 'Matthias Kleinsteiber',
-    positions: ['GK'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'emmanuel_krontiris_120',
@@ -577,13 +570,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: 'Borussia Mönchengladbach', season: '2004-05', rating: 85 }, { club: 'Borussia Mönchengladbach', season: '2005-06', rating: 85 }],
     primeRating: 85,
-  },
-  {
-    id: 'thorsten_fink_199',
-    name: 'Thorsten Fink',
-    positions: ['DM'],
-    seasons: [{ club: 'Bayern München', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'berkant_goektan_200',
@@ -782,13 +768,6 @@ export const PLAYERS = [
     primeRating: 79,
   },
   {
-    id: 'sven_kmetsch_267',
-    name: 'Sven Kmetsch',
-    positions: ['DM'],
-    seasons: [{ club: 'FC Schalke 04', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'emile_mpenza_272',
     name: 'Emile Mpenza',
     positions: ['ST', 'LW'],
@@ -815,20 +794,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: 'FC Schalke 04', season: '2004-05', rating: 81 }, { club: 'FC Schalke 04', season: '2005-06', rating: 80 }],
     primeRating: 81,
-  },
-  {
-    id: 'toni_tapalovic_281',
-    name: 'Toni Tapalovic',
-    positions: ['GK'],
-    seasons: [{ club: 'FC Schalke 04', season: '2006-07', rating: 50 }, { club: 'FC Schalke 04', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'marco_van_hoogdalem_283',
-    name: 'Marco van Hoogdalem',
-    positions: ['CB', 'DM', 'RB'],
-    seasons: [{ club: 'FC Schalke 04', season: '2004-05', rating: 50 }, { club: 'FC Schalke 04', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'nico_van_kerckhoven_284',
@@ -936,13 +901,6 @@ export const PLAYERS = [
     primeRating: 80,
   },
   {
-    id: 'tomas_ujfalusi_325',
-    name: 'Tomas Ujfalusi',
-    positions: ['CB', 'LB', 'RB'],
-    seasons: [{ club: 'Hamburger SV', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'benjamin_koehler_332',
     name: 'Benjamin Köhler',
     positions: ['LW', 'LB', 'CM'],
@@ -976,13 +934,6 @@ export const PLAYERS = [
     positions: ['LW', 'LB', 'RB'],
     seasons: [{ club: 'FC Hansa Rostock', season: '2004-05', rating: 72 }, { club: 'Hertha BSC', season: '2004-05', rating: 72 }],
     primeRating: 72,
-  },
-  {
-    id: 'g_bor_kir_ly_342',
-    name: 'Gábor Király',
-    positions: ['GK'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'konstantinos_konstantinidis_343',
@@ -1067,13 +1018,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: '1. FC Nürnberg', season: '2004-05', rating: 64 }],
     primeRating: 64,
-  },
-  {
-    id: 'marijan_kovacevic_372',
-    name: 'Marijan Kovacevic',
-    positions: ['CB'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'carsten_wolters_388',
@@ -1503,13 +1447,6 @@ export const PLAYERS = [
     primeRating: 78,
   },
   {
-    id: 'kriszti_n_lisztes_604',
-    name: 'Krisztián Lisztes',
-    positions: ['AM', 'RW', 'CM'],
-    seasons: [{ club: 'Werder Bremen', season: '2004-05', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'roberto_pinto_606',
     name: 'Roberto Pinto',
     positions: ['RW'],
@@ -1699,13 +1636,6 @@ export const PLAYERS = [
     primeRating: 66,
   },
   {
-    id: 'massimo_cannizzaro_685',
-    name: 'Massimo Cannizzaro',
-    positions: ['ST'],
-    seasons: [{ club: 'Hamburger SV', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'sead_ramovic_686',
     name: 'Sead Ramovic',
     positions: ['GK'],
@@ -1886,13 +1816,6 @@ export const PLAYERS = [
     positions: ['LB', 'DM', 'CB'],
     seasons: [{ club: '1. FC Nürnberg', season: '2004-05', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'rajko_tavcar_769',
-    name: 'Rajko Tavcar',
-    positions: ['LB'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'david_jarol_m_773',
@@ -2266,13 +2189,6 @@ export const PLAYERS = [
     primeRating: 78,
   },
   {
-    id: 'peter_neustaedter_1059',
-    name: 'Peter Neustädter',
-    positions: ['CB'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'markus_schuler_1068',
     name: 'Markus Schuler',
     positions: ['LB', 'CB', 'LW'],
@@ -2488,13 +2404,6 @@ export const PLAYERS = [
     positions: ['CM', 'DM', 'AM'],
     seasons: [{ club: 'Alemannia Aachen', season: '2006-07', rating: 66 }],
     primeRating: 66,
-  },
-  {
-    id: 'dame_diouf_1239',
-    name: 'Dame Diouf',
-    positions: ['CB'],
-    seasons: [{ club: 'Hannover 96', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'ahmed_madouni_1254',
@@ -3302,13 +3211,6 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'stefan_beckert_1820',
-    name: 'Stefan Beckert',
-    positions: ['DM'],
-    seasons: [{ club: 'Werder Bremen', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'markus_bollmann_1856',
     name: 'Markus Bollmann',
     positions: ['CB', 'RB'],
@@ -3337,25 +3239,11 @@ export const PLAYERS = [
     primeRating: 65,
   },
   {
-    id: 'domenico_cozza_1916',
-    name: 'Domenico Cozza',
-    positions: ['AM'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'ant_nio_da_silva_1919',
     name: 'Antônio da Silva',
     positions: ['AM', 'LW', 'CM'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2004-05', rating: 68 }, { club: '1. FSV Mainz 05', season: '2005-06', rating: 69 }, { club: 'VfB Stuttgart', season: '2006-07', rating: 73 }, { club: 'VfB Stuttgart', season: '2007-08', rating: 73 }, { club: 'Borussia Dortmund', season: '2010-11', rating: 71 }, { club: 'Borussia Dortmund', season: '2011-12', rating: 72 }],
     primeRating: 73,
-  },
-  {
-    id: 'daniel_damm_1924',
-    name: 'Daniel Damm',
-    positions: ['DM', 'LB', 'LW'],
-    seasons: [{ club: '1. FC Kaiserslautern', season: '2004-05', rating: 50 }, { club: '1. FC Kaiserslautern', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'thomas_drescher_1956',
@@ -3370,13 +3258,6 @@ export const PLAYERS = [
     positions: ['RW'],
     seasons: [{ club: 'MSV Duisburg', season: '2005-06', rating: 68 }],
     primeRating: 68,
-  },
-  {
-    id: 'christian_erwig_1978',
-    name: 'Christian Erwig',
-    positions: ['ST'],
-    seasons: [{ club: 'FC Schalke 04', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'markus_feulner_1986',
@@ -3631,13 +3512,6 @@ export const PLAYERS = [
     primeRating: 77,
   },
   {
-    id: 'andr_poggenborg_2398',
-    name: 'André Poggenborg',
-    positions: ['GK'],
-    seasons: [{ club: 'MSV Duisburg', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'ren_renno_2420',
     name: 'René Renno',
     positions: ['GK'],
@@ -3750,13 +3624,6 @@ export const PLAYERS = [
     primeRating: 62,
   },
   {
-    id: 'patrick_wittich_2669',
-    name: 'Patrick Wittich',
-    positions: ['DM'],
-    seasons: [{ club: '1. FC Kaiserslautern', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'daniel_ziebig_2685',
     name: 'Daniel Ziebig',
     positions: ['LB'],
@@ -3769,13 +3636,6 @@ export const PLAYERS = [
     positions: ['LB', 'CB'],
     seasons: [{ club: 'FC Schalke 04', season: '2004-05', rating: 66 }, { club: 'FC Schalke 04', season: '2005-06', rating: 69 }, { club: 'FC Schalke 04', season: '2006-07', rating: 74 }, { club: 'FC Schalke 04', season: '2007-08', rating: 74 }],
     primeRating: 74,
-  },
-  {
-    id: 'morten_skoubo_2703',
-    name: 'Morten Skoubo',
-    positions: ['ST'],
-    seasons: [{ club: 'Borussia Mönchengladbach', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'gustavo_varela_2704',
@@ -3811,13 +3671,6 @@ export const PLAYERS = [
     positions: ['ST', 'SS', 'AM'],
     seasons: [{ club: 'Borussia Dortmund', season: '2004-05', rating: 70 }, { club: 'Borussia Dortmund', season: '2005-06', rating: 70 }, { club: 'Borussia Dortmund', season: '2006-07', rating: 68 }, { club: 'Borussia Dortmund', season: '2007-08', rating: 68 }],
     primeRating: 70,
-  },
-  {
-    id: 'eren_en_2773',
-    name: 'Eren Şen',
-    positions: ['ST', 'SS', 'RW'],
-    seasons: [{ club: 'Hamburger SV', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'christian_pander_2805',
@@ -3916,13 +3769,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: 'Hertha BSC', season: '2006-07', rating: 69 }],
     primeRating: 69,
-  },
-  {
-    id: 'luciano_velardi_2916',
-    name: 'Luciano Velardi',
-    positions: ['RW', 'LW', 'AM'],
-    seasons: [{ club: 'VfL Bochum', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'andreas_ivanschitz_2923',
@@ -4107,13 +3953,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'markus_neumayr_3391',
-    name: 'Markus Neumayr',
-    positions: ['AM', 'ST', 'CM'],
-    seasons: [{ club: 'MSV Duisburg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'mika_l_silvestre_3393',
     name: 'Mikaël Silvestre',
     positions: ['LB', 'CB'],
@@ -4168,13 +4007,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: 'Bayer 04 Leverkusen', season: '2009-10', rating: 77 }, { club: 'Bayer 04 Leverkusen', season: '2010-11', rating: 80 }],
     primeRating: 80,
-  },
-  {
-    id: 'jung_hwan_ahn_3489',
-    name: 'Jung-hwan Ahn',
-    positions: ['SS', 'LW', 'ST'],
-    seasons: [{ club: 'MSV Duisburg', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'alpay_oezalan_3504',
@@ -4513,13 +4345,6 @@ export const PLAYERS = [
     primeRating: 87,
   },
   {
-    id: 'bartosz_roma_czuk_4287',
-    name: 'Bartosz Romańczuk',
-    positions: ['LW', 'DM', 'LB'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'christian_wiesner_4296',
     name: 'Christian Wiesner',
     positions: ['RB', 'LB'],
@@ -4758,13 +4583,6 @@ export const PLAYERS = [
     primeRating: 65,
   },
   {
-    id: 'cedric_van_der_gun_4676',
-    name: 'Cedric van der Gun',
-    positions: ['ST', 'LW', 'AM'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'aaron_hunt_4687',
     name: 'Aaron Hunt',
     positions: ['AM', 'SS', 'LW'],
@@ -4828,13 +4646,6 @@ export const PLAYERS = [
     primeRating: 69,
   },
   {
-    id: 'christian_schwegler_4931',
-    name: 'Christian Schwegler',
-    positions: ['RB', 'RW'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'david_pallas_4947',
     name: 'David Pallas',
     positions: ['RB', 'RW'],
@@ -4852,8 +4663,8 @@ export const PLAYERS = [
     id: 'alex_frei_4977',
     name: 'Alex Frei',
     positions: ['ST', 'SS', 'RW'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2006-07', rating: 50 }, { club: 'Borussia Dortmund', season: '2007-08', rating: 50 }, { club: 'Borussia Dortmund', season: '2008-09', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Borussia Dortmund', season: '2006-07', rating: 70 }, { club: 'Borussia Dortmund', season: '2007-08', rating: 71 }, { club: 'Borussia Dortmund', season: '2008-09', rating: 70 }],
+    primeRating: 71,
   },
   {
     id: 'florian_dick_4979',
@@ -4882,13 +4693,6 @@ export const PLAYERS = [
     positions: ['RB', 'LB', 'RW'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2004-05', rating: 60 }, { club: '1. FSV Mainz 05', season: '2005-06', rating: 60 }, { club: '1. FSV Mainz 05', season: '2006-07', rating: 69 }],
     primeRating: 69,
-  },
-  {
-    id: 'christopher_ihm_5065',
-    name: 'Christopher Ihm',
-    positions: ['CB', 'LB'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'michael_falkenmayer_5067',
@@ -4940,13 +4744,6 @@ export const PLAYERS = [
     primeRating: 63,
   },
   {
-    id: 'sebastian_huber_5172',
-    name: 'Sebastian Huber',
-    positions: ['RW'],
-    seasons: [{ club: '1. FC Nürnberg', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'daniel_schell_5176',
     name: 'Daniel Schell',
     positions: ['GK'],
@@ -4973,13 +4770,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'FC Augsburg', season: '2012-13', rating: 74 }, { club: 'FC Augsburg', season: '2013-14', rating: 73 }, { club: 'FC Augsburg', season: '2014-15', rating: 71 }, { club: 'FC Augsburg', season: '2015-16', rating: 72 }],
     primeRating: 74,
-  },
-  {
-    id: 'jacques_abardonado_5320',
-    name: 'Jacques Abardonado',
-    positions: ['CB'],
-    seasons: [{ club: '1. FC Nürnberg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'mathieu_beda_5367',
@@ -5073,13 +4863,6 @@ export const PLAYERS = [
     primeRating: 79,
   },
   {
-    id: 'leandro_cufr_5945',
-    name: 'Leandro Cufré',
-    positions: ['LB', 'CB', 'RB'],
-    seasons: [{ club: 'Hertha BSC', season: '2008-09', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'marius_stankevicius_5966',
     name: 'Marius Stankevicius',
     positions: ['CB', 'RB', 'RW'],
@@ -5106,13 +4889,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: '1. FC Köln', season: '2008-09', rating: 76 }, { club: '1. FC Köln', season: '2009-10', rating: 74 }, { club: '1. FC Köln', season: '2010-11', rating: 75 }],
     primeRating: 76,
-  },
-  {
-    id: 'alexander_huber_6103',
-    name: 'Alexander Huber',
-    positions: ['RB', 'RW'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2005-06', rating: 50 }, { club: 'Eintracht Frankfurt', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'marcel_eger_6129',
@@ -5283,20 +5059,6 @@ export const PLAYERS = [
     primeRating: 87,
   },
   {
-    id: 'jean_carlos_6719',
-    name: 'Jean Carlos',
-    positions: ['LB'],
-    seasons: [{ club: 'Hamburger SV', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'alexander_thamm_6724',
-    name: 'Alexander Thamm',
-    positions: ['CB'],
-    seasons: [{ club: 'VfL Bochum', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'david_zajas_6726',
     name: 'David Zajas',
     positions: ['DM', 'CM'],
@@ -5337,13 +5099,6 @@ export const PLAYERS = [
     positions: ['ST', 'LW', 'RW'],
     seasons: [{ club: 'VfL Bochum', season: '2008-09', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'i_lhan_mans_z_6875',
-    name: 'İlhan Mansız',
-    positions: ['ST'],
-    seasons: [{ club: 'Hertha BSC', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'thomas_paulus_6890',
@@ -5465,13 +5220,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'iulian_filipescu_7646',
-    name: 'Iulian Filipescu',
-    positions: ['CB', 'LB', 'RB'],
-    seasons: [{ club: 'MSV Duisburg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'pepe_reina_7825',
     name: 'Pepe Reina',
     positions: ['GK'],
@@ -5584,25 +5332,11 @@ export const PLAYERS = [
     primeRating: 68,
   },
   {
-    id: 'nils_christian_schmidt_8632',
-    name: 'Nils-Christian Schmidt',
-    positions: ['RB'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2006-07', rating: 50 }, { club: 'Arminia Bielefeld', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'andreas_lambertz_8640',
     name: 'Andreas Lambertz',
     positions: ['CM', 'DM', 'AM'],
     seasons: [{ club: 'Fortuna Düsseldorf', season: '2012-13', rating: 70 }],
     primeRating: 70,
-  },
-  {
-    id: 'cataldo_cozza_8674',
-    name: 'Cataldo Cozza',
-    positions: ['CM'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'sezer_oeztuerk_8689',
@@ -5680,20 +5414,6 @@ export const PLAYERS = [
     positions: ['LB'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2005-06', rating: 69 }],
     primeRating: 69,
-  },
-  {
-    id: 'henning_lichte_9379',
-    name: 'Henning Lichte',
-    positions: ['RB', 'LB', 'RW'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2005-06', rating: 50 }, { club: '1. FSV Mainz 05', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'rudi_skacel_9524',
-    name: 'Rudi Skacel',
-    positions: ['LW', 'LB', 'AM'],
-    seasons: [{ club: 'Hertha BSC', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'isaac_boakye_9540',
@@ -5799,13 +5519,6 @@ export const PLAYERS = [
     positions: ['ST', 'SS'],
     seasons: [{ club: 'Eintracht Frankfurt', season: '2008-09', rating: 76 }, { club: 'Eintracht Frankfurt', season: '2009-10', rating: 76 }],
     primeRating: 76,
-  },
-  {
-    id: 'reto_ziegler_9915',
-    name: 'Reto Ziegler',
-    positions: ['CB', 'LB', 'LW'],
-    seasons: [{ club: 'Hamburger SV', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'claus_costa_10030',
@@ -5955,32 +5668,11 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'guerman_agac_11296',
-    name: 'Gürman Agac',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: 'Hannover 96', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'denis_wolf_11317',
     name: 'Denis Wolf',
     positions: ['AM', 'LW', 'RW'],
     seasons: [{ club: 'Hannover 96', season: '2004-05', rating: 60 }],
     primeRating: 60,
-  },
-  {
-    id: 'dominik_wohlfarth_11327',
-    name: 'Dominik Wohlfarth',
-    positions: ['GK'],
-    seasons: [{ club: 'SC Freiburg', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'craig_moore_11367',
-    name: 'Craig Moore',
-    positions: ['CB'],
-    seasons: [{ club: 'Borussia Mönchengladbach', season: '2004-05', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'hamed_namouchi_11492',
@@ -6249,20 +5941,6 @@ export const PLAYERS = [
     primeRating: 76,
   },
   {
-    id: 'oleksiy_belik_14927',
-    name: 'Oleksiy Belik',
-    positions: ['ST'],
-    seasons: [{ club: 'VfL Bochum', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'bojan_neziri_14936',
-    name: 'Bojan Neziri',
-    positions: ['LB'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'anatoliy_tymoshchuk_14944',
     name: 'Anatoliy Tymoshchuk',
     positions: ['DM', 'CB'],
@@ -6410,13 +6088,6 @@ export const PLAYERS = [
     primeRating: 76,
   },
   {
-    id: 'ronny_kockel_15434',
-    name: 'Ronny Kockel',
-    positions: ['GK'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'fernando_15450',
     name: 'Fernando',
     positions: ['CB'],
@@ -6550,13 +6221,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'fabian_lucassen_16317',
-    name: 'Fabian Lucassen',
-    positions: ['GK'],
-    seasons: [{ club: 'Hamburger SV', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'theofanis_gekas_16402',
     name: 'Theofanis Gekas',
     positions: ['ST'],
@@ -6641,13 +6305,6 @@ export const PLAYERS = [
     primeRating: 63,
   },
   {
-    id: 'marcel_schuon_16688',
-    name: 'Marcel Schuon',
-    positions: ['CB'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'jan_mauersberger_16721',
     name: 'Jan Mauersberger',
     positions: ['CB'],
@@ -6730,13 +6387,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'Hertha BSC', season: '2006-07', rating: 59 }, { club: 'Werder Bremen', season: '2007-08', rating: 59 }, { club: 'Werder Bremen', season: '2008-09', rating: 63 }],
     primeRating: 63,
-  },
-  {
-    id: 'marcus_steinwarth_16920',
-    name: 'Marcus Steinwarth',
-    positions: ['LB', 'CB', 'LW'],
-    seasons: [{ club: 'Hertha BSC', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'kevin_prince_boateng_16922',
@@ -6844,13 +6494,6 @@ export const PLAYERS = [
     primeRating: 81,
   },
   {
-    id: 'carlitos_17352',
-    name: 'Carlitos',
-    positions: ['LW', 'RW'],
-    seasons: [{ club: 'Hannover 96', season: '2010-11', rating: 50 }, { club: 'Hannover 96', season: '2011-12', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'dominik_schmidt_17443',
     name: 'Dominik Schmidt',
     positions: ['CB'],
@@ -6891,13 +6534,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'Alemannia Aachen', season: '2006-07', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'tom_moosmayer_17687',
-    name: 'Tom Moosmayer',
-    positions: ['DM', 'LB', 'LW'],
-    seasons: [{ club: 'Alemannia Aachen', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'sascha_moelders_17689',
@@ -6949,25 +6585,11 @@ export const PLAYERS = [
     primeRating: 77,
   },
   {
-    id: 'derek_boateng_18091',
-    name: 'Derek Boateng',
-    positions: ['DM'],
-    seasons: [{ club: '1. FC Köln', season: '2008-09', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'per_nilsson_18100',
     name: 'Per Nilsson',
     positions: ['CB'],
     seasons: [{ club: 'TSG Hoffenheim', season: '2008-09', rating: 70 }, { club: 'TSG Hoffenheim', season: '2009-10', rating: 71 }, { club: '1. FC Nürnberg', season: '2010-11', rating: 72 }, { club: '1. FC Nürnberg', season: '2011-12', rating: 71 }, { club: '1. FC Nürnberg', season: '2012-13', rating: 73 }, { club: '1. FC Nürnberg', season: '2013-14', rating: 73 }],
     primeRating: 73,
-  },
-  {
-    id: 'soeren_pirson_18192',
-    name: 'Sören Pirson',
-    positions: ['GK'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2004-05', rating: 50 }, { club: 'Borussia Dortmund', season: '2005-06', rating: 50 }, { club: 'Borussia Dortmund', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'edmond_kapllani_18248',
@@ -7017,13 +6639,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: '1. FC Köln', season: '2005-06', rating: 68 }],
     primeRating: 68,
-  },
-  {
-    id: 'fatmir_pupalovic_18372',
-    name: 'Fatmir Pupalovic',
-    positions: ['RW'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2005-06', rating: 50 }, { club: '1. FSV Mainz 05', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'damir_vrancic_18379',
@@ -7131,32 +6746,11 @@ export const PLAYERS = [
     primeRating: 52,
   },
   {
-    id: 'benjamin_venekamp_18739',
-    name: 'Benjamin Venekamp',
-    positions: ['LB', 'CB', 'RB'],
-    seasons: [{ club: 'Werder Bremen', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'tobias_grahn_18769',
     name: 'Tobias Grahn',
     positions: ['CM', 'DM', 'AM'],
     seasons: [{ club: 'Hertha BSC', season: '2007-08', rating: 71 }],
     primeRating: 71,
-  },
-  {
-    id: 'jon_inge_h_iland_18777',
-    name: 'Jon Inge Høiland',
-    positions: ['RB', 'CB', 'LB'],
-    seasons: [{ club: '1. FC Kaiserslautern', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'bilal_aziz_oezer_18831',
-    name: 'Bilal Aziz Özer',
-    positions: ['LB', 'LW', 'CM'],
-    seasons: [{ club: 'FC Schalke 04', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'tim_hoogland_18833',
@@ -7290,27 +6884,6 @@ export const PLAYERS = [
     positions: ['LB'],
     seasons: [{ club: 'Borussia Mönchengladbach', season: '2011-12', rating: 73 }, { club: 'Borussia Mönchengladbach', season: '2012-13', rating: 74 }, { club: 'Borussia Mönchengladbach', season: '2013-14', rating: 75 }, { club: 'Borussia Mönchengladbach', season: '2014-15', rating: 74 }, { club: 'Borussia Mönchengladbach', season: '2015-16', rating: 78 }, { club: 'Borussia Mönchengladbach', season: '2016-17', rating: 78 }, { club: 'Borussia Mönchengladbach', season: '2017-18', rating: 77 }, { club: 'Borussia Mönchengladbach', season: '2018-19', rating: 77 }, { club: 'Borussia Mönchengladbach', season: '2019-20', rating: 76 }, { club: 'Borussia Mönchengladbach', season: '2020-21', rating: 73 }],
     primeRating: 78,
-  },
-  {
-    id: 'johannes_dietwald_19333',
-    name: 'Johannes Dietwald',
-    positions: ['DM', 'RB', 'CM'],
-    seasons: [{ club: 'Hannover 96', season: '2005-06', rating: 50 }, { club: 'Hannover 96', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'hendrik_grossoehmichen_19334',
-    name: 'Hendrik Großöhmichen',
-    positions: ['DM', 'CB'],
-    seasons: [{ club: 'Hannover 96', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'moritz_marheineke_19335',
-    name: 'Moritz Marheineke',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: 'Hannover 96', season: '2004-05', rating: 50 }, { club: 'Hannover 96', season: '2005-06', rating: 50 }, { club: 'Hannover 96', season: '2006-07', rating: 50 }, { club: 'Hannover 96', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'bastian_schulz_19340',
@@ -7481,13 +7054,6 @@ export const PLAYERS = [
     primeRating: 71,
   },
   {
-    id: 'sasan_gouhari_20629',
-    name: 'Sasan Gouhari',
-    positions: ['CB'],
-    seasons: [{ club: 'Hamburger SV', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'adam_bodzek_20778',
     name: 'Adam Bodzek',
     positions: ['DM', 'CB'],
@@ -7542,13 +7108,6 @@ export const PLAYERS = [
     positions: ['RW', 'LW'],
     seasons: [{ club: 'FC Augsburg', season: '2012-13', rating: 69 }],
     primeRating: 69,
-  },
-  {
-    id: 'jan_rajnoch_21108',
-    name: 'Jan Rajnoch',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: 'FC Energie Cottbus', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'vedad_ibisevic_21175',
@@ -7626,13 +7185,6 @@ export const PLAYERS = [
     positions: ['LW', 'AM'],
     seasons: [{ club: 'Bayern München', season: '2007-08', rating: 87 }, { club: 'Bayern München', season: '2008-09', rating: 88 }, { club: 'Bayern München', season: '2009-10', rating: 88 }, { club: 'Bayern München', season: '2010-11', rating: 86 }, { club: 'Bayern München', season: '2011-12', rating: 89 }, { club: 'Bayern München', season: '2012-13', rating: 90 }, { club: 'Bayern München', season: '2013-14', rating: 89 }, { club: 'Bayern München', season: '2014-15', rating: 88 }, { club: 'Bayern München', season: '2015-16', rating: 86 }, { club: 'Bayern München', season: '2016-17', rating: 86 }, { club: 'Bayern München', season: '2017-18', rating: 85 }, { club: 'Bayern München', season: '2018-19', rating: 83 }],
     primeRating: 90,
-  },
-  {
-    id: 'michael_gravgaard_22172',
-    name: 'Michael Gravgaard',
-    positions: ['CB'],
-    seasons: [{ club: 'Hamburger SV', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'jonas_troest_22469',
@@ -7901,20 +7453,6 @@ export const PLAYERS = [
     primeRating: 77,
   },
   {
-    id: 'claudiu_niculescu_26049',
-    name: 'Claudiu Niculescu',
-    positions: ['ST'],
-    seasons: [{ club: 'MSV Duisburg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'engin_yildiz_26053',
-    name: 'Engin Yildiz',
-    positions: ['ST'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'morten_jensen_26056',
     name: 'Morten Jensen',
     positions: ['GK'],
@@ -8013,13 +7551,6 @@ export const PLAYERS = [
     primeRating: 63,
   },
   {
-    id: 'renato_bernardi_bauer_27035',
-    name: 'Renato Bernardi Bauer',
-    positions: ['CM'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'jos_alex_ikeng_27038',
     name: 'José-Alex Ikeng',
     positions: ['DM', 'CM'],
@@ -8046,13 +7577,6 @@ export const PLAYERS = [
     positions: ['AM', 'LW', 'RW'],
     seasons: [{ club: 'Eintracht Frankfurt', season: '2007-08', rating: 73 }, { club: 'Eintracht Frankfurt', season: '2008-09', rating: 73 }, { club: 'Eintracht Frankfurt', season: '2009-10', rating: 74 }, { club: 'Eintracht Frankfurt', season: '2010-11', rating: 74 }],
     primeRating: 74,
-  },
-  {
-    id: 'yoshito_okubo_27439',
-    name: 'Yoshito Okubo',
-    positions: ['ST', 'SS'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'markus_rosenberg_27505',
@@ -8468,13 +7992,6 @@ export const PLAYERS = [
     primeRating: 64,
   },
   {
-    id: 'timo_hammel_31158',
-    name: 'Timo Hammel',
-    positions: ['GK'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2005-06', rating: 50 }, { club: 'VfB Stuttgart', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'martin_harnik_31159',
     name: 'Martin Harnik',
     positions: ['ST', 'SS', 'RW'],
@@ -8522,13 +8039,6 @@ export const PLAYERS = [
     positions: ['RB', 'CB', 'LB'],
     seasons: [{ club: 'Borussia Mönchengladbach', season: '2005-06', rating: 56 }, { club: 'Borussia Mönchengladbach', season: '2006-07', rating: 56 }, { club: 'Borussia Mönchengladbach', season: '2008-09', rating: 65 }, { club: 'Borussia Mönchengladbach', season: '2009-10', rating: 69 }, { club: 'Borussia Mönchengladbach', season: '2010-11', rating: 73 }, { club: 'Fortuna Düsseldorf', season: '2012-13', rating: 68 }, { club: 'FC Ingolstadt 04', season: '2015-16', rating: 70 }, { club: 'FC Ingolstadt 04', season: '2016-17', rating: 70 }],
     primeRating: 73,
-  },
-  {
-    id: 'stefan_richter_31217',
-    name: 'Stefan Richter',
-    positions: ['GK'],
-    seasons: [{ club: 'Borussia Mönchengladbach', season: '2005-06', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'johannes_van_den_bergh_31218',
@@ -8650,13 +8160,6 @@ export const PLAYERS = [
     primeRating: 75,
   },
   {
-    id: 'johannes_ibelherr_31593',
-    name: 'Johannes Ibelherr',
-    positions: ['CB'],
-    seasons: [{ club: 'Hannover 96', season: '2008-09', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'norman_theuerkauf_31599',
     name: 'Norman Theuerkauf',
     positions: ['DM', 'CB', 'LB'],
@@ -8706,13 +8209,6 @@ export const PLAYERS = [
     primeRating: 62,
   },
   {
-    id: 'fatih_yigitusagi_31718',
-    name: 'Fatih Yigitusagi',
-    positions: ['ST'],
-    seasons: [{ club: 'Hannover 96', season: '2008-09', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'nicolas_feldhahn_31741',
     name: 'Nicolas Feldhahn',
     positions: ['DM', 'CB', 'CM'],
@@ -8739,20 +8235,6 @@ export const PLAYERS = [
     positions: ['CB', 'DM'],
     seasons: [{ club: 'MSV Duisburg', season: '2005-06', rating: 65 }],
     primeRating: 65,
-  },
-  {
-    id: 'nico_hillenbrand_31853',
-    name: 'Nico Hillenbrand',
-    positions: ['DM', 'RW', 'CM'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2006-07', rating: 50 }, { club: 'Borussia Dortmund', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'joern_neumeister_31862',
-    name: 'Jörn Neumeister',
-    positions: ['CB'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'patrick_njambe_31863',
@@ -8811,13 +8293,6 @@ export const PLAYERS = [
     primeRating: 71,
   },
   {
-    id: 'simon_tueting_32049',
-    name: 'Simon Tüting',
-    positions: ['CM', 'DM', 'AM'],
-    seasons: [{ club: 'FC Hansa Rostock', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'louis_ngwat_mahop_32065',
     name: 'Louis Ngwat-Mahop',
     positions: ['ST', 'AM', 'RW'],
@@ -8832,39 +8307,11 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'marius_schultens_32164',
-    name: 'Marius Schultens',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2004-05', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'christian_eggert_32196',
-    name: 'Christian Eggert',
-    positions: ['DM', 'CB', 'RB'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'marcel_grosskreutz_32197',
-    name: 'Marcel Großkreutz',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'michael_kammermeyer_32199',
     name: 'Michael Kammermeyer',
     positions: ['CB', 'DM', 'RB'],
     seasons: [{ club: '1. FC Nürnberg', season: '2005-06', rating: 55 }, { club: '1. FC Nürnberg', season: '2007-08', rating: 55 }],
     primeRating: 55,
-  },
-  {
-    id: 'sebastian_szikal_32201',
-    name: 'Sebastian Szikal',
-    positions: ['DM'],
-    seasons: [{ club: '1. FC Nürnberg', season: '2004-05', rating: 50 }, { club: '1. FC Nürnberg', season: '2005-06', rating: 50 }, { club: '1. FC Nürnberg', season: '2006-07', rating: 50 }, { club: '1. FC Nürnberg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'marcel_heller_32207',
@@ -8975,8 +8422,8 @@ export const PLAYERS = [
     id: 'patrick_herrmann_32711',
     name: 'Patrick Herrmann',
     positions: ['RW', 'SS', 'LW'],
-    seasons: [{ club: 'Borussia Mönchengladbach', season: '2009-10', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2010-11', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2011-12', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2012-13', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2013-14', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2014-15', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2015-16', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2016-17', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2017-18', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2018-19', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2019-20', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2020-21', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2021-22', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2022-23', rating: 50 }, { club: 'Borussia Mönchengladbach', season: '2023-24', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Borussia Mönchengladbach', season: '2009-10', rating: 67 }, { club: 'Borussia Mönchengladbach', season: '2010-11', rating: 72 }, { club: 'Borussia Mönchengladbach', season: '2011-12', rating: 76 }, { club: 'Borussia Mönchengladbach', season: '2012-13', rating: 77 }, { club: 'Borussia Mönchengladbach', season: '2013-14', rating: 78 }, { club: 'Borussia Mönchengladbach', season: '2014-15', rating: 81 }, { club: 'Borussia Mönchengladbach', season: '2015-16', rating: 80 }, { club: 'Borussia Mönchengladbach', season: '2016-17', rating: 77 }, { club: 'Borussia Mönchengladbach', season: '2017-18', rating: 77 }, { club: 'Borussia Mönchengladbach', season: '2018-19', rating: 79 }, { club: 'Borussia Mönchengladbach', season: '2019-20', rating: 75 }, { club: 'Borussia Mönchengladbach', season: '2020-21', rating: 73 }, { club: 'Borussia Mönchengladbach', season: '2021-22', rating: 72 }, { club: 'Borussia Mönchengladbach', season: '2022-23', rating: 70 }, { club: 'Borussia Mönchengladbach', season: '2023-24', rating: 70 }],
+    primeRating: 81,
   },
   {
     id: 'moritz_nebel_32713',
@@ -9070,13 +8517,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'benny_feilhaber_33118',
-    name: 'Benny Feilhaber',
-    positions: ['CM', 'DM', 'AM'],
-    seasons: [{ club: 'Hamburger SV', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'przemyslaw_tyton_33210',
     name: 'Przemyslaw Tyton',
     positions: ['GK'],
@@ -9089,13 +8529,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: '1. FC Kaiserslautern', season: '2005-06', rating: 70 }, { club: 'Hamburger SV', season: '2006-07', rating: 76 }, { club: 'Hamburger SV', season: '2007-08', rating: 74 }, { club: 'Werder Bremen', season: '2007-08', rating: 74 }, { club: 'Werder Bremen', season: '2008-09', rating: 78 }, { club: 'TSG Hoffenheim', season: '2008-09', rating: 78 }, { club: 'Werder Bremen', season: '2009-10', rating: 78 }],
     primeRating: 78,
-  },
-  {
-    id: 'thomas_rathgeber_33291',
-    name: 'Thomas Rathgeber',
-    positions: ['ST', 'SS', 'CB'],
-    seasons: [{ club: 'VfL Bochum', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'markus_weck_33312',
@@ -9119,25 +8552,11 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'georges_ndoum_33454',
-    name: 'Georges Ndoum',
-    positions: ['CB'],
-    seasons: [{ club: 'MSV Duisburg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'valdet_rama_33535',
     name: 'Valdet Rama',
     positions: ['LW', 'ST', 'RW'],
     seasons: [{ club: 'Hannover 96', season: '2009-10', rating: 66 }],
     primeRating: 66,
-  },
-  {
-    id: 'alexander_hessel_33657',
-    name: 'Alexander Hessel',
-    positions: ['CB'],
-    seasons: [{ club: 'Werder Bremen', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'kevin_schindler_33662',
@@ -9210,13 +8629,6 @@ export const PLAYERS = [
     primeRating: 56,
   },
   {
-    id: 'abuda_34118',
-    name: 'Abuda',
-    positions: ['RW', 'SS', 'ST'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'nils_fischer_34134',
     name: 'Nils Fischer',
     positions: ['CB', 'DM', 'RB'],
@@ -9229,13 +8641,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'Arminia Bielefeld', season: '2007-08', rating: 53 }, { club: 'Arminia Bielefeld', season: '2008-09', rating: 53 }],
     primeRating: 53,
-  },
-  {
-    id: 'r_mulo_antoneli_34175',
-    name: 'Rômulo Antoneli',
-    positions: ['ST'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2005-06', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'vasilios_pliatsikas_34186',
@@ -9413,25 +8818,11 @@ export const PLAYERS = [
     primeRating: 76,
   },
   {
-    id: 'marc_hensel_35195',
-    name: 'Marc Hensel',
-    positions: ['DM', 'CB'],
-    seasons: [{ club: 'FC Energie Cottbus', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'mineiro_35198',
     name: 'Mineiro',
     positions: ['DM'],
     seasons: [{ club: 'Hertha BSC', season: '2006-07', rating: 74 }, { club: 'Hertha BSC', season: '2007-08', rating: 74 }, { club: 'FC Schalke 04', season: '2009-10', rating: 75 }],
     primeRating: 75,
-  },
-  {
-    id: 'fabian_goetze_35203',
-    name: 'Fabian Götze',
-    positions: ['LB', 'LW', 'CM'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'marco_reus_35207',
@@ -9451,8 +8842,8 @@ export const PLAYERS = [
     id: 'vieirinha_35247',
     name: 'Vieirinha',
     positions: ['RB', 'LB', 'LW'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2011-12', rating: 50 }, { club: 'VfL Wolfsburg', season: '2012-13', rating: 50 }, { club: 'VfL Wolfsburg', season: '2013-14', rating: 50 }, { club: 'VfL Wolfsburg', season: '2014-15', rating: 50 }, { club: 'VfL Wolfsburg', season: '2015-16', rating: 50 }, { club: 'VfL Wolfsburg', season: '2016-17', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'VfL Wolfsburg', season: '2011-12', rating: 78 }, { club: 'VfL Wolfsburg', season: '2012-13', rating: 79 }, { club: 'VfL Wolfsburg', season: '2013-14', rating: 78 }, { club: 'VfL Wolfsburg', season: '2014-15', rating: 80 }, { club: 'VfL Wolfsburg', season: '2015-16', rating: 80 }, { club: 'VfL Wolfsburg', season: '2016-17', rating: 79 }],
+    primeRating: 80,
   },
   {
     id: 'marko_marin_35251',
@@ -9467,13 +8858,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'FC St. Pauli', season: '2010-11', rating: 57 }],
     primeRating: 57,
-  },
-  {
-    id: 'alexander_wulf_35345',
-    name: 'Alexander Wulf',
-    positions: ['LB', 'LW'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'j_nior_d_az_35383',
@@ -9502,20 +8886,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: 'Hannover 96', season: '2006-07', rating: 61 }],
     primeRating: 61,
-  },
-  {
-    id: 'silvio_bankert_35602',
-    name: 'Silvio Bankert',
-    positions: ['CB', 'RB'],
-    seasons: [{ club: 'FC Energie Cottbus', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'kamil_vacek_35645',
-    name: 'Kamil Vacek',
-    positions: ['DM', 'CM'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2005-06', rating: 50 }, { club: 'Arminia Bielefeld', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'mesut_oezil_35664',
@@ -9567,13 +8937,6 @@ export const PLAYERS = [
     primeRating: 83,
   },
   {
-    id: 'niklas_stegmann_36185',
-    name: 'Niklas Stegmann',
-    positions: ['AM', 'LW', 'RW'],
-    seasons: [{ club: 'MSV Duisburg', season: '2005-06', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'christian_dorda_36189',
     name: 'Christian Dorda',
     positions: ['LB', 'CB', 'LW'],
@@ -9614,13 +8977,6 @@ export const PLAYERS = [
     positions: ['LW', 'AM', 'RW'],
     seasons: [{ club: '1. FC Kaiserslautern', season: '2011-12', rating: 70 }],
     primeRating: 70,
-  },
-  {
-    id: 'oliver_stang_36203',
-    name: 'Oliver Stang',
-    positions: ['CB'],
-    seasons: [{ club: 'Borussia Mönchengladbach', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'fin_bartels_36207',
@@ -9691,13 +9047,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: 'Hertha BSC', season: '2006-07', rating: 65 }, { club: '1. FC Köln', season: '2009-10', rating: 65 }, { club: '1. FC Köln', season: '2010-11', rating: 68 }, { club: '1. FC Köln', season: '2011-12', rating: 67 }],
     primeRating: 68,
-  },
-  {
-    id: 'fabrice_begeorgi_36911',
-    name: 'Fabrice Begeorgi',
-    positions: ['LB'],
-    seasons: [{ club: 'Werder Bremen', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'sebastian_boenisch_36914',
@@ -9805,13 +9154,6 @@ export const PLAYERS = [
     primeRating: 79,
   },
   {
-    id: 'ferhat_bikmaz_37560',
-    name: 'Ferhat Bikmaz',
-    positions: ['DM', 'LB', 'AM'],
-    seasons: [{ club: 'Hannover 96', season: '2005-06', rating: 50 }, { club: 'Hannover 96', season: '2006-07', rating: 50 }, { club: 'Hannover 96', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'prince_tagoe_37649',
     name: 'Prince Tagoe',
     positions: ['ST', 'LW', 'RW'],
@@ -9824,13 +9166,6 @@ export const PLAYERS = [
     positions: ['CM', 'DM', 'AM'],
     seasons: [{ club: 'Bayer 04 Leverkusen', season: '2007-08', rating: 68 }, { club: 'Bayer 04 Leverkusen', season: '2008-09', rating: 76 }, { club: 'Bayer 04 Leverkusen', season: '2009-10', rating: 78 }, { club: 'Bayer 04 Leverkusen', season: '2010-11', rating: 79 }, { club: 'Bayern München', season: '2015-16', rating: 85 }, { club: 'Bayern München', season: '2016-17', rating: 87 }, { club: 'Bayern München', season: '2017-18', rating: 86 }],
     primeRating: 87,
-  },
-  {
-    id: 'tufan_tosunoglu_37685',
-    name: 'Tufan Tosunoglu',
-    positions: ['SS', 'LW', 'RW'],
-    seasons: [{ club: 'MSV Duisburg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'siyabonga_nkosi_37732',
@@ -9929,13 +9264,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'TSG Hoffenheim', season: '2008-09', rating: 64 }, { club: 'VfB Stuttgart', season: '2013-14', rating: 69 }, { club: 'VfB Stuttgart', season: '2014-15', rating: 69 }, { club: 'Bayer 04 Leverkusen', season: '2018-19', rating: 69 }],
     primeRating: 69,
-  },
-  {
-    id: 'dennis_lamczyk_38347',
-    name: 'Dennis Lamczyk',
-    positions: ['GK'],
-    seasons: [{ club: 'FC Schalke 04', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'david_pisot_38348',
@@ -10379,13 +9707,6 @@ export const PLAYERS = [
     primeRating: 77,
   },
   {
-    id: 'sebastian_enderle_40667',
-    name: 'Sebastian Enderle',
-    positions: ['LB', 'RB'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2008-09', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'tobias_feisthammel_40669',
     name: 'Tobias Feisthammel',
     positions: ['CB', 'DM', 'RB'],
@@ -10517,13 +9838,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'VfL Bochum', season: '2009-10', rating: 58 }, { club: 'FC Augsburg', season: '2016-17', rating: 71 }, { club: 'FC Augsburg', season: '2017-18', rating: 72 }, { club: 'FC Augsburg', season: '2018-19', rating: 73 }, { club: 'FC Augsburg', season: '2019-20', rating: 65 }, { club: '1. FC Union Berlin', season: '2020-21', rating: 64 }, { club: '1. FC Union Berlin', season: '2021-22', rating: 75 }, { club: 'VfL Bochum', season: '2023-24', rating: 73 }],
     primeRating: 75,
-  },
-  {
-    id: 'tore_reginiussen_41328',
-    name: 'Tore Reginiussen',
-    positions: ['CB'],
-    seasons: [{ club: 'FC Schalke 04', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'henning_hauger_41344',
@@ -10673,20 +9987,6 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'petar_jelic_42347',
-    name: 'Petar Jelic',
-    positions: ['ST'],
-    seasons: [{ club: '1. FC Nürnberg', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'umut_ko_in_42358',
-    name: 'Umut Koçin',
-    positions: ['AM', 'LB', 'LW'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2006-07', rating: 50 }, { club: 'Arminia Bielefeld', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'ivan_peri_i_42460',
     name: 'Ivan Perišić',
     positions: ['LW', 'RW'],
@@ -10797,13 +10097,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'Eintracht Frankfurt', season: '2010-11', rating: 53 }],
     primeRating: 53,
-  },
-  {
-    id: 'przemyslaw_trytko_43441',
-    name: 'Przemyslaw Trytko',
-    positions: ['ST', 'SS'],
-    seasons: [{ club: 'FC Energie Cottbus', season: '2006-07', rating: 50 }, { club: 'FC Energie Cottbus', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'eke_uzoma_43500',
@@ -10918,13 +10211,6 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'dieumerci_mbokani_44624',
-    name: 'Dieumerci Mbokani',
-    positions: ['ST'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2010-11', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'bojan_krkic_44675',
     name: 'Bojan Krkic',
     positions: ['SS', 'ST', 'RW'],
@@ -10972,13 +10258,6 @@ export const PLAYERS = [
     positions: ['CB', 'DM'],
     seasons: [{ club: '1. FC Nürnberg', season: '2006-07', rating: 65 }, { club: '1. FC Nürnberg', season: '2007-08', rating: 65 }, { club: '1. FC Nürnberg', season: '2009-10', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'pablo_lvarez_45053',
-    name: 'Pablo Álvarez',
-    positions: ['GK'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2006-07', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'medhi_benatia_45124',
@@ -11156,13 +10435,6 @@ export const PLAYERS = [
     primeRating: 59,
   },
   {
-    id: 'andreas_dick_45705',
-    name: 'Andreas Dick',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: '1. FC Köln', season: '2009-10', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'stephan_salger_45707',
     name: 'Stephan Salger',
     positions: ['CB', 'DM', 'LB'],
@@ -11210,13 +10482,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: '1. FC Köln', season: '2008-09', rating: 60 }, { club: '1. FC Köln', season: '2009-10', rating: 60 }, { club: '1. FC Köln', season: '2010-11', rating: 65 }, { club: '1. FC Köln', season: '2011-12', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'pascal_pellowski_45854',
-    name: 'Pascal Pellowski',
-    positions: ['LB', 'DM', 'CB'],
-    seasons: [{ club: 'VfL Bochum', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'kingsley_onuegbu_45986',
@@ -11301,13 +10566,6 @@ export const PLAYERS = [
     positions: ['ST', 'SS', 'LW'],
     seasons: [{ club: 'FC Schalke 04', season: '2011-12', rating: 73 }, { club: 'FC Schalke 04', season: '2012-13', rating: 72 }, { club: 'FC Schalke 04', season: '2013-14', rating: 68 }],
     primeRating: 73,
-  },
-  {
-    id: 'dominique_wassi_47045',
-    name: 'Dominique Wassi',
-    positions: ['ST'],
-    seasons: [{ club: 'FC Schalke 04', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'emir_kujovic_47199',
@@ -11618,13 +10876,6 @@ export const PLAYERS = [
     primeRating: 61,
   },
   {
-    id: 'mame_niang_50462',
-    name: 'Mame Niang',
-    positions: ['ST'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'anthony_modeste_50512',
     name: 'Anthony Modeste',
     positions: ['ST'],
@@ -11653,13 +10904,6 @@ export const PLAYERS = [
     primeRating: 61,
   },
   {
-    id: 'deran_toksoez_50776',
-    name: 'Deran Toksöz',
-    positions: ['DM', 'AM', 'CM'],
-    seasons: [{ club: 'VfL Bochum', season: '2006-07', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'justin_eilers_50782',
     name: 'Justin Eilers',
     positions: ['ST', 'LW', 'RW'],
@@ -11677,8 +10921,8 @@ export const PLAYERS = [
     id: 'chicharito_50935',
     name: 'Chicharito',
     positions: ['ST', 'SS'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2015-16', rating: 50 }, { club: 'Bayer 04 Leverkusen', season: '2016-17', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2015-16', rating: 82 }, { club: 'Bayer 04 Leverkusen', season: '2016-17', rating: 82 }],
+    primeRating: 82,
   },
   {
     id: 'stefan_kutschke_51069',
@@ -11751,13 +10995,6 @@ export const PLAYERS = [
     primeRating: 77,
   },
   {
-    id: 'stefano_cincotta_51745',
-    name: 'Stefano Cincotta',
-    positions: ['LB', 'LW'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2009-10', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'fabian_baecker_51791',
     name: 'Fabian Bäcker',
     positions: ['RW', 'SS', 'ST'],
@@ -11798,13 +11035,6 @@ export const PLAYERS = [
     positions: ['LB'],
     seasons: [{ club: 'Hertha BSC', season: '2007-08', rating: 73 }, { club: 'Hertha BSC', season: '2008-09', rating: 76 }],
     primeRating: 76,
-  },
-  {
-    id: 'zanka_52059',
-    name: 'Zanka',
-    positions: ['CB'],
-    seasons: [{ club: 'Fortuna Düsseldorf', season: '2019-20', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'maximilian_riedmueller_52093',
@@ -11889,13 +11119,6 @@ export const PLAYERS = [
     positions: ['DM', 'CB', 'CM'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2015-16', rating: 75 }, { club: '1. FSV Mainz 05', season: '2016-17', rating: 76 }, { club: '1. FSV Mainz 05', season: '2017-18', rating: 75 }],
     primeRating: 76,
-  },
-  {
-    id: 'andr_lima_52692',
-    name: 'André Lima',
-    positions: ['ST'],
-    seasons: [{ club: 'Hertha BSC', season: '2007-08', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'z_roberto_52708',
@@ -12087,13 +11310,6 @@ export const PLAYERS = [
     primeRating: 74,
   },
   {
-    id: 'stefan_grummel_53621',
-    name: 'Stefan Grummel',
-    positions: ['CM', 'DM', 'LW'],
-    seasons: [{ club: 'VfL Bochum', season: '2007-08', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'i_lkay_guendo_an_53622',
     name: 'İlkay Gündoğan',
     positions: ['CM', 'DM', 'AM'],
@@ -12150,13 +11366,6 @@ export const PLAYERS = [
     primeRating: 77,
   },
   {
-    id: 'marcelo_martins_54162',
-    name: 'Marcelo Martins',
-    positions: ['ST'],
-    seasons: [{ club: 'Werder Bremen', season: '2009-10', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'maicosuel_54183',
     name: 'Maicosuel',
     positions: ['AM', 'LW', 'RW'],
@@ -12169,13 +11378,6 @@ export const PLAYERS = [
     positions: ['CB', 'DM'],
     seasons: [{ club: 'Borussia Dortmund', season: '2008-09', rating: 72 }, { club: 'Borussia Dortmund', season: '2009-10', rating: 76 }, { club: 'Borussia Dortmund', season: '2010-11', rating: 76 }, { club: 'Borussia Dortmund', season: '2011-12', rating: 77 }, { club: 'Borussia Dortmund', season: '2012-13', rating: 77 }, { club: 'FC Schalke 04', season: '2013-14', rating: 76 }, { club: 'FC Schalke 04', season: '2014-15', rating: 74 }],
     primeRating: 77,
-  },
-  {
-    id: 'sal_zizzo_54326',
-    name: 'Sal Zizzo',
-    positions: ['RB', 'LW', 'RW'],
-    seasons: [{ club: 'Hannover 96', season: '2007-08', rating: 50 }, { club: 'Hannover 96', season: '2008-09', rating: 50 }, { club: 'Hannover 96', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'holger_badstuber_54659',
@@ -12230,8 +11432,8 @@ export const PLAYERS = [
     id: 'oliver_sorg_55114',
     name: 'Oliver Sorg',
     positions: ['RB', 'CB', 'LB'],
-    seasons: [{ club: 'SC Freiburg', season: '2011-12', rating: 50 }, { club: 'SC Freiburg', season: '2012-13', rating: 50 }, { club: 'SC Freiburg', season: '2013-14', rating: 50 }, { club: 'SC Freiburg', season: '2014-15', rating: 50 }, { club: 'Hannover 96', season: '2015-16', rating: 50 }, { club: 'Hannover 96', season: '2017-18', rating: 50 }, { club: 'Hannover 96', season: '2018-19', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'SC Freiburg', season: '2011-12', rating: 62 }, { club: 'SC Freiburg', season: '2012-13', rating: 72 }, { club: 'SC Freiburg', season: '2013-14', rating: 71 }, { club: 'SC Freiburg', season: '2014-15', rating: 71 }, { club: 'Hannover 96', season: '2015-16', rating: 72 }, { club: 'Hannover 96', season: '2017-18', rating: 71 }, { club: 'Hannover 96', season: '2018-19', rating: 72 }],
+    primeRating: 72,
   },
   {
     id: 'david_targamadze_55115',
@@ -12330,13 +11532,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'Hannover 96', season: '2008-09', rating: 49 }],
     primeRating: 49,
-  },
-  {
-    id: 'andr_zinho_56200',
-    name: 'Andrézinho',
-    positions: ['RB', 'LB'],
-    seasons: [{ club: '1. FC Köln', season: '2010-11', rating: 50 }, { club: '1. FC Köln', season: '2011-12', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'max_wegner_56216',
@@ -12612,13 +11807,6 @@ export const PLAYERS = [
     primeRating: 73,
   },
   {
-    id: 'gerrit_pressel_58432',
-    name: 'Gerrit Pressel',
-    positions: ['AM', 'LB', 'LW'],
-    seasons: [{ club: 'Hamburger SV', season: '2010-11', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'dani_schahin_58437',
     name: 'Dani Schahin',
     positions: ['ST'],
@@ -12701,13 +11889,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: 'Eintracht Frankfurt', season: '2010-11', rating: 58 }],
     primeRating: 58,
-  },
-  {
-    id: 'erman_muratagic_58998',
-    name: 'Erman Muratagic',
-    positions: ['GK'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'david_alaba_59016',
@@ -12799,13 +11980,6 @@ export const PLAYERS = [
     positions: ['DM', 'CM'],
     seasons: [{ club: 'Hertha BSC', season: '2007-08', rating: 63 }, { club: 'Hertha BSC', season: '2008-09', rating: 63 }],
     primeRating: 63,
-  },
-  {
-    id: 'boy_deul_59636',
-    name: 'Boy Deul',
-    positions: ['AM', 'DM', 'CM'],
-    seasons: [{ club: 'Bayern München', season: '2010-11', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'patrick_sobtzik_59683',
@@ -13025,13 +12199,6 @@ export const PLAYERS = [
     primeRating: 62,
   },
   {
-    id: 'sven_bacher_63482',
-    name: 'Sven Bacher',
-    positions: ['GK'],
-    seasons: [{ club: '1. FC Köln', season: '2016-17', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'vasilios_lampropoulos_63489',
     name: 'Vasilios Lampropoulos',
     positions: ['CB', 'DM', 'RB'],
@@ -13200,25 +12367,11 @@ export const PLAYERS = [
     primeRating: 76,
   },
   {
-    id: 'alexander_langlitz_68206',
-    name: 'Alexander Langlitz',
-    positions: ['RB', 'RW'],
-    seasons: [{ club: 'FC Schalke 04', season: '2011-12', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'stefanos_kapino_68410',
     name: 'Stefanos Kapino',
     positions: ['GK'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2014-15', rating: 72 }, { club: 'Werder Bremen', season: '2018-19', rating: 73 }, { club: 'Werder Bremen', season: '2019-20', rating: 73 }, { club: 'Werder Bremen', season: '2020-21', rating: 73 }, { club: 'Arminia Bielefeld', season: '2021-22', rating: 55 }],
     primeRating: 73,
-  },
-  {
-    id: 'chong_tese_68574',
-    name: 'Chong Tese',
-    positions: ['ST'],
-    seasons: [{ club: '1. FC Köln', season: '2011-12', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'predrag_stevanovic_68649',
@@ -13333,13 +12486,6 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'juanan_72203',
-    name: 'Juanan',
-    positions: ['CB'],
-    seasons: [{ club: 'Fortuna Düsseldorf', season: '2012-13', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'rasmus_joensson_72457',
     name: 'Rasmus Jönsson',
     positions: ['ST', 'LW', 'AM'],
@@ -13352,13 +12498,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'Bayer 04 Leverkusen', season: '2011-12', rating: 78 }, { club: 'VfB Stuttgart', season: '2011-12', rating: 78 }, { club: 'Bayer 04 Leverkusen', season: '2012-13', rating: 80 }, { club: 'Bayer 04 Leverkusen', season: '2013-14', rating: 82 }, { club: 'Bayer 04 Leverkusen', season: '2014-15', rating: 83 }, { club: 'Bayer 04 Leverkusen', season: '2015-16', rating: 83 }, { club: 'Bayer 04 Leverkusen', season: '2016-17', rating: 86 }, { club: 'Bayer 04 Leverkusen', season: '2017-18', rating: 85 }],
     primeRating: 86,
-  },
-  {
-    id: 'r_ver_72489',
-    name: 'Réver',
-    positions: ['CB'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'bobby_wood_72519',
@@ -13655,13 +12794,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'florian_buechler_77858',
-    name: 'Florian Büchler',
-    positions: ['CB', 'ST'],
-    seasons: [{ club: 'Hannover 96', season: '2009-10', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'immanuel_hoehn_77920',
     name: 'Immanuel Höhn',
     positions: ['CB', 'RB'],
@@ -13809,13 +12941,6 @@ export const PLAYERS = [
     primeRating: 78,
   },
   {
-    id: 'jackson_mendy_81636',
-    name: 'Jackson Mendy',
-    positions: ['CB', 'DM', 'LB'],
-    seasons: [{ club: 'SC Freiburg', season: '2009-10', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'georg_teigl_81698',
     name: 'Georg Teigl',
     positions: ['RB', 'RW'],
@@ -13863,13 +12988,6 @@ export const PLAYERS = [
     positions: ['LB', 'LW', 'CM'],
     seasons: [{ club: 'SC Freiburg', season: '2012-13', rating: 66 }, { club: 'SC Freiburg', season: '2013-14', rating: 66 }],
     primeRating: 66,
-  },
-  {
-    id: 'nicola_sansone_82048',
-    name: 'Nicola Sansone',
-    positions: ['LW', 'SS', 'ST'],
-    seasons: [{ club: 'Bayern München', season: '2010-11', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'diego_demme_82070',
@@ -14059,13 +13177,6 @@ export const PLAYERS = [
     positions: ['CB', 'DM'],
     seasons: [{ club: 'Hertha BSC', season: '2011-12', rating: 65 }],
     primeRating: 65,
-  },
-  {
-    id: 'thomas_geyer_83691',
-    name: 'Thomas Geyer',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2010-11', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'ali_goekdemir_83692',
@@ -14367,13 +13478,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: '1. FC Köln', season: '2019-20', rating: 73 }],
     primeRating: 73,
-  },
-  {
-    id: 'fabr_cio_86917',
-    name: 'Fabrício',
-    positions: ['CB', 'LB'],
-    seasons: [{ club: 'TSG Hoffenheim', season: '2008-09', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'fran_ois_affolter_87268',
@@ -15209,13 +14313,6 @@ export const PLAYERS = [
     primeRating: 60,
   },
   {
-    id: 'luis_adv_ncula_103890',
-    name: 'Luis Advíncula',
-    positions: ['RB', 'RW'],
-    seasons: [{ club: 'TSG Hoffenheim', season: '2012-13', rating: 50 }, { club: 'TSG Hoffenheim', season: '2013-14', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'hendrik_bonmann_104220',
     name: 'Hendrik Bonmann',
     positions: ['GK'],
@@ -15270,13 +14367,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: '1. FC Köln', season: '2010-11', rating: 68 }, { club: '1. FC Köln', season: '2011-12', rating: 68 }],
     primeRating: 68,
-  },
-  {
-    id: 'alban_sabah_106103',
-    name: 'Alban Sabah',
-    positions: ['CB'],
-    seasons: [{ club: 'FC Schalke 04', season: '2011-12', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'jacques_zoua_106181',
@@ -15368,13 +14458,6 @@ export const PLAYERS = [
     positions: ['ST', 'SS', 'AM'],
     seasons: [{ club: '1. FC Köln', season: '2014-15', rating: 72 }, { club: '1. FC Köln', season: '2015-16', rating: 73 }, { club: '1. FC Köln', season: '2016-17', rating: 75 }, { club: '1. FC Köln', season: '2017-18', rating: 75 }, { club: 'Werder Bremen', season: '2018-19', rating: 76 }, { club: 'Werder Bremen', season: '2019-20', rating: 75 }, { club: 'Werder Bremen', season: '2020-21', rating: 72 }],
     primeRating: 76,
-  },
-  {
-    id: 'aymen_abdennour_108830',
-    name: 'Aymen Abdennour',
-    positions: ['CB', 'LB'],
-    seasons: [{ club: 'Werder Bremen', season: '2009-10', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'koen_casteels_108880',
@@ -15480,13 +14563,6 @@ export const PLAYERS = [
     positions: ['LB', 'DM', 'LW'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2013-14', rating: 73 }, { club: '1. FSV Mainz 05', season: '2014-15', rating: 73 }, { club: 'Borussia Dortmund', season: '2015-16', rating: 74 }, { club: '1. FSV Mainz 05', season: '2015-16', rating: 74 }, { club: 'Borussia Dortmund', season: '2016-17', rating: 75 }],
     primeRating: 75,
-  },
-  {
-    id: 'j_nior_cai_ara_112062',
-    name: 'Júnior Caiçara',
-    positions: ['RB', 'LB', 'RW'],
-    seasons: [{ club: 'FC Schalke 04', season: '2015-16', rating: 50 }, { club: 'FC Schalke 04', season: '2016-17', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'andrey_lunev_112541',
@@ -15732,13 +14808,6 @@ export const PLAYERS = [
     positions: ['ST', 'AM', 'RW'],
     seasons: [{ club: 'Werder Bremen', season: '2015-16', rating: 74 }, { club: 'Werder Bremen', season: '2016-17', rating: 73 }, { club: 'Werder Bremen', season: '2017-18', rating: 72 }, { club: 'Werder Bremen', season: '2018-19', rating: 66 }],
     primeRating: 74,
-  },
-  {
-    id: 'noah_van_lent_119194',
-    name: 'Noah van Lent',
-    positions: ['CB', 'RB'],
-    seasons: [{ club: '1. FC Nürnberg', season: '2012-13', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'mitchell_weiser_119211',
@@ -16012,13 +15081,6 @@ export const PLAYERS = [
     positions: ['CB', 'DM', 'RB'],
     seasons: [{ club: 'SC Freiburg', season: '2011-12', rating: 62 }, { club: 'SC Freiburg', season: '2012-13', rating: 72 }, { club: 'SC Freiburg', season: '2013-14', rating: 76 }, { club: 'Borussia Dortmund', season: '2014-15', rating: 63 }, { club: 'Borussia Dortmund', season: '2015-16', rating: 68 }, { club: 'Borussia Dortmund', season: '2016-17', rating: 70 }, { club: 'Borussia Mönchengladbach', season: '2017-18', rating: 70 }, { club: 'Borussia Mönchengladbach', season: '2018-19', rating: 68 }, { club: 'Borussia Mönchengladbach', season: '2019-20', rating: 68 }, { club: 'Borussia Mönchengladbach', season: '2020-21', rating: 66 }, { club: 'Borussia Mönchengladbach', season: '2021-22', rating: 83 }, { club: 'SC Freiburg', season: '2022-23', rating: 83 }, { club: 'SC Freiburg', season: '2023-24', rating: 83 }, { club: 'SC Freiburg', season: '2024-25', rating: 81 }, { club: 'SC Freiburg', season: '2025-26', rating: 60 }],
     primeRating: 83,
-  },
-  {
-    id: 'fabian_menig_124507',
-    name: 'Fabian Menig',
-    positions: ['CB', 'LB', 'RB'],
-    seasons: [{ club: 'SC Freiburg', season: '2016-17', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'sebastian_kerk_124517',
@@ -16357,13 +15419,6 @@ export const PLAYERS = [
     primeRating: 71,
   },
   {
-    id: 'bruma_139396',
-    name: 'Bruma',
-    positions: ['LW', 'RW'],
-    seasons: [{ club: 'RB Leipzig', season: '2017-18', rating: 50 }, { club: 'RB Leipzig', season: '2018-19', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'josip_drmic_140579',
     name: 'Josip Drmic',
     positions: ['ST', 'LW', 'RW'],
@@ -16411,13 +15466,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: 'FC Schalke 04', season: '2014-15', rating: 77 }, { club: 'FC Schalke 04', season: '2015-16', rating: 79 }, { club: 'FC Schalke 04', season: '2016-17', rating: 80 }, { club: 'FC Schalke 04', season: '2017-18', rating: 81 }, { club: 'FC Schalke 04', season: '2018-19', rating: 80 }, { club: 'FC Schalke 04', season: '2019-20', rating: 80 }, { club: 'FC Schalke 04', season: '2020-21', rating: 75 }],
     primeRating: 81,
-  },
-  {
-    id: 'luc_o_143794',
-    name: 'Lucão',
-    positions: ['CB', 'DM'],
-    seasons: [{ club: '1. FC Kaiserslautern', season: '2010-11', rating: 50 }, { club: '1. FC Kaiserslautern', season: '2011-12', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'pavel_kaderabek_143798',
@@ -16665,13 +15713,6 @@ export const PLAYERS = [
     primeRating: 74,
   },
   {
-    id: 'paterson_chato_149265',
-    name: 'Paterson Chato',
-    positions: ['DM', 'CB'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2016-17', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'ahmed_sassi_149412',
     name: 'Ahmed Sassi',
     positions: ['RW', 'LW', 'AM'],
@@ -16712,13 +15753,6 @@ export const PLAYERS = [
     positions: ['AM', 'CM'],
     seasons: [{ club: 'Borussia Mönchengladbach', season: '2014-15', rating: 58 }, { club: 'Borussia Mönchengladbach', season: '2015-16', rating: 60 }, { club: 'SC Paderborn 07', season: '2019-20', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'samuel_jesus_152167',
-    name: 'Samuel Jesus',
-    positions: ['CB', 'LB'],
-    seasons: [{ club: 'Werder Bremen', season: '2010-11', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'besar_halimi_152241',
@@ -18009,13 +17043,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'kerem_buelbuel_192265',
-    name: 'Kerem Bülbül',
-    positions: ['AM', 'SS', 'ST'],
-    seasons: [{ club: 'FC Ingolstadt 04', season: '2016-17', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'tolcay_cigerci_192266',
     name: 'Tolcay Cigerci',
     positions: ['AM', 'RW', 'CM'],
@@ -18338,13 +17365,6 @@ export const PLAYERS = [
     primeRating: 60,
   },
   {
-    id: 'lukas_watkowiak_196791',
-    name: 'Lukas Watkowiak',
-    positions: ['GK'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2016-17', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'julian_weigl_196792',
     name: 'Julian Weigl',
     positions: ['DM', 'CB', 'CM'],
@@ -18520,13 +17540,6 @@ export const PLAYERS = [
     primeRating: 81,
   },
   {
-    id: 'andrejs_ciganiks_202659',
-    name: 'Andrejs Ciganiks',
-    positions: ['LB', 'LW', 'RW'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2016-17', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'yaffa_yusupha_202836',
     name: 'Yaffa Yusupha',
     positions: ['ST', 'LW', 'RW'],
@@ -18674,13 +17687,6 @@ export const PLAYERS = [
     primeRating: 58,
   },
   {
-    id: 'dimitri_oberlin_212718',
-    name: 'Dimitri Oberlin',
-    positions: ['ST', 'LW', 'RW'],
-    seasons: [{ club: 'Bayern München', season: '2020-21', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'djibril_sow_212723',
     name: 'Djibril Sow',
     positions: ['CM', 'DM'],
@@ -18707,13 +17713,6 @@ export const PLAYERS = [
     positions: ['LW', 'RW'],
     seasons: [{ club: '1. FC Nürnberg', season: '2018-19', rating: 73 }],
     primeRating: 73,
-  },
-  {
-    id: 'junior_ponce_214654',
-    name: 'Junior Ponce',
-    positions: ['RW', 'LW', 'AM'],
-    seasons: [{ club: 'TSG Hoffenheim', season: '2012-13', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'daley_sinkgraven_215099',
@@ -18973,13 +17972,6 @@ export const PLAYERS = [
     positions: ['DM', 'CB', 'CM'],
     seasons: [{ club: 'Hertha BSC', season: '2022-23', rating: 68 }],
     primeRating: 68,
-  },
-  {
-    id: 'carlinhos_226155',
-    name: 'Carlinhos',
-    positions: ['AM', 'CM'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2012-13', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'iver_fossum_226450',
@@ -19309,13 +18301,6 @@ export const PLAYERS = [
     positions: ['AM', 'LW', 'CM'],
     seasons: [{ club: 'SV Darmstadt 98', season: '2023-24', rating: 74 }],
     primeRating: 74,
-  },
-  {
-    id: 'marco_rente_237244',
-    name: 'Marco Rente',
-    positions: ['RB', 'CB'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2019-20', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'robin_becker_237444',
@@ -20203,8 +19188,8 @@ export const PLAYERS = [
     id: 'angeli_o_277179',
     name: 'Angeliño',
     positions: ['LB', 'CB', 'LW'],
-    seasons: [{ club: 'RB Leipzig', season: '2019-20', rating: 50 }, { club: 'RB Leipzig', season: '2020-21', rating: 50 }, { club: 'RB Leipzig', season: '2021-22', rating: 50 }, { club: 'TSG Hoffenheim', season: '2022-23', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'RB Leipzig', season: '2019-20', rating: 78 }, { club: 'RB Leipzig', season: '2020-21', rating: 83 }, { club: 'RB Leipzig', season: '2021-22', rating: 83 }, { club: 'TSG Hoffenheim', season: '2022-23', rating: 82 }],
+    primeRating: 83,
   },
   {
     id: 'alexander_fuchs_278323',
@@ -20690,13 +19675,6 @@ export const PLAYERS = [
     primeRating: 58,
   },
   {
-    id: 'lys_mousset_291422',
-    name: 'Lys Mousset',
-    positions: ['ST'],
-    seasons: [{ club: 'VfL Bochum', season: '2022-23', rating: 50 }, { club: 'VfL Bochum', season: '2023-24', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'milot_rashica_291739',
     name: 'Milot Rashica',
     positions: ['RW', 'SS', 'LW'],
@@ -20938,8 +19916,8 @@ export const PLAYERS = [
     id: 'palk_d_rdai_300508',
     name: 'Palkó Dárdai',
     positions: ['RW', 'LW', 'AM'],
-    seasons: [{ club: 'Hertha BSC', season: '2016-17', rating: 50 }, { club: 'Hertha BSC', season: '2017-18', rating: 50 }, { club: 'Hertha BSC', season: '2018-19', rating: 50 }, { club: 'Hertha BSC', season: '2019-20', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Hertha BSC', season: '2016-17', rating: 56 }, { club: 'Hertha BSC', season: '2017-18', rating: 60 }, { club: 'Hertha BSC', season: '2018-19', rating: 63 }, { club: 'Hertha BSC', season: '2019-20', rating: 65 }],
+    primeRating: 65,
   },
   {
     id: 'jonas_hupe_300582',
@@ -20959,8 +19937,8 @@ export const PLAYERS = [
     id: 'jeff_chabot_303219',
     name: 'Jeff Chabot',
     positions: ['CB'],
-    seasons: [{ club: '1. FC Köln', season: '2021-22', rating: 50 }, { club: '1. FC Köln', season: '2022-23', rating: 50 }, { club: '1. FC Köln', season: '2023-24', rating: 50 }, { club: 'VfB Stuttgart', season: '2024-25', rating: 50 }, { club: 'VfB Stuttgart', season: '2025-26', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: '1. FC Köln', season: '2021-22', rating: 70 }, { club: '1. FC Köln', season: '2022-23', rating: 73 }, { club: '1. FC Köln', season: '2023-24', rating: 76 }, { club: 'VfB Stuttgart', season: '2024-25', rating: 77 }, { club: 'VfB Stuttgart', season: '2025-26', rating: 80 }],
+    primeRating: 80,
   },
   {
     id: 'dodi_luk_bakio_303259',
@@ -21789,13 +20767,6 @@ export const PLAYERS = [
     primeRating: 64,
   },
   {
-    id: 'herdi_bukusu_336002',
-    name: 'Herdi Bukusu',
-    positions: ['ST', 'LW', 'RW'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2018-19', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'patrice_kabuya_336003',
     name: 'Patrice Kabuya',
     positions: ['RW', 'LW', 'RB'],
@@ -21964,13 +20935,6 @@ export const PLAYERS = [
     primeRating: 72,
   },
   {
-    id: 'maduka_okoye_340353',
-    name: 'Maduka Okoye',
-    positions: ['GK'],
-    seasons: [{ club: 'Fortuna Düsseldorf', season: '2019-20', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'abdelhamid_sabiri_340394',
     name: 'Abdelhamid Sabiri',
     positions: ['AM', 'LW', 'CM'],
@@ -22011,13 +20975,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: '1. FC Union Berlin', season: '2024-25', rating: 70 }],
     primeRating: 70,
-  },
-  {
-    id: 'juan_miranda_341227',
-    name: 'Juan Miranda',
-    positions: ['LB', 'LW'],
-    seasons: [{ club: 'FC Schalke 04', season: '2019-20', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'oliver_burke_341317',
@@ -22223,13 +21180,6 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'japhet_tanganga_346478',
-    name: 'Japhet Tanganga',
-    positions: ['CB', 'RB'],
-    seasons: [{ club: 'FC Augsburg', season: '2023-24', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'danel_sinani_346499',
     name: 'Danel Sinani',
     positions: ['AM', 'LW', 'RW'],
@@ -22242,13 +21192,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'VfL Wolfsburg', season: '2024-25', rating: 79 }, { club: 'VfL Wolfsburg', season: '2025-26', rating: 81 }],
     primeRating: 81,
-  },
-  {
-    id: 'luca_pellegrini_346567',
-    name: 'Luca Pellegrini',
-    positions: ['LB', 'LW'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2022-23', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'christoph_klarer_346849',
@@ -22328,25 +21271,11 @@ export const PLAYERS = [
     primeRating: 65,
   },
   {
-    id: 'ryan_johansson_351071',
-    name: 'Ryan Johansson',
-    positions: ['AM', 'LB', 'LW'],
-    seasons: [{ club: 'Bayern München', season: '2019-20', rating: 50 }, { club: 'SC Freiburg', season: '2023-24', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'omar_alderete_353032',
     name: 'Omar Alderete',
     positions: ['CB', 'LB'],
     seasons: [{ club: 'Hertha BSC', season: '2020-21', rating: 73 }],
     primeRating: 73,
-  },
-  {
-    id: 'bruno_henrique_353108',
-    name: 'Bruno Henrique',
-    positions: ['ST', 'SS', 'LW'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2015-16', rating: 50 }, { club: 'VfL Wolfsburg', season: '2016-17', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'benjamin_pavard_353366',
@@ -22450,8 +21379,8 @@ export const PLAYERS = [
     id: 'leandro_barreiro_357233',
     name: 'Leandro Barreiro',
     positions: ['CM', 'DM', 'AM'],
-    seasons: [{ club: '1. FSV Mainz 05', season: '2018-19', rating: 50 }, { club: '1. FSV Mainz 05', season: '2019-20', rating: 50 }, { club: '1. FSV Mainz 05', season: '2020-21', rating: 50 }, { club: '1. FSV Mainz 05', season: '2021-22', rating: 50 }, { club: '1. FSV Mainz 05', season: '2022-23', rating: 50 }, { club: '1. FSV Mainz 05', season: '2023-24', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: '1. FSV Mainz 05', season: '2018-19', rating: 60 }, { club: '1. FSV Mainz 05', season: '2019-20', rating: 64 }, { club: '1. FSV Mainz 05', season: '2020-21', rating: 71 }, { club: '1. FSV Mainz 05', season: '2021-22', rating: 73 }, { club: '1. FSV Mainz 05', season: '2022-23', rating: 74 }, { club: '1. FSV Mainz 05', season: '2023-24', rating: 76 }],
+    primeRating: 76,
   },
   {
     id: 'ritsu_doan_358504',
@@ -23308,13 +22237,6 @@ export const PLAYERS = [
     primeRating: 70,
   },
   {
-    id: 'marco_pa_ali_395928',
-    name: 'Marco Pašalić',
-    positions: ['RW', 'LW'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2021-22', rating: 50 }, { club: 'Borussia Dortmund', season: '2022-23', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'jordi_osei_tutu_397099',
     name: 'Jordi Osei-Tutu',
     positions: ['RB', 'LW', 'RW'],
@@ -23658,13 +22580,6 @@ export const PLAYERS = [
     primeRating: 69,
   },
   {
-    id: 'jo_o_queir_s_415642',
-    name: 'João Queirós',
-    positions: ['CB'],
-    seasons: [{ club: '1. FC Köln', season: '2017-18', rating: 50 }, { club: '1. FC Köln', season: '2020-21', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'konstantinos_mavropanos_415912',
     name: 'Konstantinos Mavropanos',
     positions: ['CB'],
@@ -23801,8 +22716,8 @@ export const PLAYERS = [
     id: 'paulinho_428791',
     name: 'Paulinho',
     positions: ['SS', 'LW', 'ST'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2018-19', rating: 50 }, { club: 'Bayer 04 Leverkusen', season: '2019-20', rating: 50 }, { club: 'Bayer 04 Leverkusen', season: '2020-21', rating: 50 }, { club: 'Bayer 04 Leverkusen', season: '2021-22', rating: 50 }, { club: 'Bayer 04 Leverkusen', season: '2022-23', rating: 50 }],
-    primeRating: 50,
+    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2018-19', rating: 71 }, { club: 'Bayer 04 Leverkusen', season: '2019-20', rating: 74 }, { club: 'Bayer 04 Leverkusen', season: '2020-21', rating: 73 }, { club: 'Bayer 04 Leverkusen', season: '2021-22', rating: 74 }, { club: 'Bayer 04 Leverkusen', season: '2022-23', rating: 75 }],
+    primeRating: 75,
   },
   {
     id: 'nana_ampomah_429086',
@@ -24085,13 +23000,6 @@ export const PLAYERS = [
     primeRating: 81,
   },
   {
-    id: 'nunoo_sarpei_451340',
-    name: 'Nunoo Sarpei',
-    positions: ['DM', 'CB', 'CM'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2018-19', rating: 50 }, { club: 'SpVgg Greuther Fürth', season: '2021-22', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'laurenz_dehl_451403',
     name: 'Laurenz Dehl',
     positions: ['LB', 'RB', 'RW'],
@@ -24104,20 +23012,6 @@ export const PLAYERS = [
     positions: ['CB'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2021-22', rating: 69 }, { club: 'FC St. Pauli', season: '2024-25', rating: 70 }, { club: 'FC St. Pauli', season: '2025-26', rating: 70 }],
     primeRating: 70,
-  },
-  {
-    id: 'joey_mueller_452054',
-    name: 'Joey Müller',
-    positions: ['DM', 'LB', 'CM'],
-    seasons: [{ club: 'FC Schalke 04', season: '2022-23', rating: 50 }],
-    primeRating: 50,
-  },
-  {
-    id: 'fabian_rueth_452065',
-    name: 'Fabian Rüth',
-    positions: ['CB', 'DM', 'LB'],
-    seasons: [{ club: 'TSG Hoffenheim', season: '2021-22', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'ayman_azhil_452068',
@@ -24188,13 +23082,6 @@ export const PLAYERS = [
     positions: ['GK'],
     seasons: [{ club: 'FC St. Pauli', season: '2024-25', rating: 66 }, { club: 'FC St. Pauli', season: '2025-26', rating: 67 }],
     primeRating: 67,
-  },
-  {
-    id: 'julian_roloff_453757',
-    name: 'Julian Roloff',
-    positions: ['GK'],
-    seasons: [{ club: '1. FC Köln', season: '2022-23', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'justin_heekeren_453770',
@@ -25317,13 +24204,6 @@ export const PLAYERS = [
     primeRating: 78,
   },
   {
-    id: 'nikolai_kemlein_546343',
-    name: 'Nikolai Kemlein',
-    positions: ['CM'],
-    seasons: [{ club: '1. FC Union Berlin', season: '2020-21', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'kiliann_sildillia_548348',
     name: 'Kiliann Sildillia',
     positions: ['RB', 'CB', 'RW'],
@@ -25413,13 +24293,6 @@ export const PLAYERS = [
     positions: ['LW', 'AM', 'RW'],
     seasons: [{ club: 'FC Augsburg', season: '2022-23', rating: 55 }, { club: 'FC Augsburg', season: '2023-24', rating: 55 }],
     primeRating: 55,
-  },
-  {
-    id: 'f_bio_carvalho_559263',
-    name: 'Fábio Carvalho',
-    positions: ['AM', 'SS', 'LW'],
-    seasons: [{ club: 'RB Leipzig', season: '2023-24', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'hyun_seok_hong_562948',
@@ -25835,13 +24708,6 @@ export const PLAYERS = [
     primeRating: 56,
   },
   {
-    id: 'kenson_pierre_bauer_596481',
-    name: 'Kenson Pierre Bauer',
-    positions: ['CB'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2021-22', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'dickson_abiama_596813',
     name: 'Dickson Abiama',
     positions: ['RW', 'LW', 'ST'],
@@ -26036,13 +24902,6 @@ export const PLAYERS = [
     positions: ['CM', 'AM', 'RW'],
     seasons: [{ club: 'FC Schalke 04', season: '2020-21', rating: 59 }],
     primeRating: 59,
-  },
-  {
-    id: 'daniel_hausmann_605572',
-    name: 'Daniel Hausmann',
-    positions: ['AM', 'LW', 'ST'],
-    seasons: [{ club: 'FC Augsburg', season: '2023-24', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'lucas_ribeiro_605893',
@@ -26353,13 +25212,6 @@ export const PLAYERS = [
     primeRating: 63,
   },
   {
-    id: 'niklas_sauter_632147',
-    name: 'Niklas Sauter',
-    positions: ['GK'],
-    seasons: [{ club: 'SC Freiburg', season: '2023-24', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'jarell_quansah_632349',
     name: 'Jarell Quansah',
     positions: ['CB', 'RB'],
@@ -26591,25 +25443,11 @@ export const PLAYERS = [
     primeRating: 78,
   },
   {
-    id: 'rodney_elongo_yombo_662808',
-    name: 'Rodney Elongo-Yombo',
-    positions: ['LW', 'AM', 'RW'],
-    seasons: [{ club: 'Borussia Dortmund', season: '2024-25', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'eniss_shabani_663189',
     name: 'Eniss Shabani',
     positions: ['CM', 'DM', 'AM'],
     seasons: [{ club: '1. FSV Mainz 05', season: '2021-22', rating: 58 }, { club: '1. FSV Mainz 05', season: '2022-23', rating: 58 }],
     primeRating: 58,
-  },
-  {
-    id: 'vini_souza_663581',
-    name: 'Vini Souza',
-    positions: ['DM', 'CM'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2025-26', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'equi_fern_ndez_664708',
@@ -26652,13 +25490,6 @@ export const PLAYERS = [
     positions: ['CB', 'RB'],
     seasons: [{ club: 'RB Leipzig', season: '2021-22', rating: 77 }, { club: 'RB Leipzig', season: '2022-23', rating: 79 }, { club: 'RB Leipzig', season: '2023-24', rating: 80 }, { club: 'RB Leipzig', season: '2024-25', rating: 80 }],
     primeRating: 80,
-  },
-  {
-    id: 'aliou_bald_666977',
-    name: 'Aliou Baldé',
-    positions: ['LW', 'RW'],
-    seasons: [{ club: 'VfL Bochum', season: '2024-25', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'hugo_bolin_667251',
@@ -26878,13 +25709,6 @@ export const PLAYERS = [
     primeRating: 59,
   },
   {
-    id: 'gil_walther_690222',
-    name: 'Gil Walther',
-    positions: ['CM', 'LW', 'AM'],
-    seasons: [{ club: 'VfL Wolfsburg', season: '2021-22', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'robert_wagner_690429',
     name: 'Robert Wagner',
     positions: ['CM', 'DM'],
@@ -26946,13 +25770,6 @@ export const PLAYERS = [
     positions: ['CM', 'DM'],
     seasons: [{ club: 'RB Leipzig', season: '2021-22', rating: 58 }],
     primeRating: 58,
-  },
-  {
-    id: 'fabian_eutinger_692463',
-    name: 'Fabian Eutinger',
-    positions: ['GK'],
-    seasons: [{ club: 'RB Leipzig', season: '2021-22', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'maximilian_somnitz_692713',
@@ -27046,13 +25863,6 @@ export const PLAYERS = [
     primeRating: 60,
   },
   {
-    id: 'niklas_petzsch_698776',
-    name: 'Niklas Petzsch',
-    positions: ['GK'],
-    seasons: [{ club: '1. FC Union Berlin', season: '2021-22', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'yannic_stein_698840',
     name: 'Yannic Stein',
     positions: ['GK'],
@@ -27107,13 +25917,6 @@ export const PLAYERS = [
     positions: ['RW', 'AM'],
     seasons: [{ club: 'VfB Stuttgart', season: '2025-26', rating: 74 }],
     primeRating: 74,
-  },
-  {
-    id: 'max_scholze_707350',
-    name: 'Max Scholze',
-    positions: ['RB', 'RW'],
-    seasons: [{ club: 'Bayern München', season: '2023-24', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'hugo_ekitik_709726',
@@ -27312,13 +26115,6 @@ export const PLAYERS = [
     primeRating: 64,
   },
   {
-    id: 'jaaso_jantunen_741578',
-    name: 'Jaaso Jantunen',
-    positions: ['GK'],
-    seasons: [{ club: 'SC Freiburg', season: '2023-24', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'caden_clark_742297',
     name: 'Caden Clark',
     positions: ['AM', 'LW', 'RW'],
@@ -27457,13 +26253,6 @@ export const PLAYERS = [
     positions: ['DM', 'CB'],
     seasons: [{ club: 'Hertha BSC', season: '2022-23', rating: 59 }, { club: 'Borussia Mönchengladbach', season: '2024-25', rating: 60 }],
     primeRating: 60,
-  },
-  {
-    id: 'david_datro_fofana_787232',
-    name: 'David Datro Fofana',
-    positions: ['ST', 'LW', 'RW'],
-    seasons: [{ club: '1. FC Union Berlin', season: '2023-24', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'el_chadaille_bitshiabu_787912',
@@ -27648,13 +26437,6 @@ export const PLAYERS = [
     primeRating: 66,
   },
   {
-    id: 'r_my_vita_805835',
-    name: 'Rémy Vita',
-    positions: ['LB', 'LW'],
-    seasons: [{ club: 'Bayern München', season: '2020-21', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'frank_feller_806948',
     name: 'Frank Feller',
     positions: ['GK'],
@@ -27704,13 +26486,6 @@ export const PLAYERS = [
     primeRating: 70,
   },
   {
-    id: 'luca_novodomsky_810826',
-    name: 'Luca Novodomsky',
-    positions: ['GK'],
-    seasons: [{ club: 'Bayer 04 Leverkusen', season: '2024-25', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'eliesse_ben_seghir_810895',
     name: 'Eliesse Ben Seghir',
     positions: ['LW', 'AM'],
@@ -27751,13 +26526,6 @@ export const PLAYERS = [
     positions: ['CB', 'DM'],
     seasons: [{ club: '1. FC Köln', season: '2022-23', rating: 61 }],
     primeRating: 61,
-  },
-  {
-    id: 'cem_ali_dogan_815888',
-    name: 'Cem-Ali Dogan',
-    positions: ['CM'],
-    seasons: [{ club: 'Arminia Bielefeld', season: '2021-22', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'can_uzun_816585',
@@ -27956,25 +26724,11 @@ export const PLAYERS = [
     primeRating: 67,
   },
   {
-    id: 'luke_gauer_866609',
-    name: 'Luke Gauer',
-    positions: ['GK'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2023-24', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'nacho_ferri_867357',
     name: 'Nacho Ferri',
     positions: ['ST'],
     seasons: [{ club: 'Eintracht Frankfurt', season: '2022-23', rating: 61 }, { club: 'Eintracht Frankfurt', season: '2023-24', rating: 64 }],
     primeRating: 64,
-  },
-  {
-    id: 'taichi_fukui_868622',
-    name: 'Taichi Fukui',
-    positions: ['CM', 'DM'],
-    seasons: [{ club: 'Bayern München', season: '2023-24', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'arthur_chaves_875332',
@@ -28145,13 +26899,6 @@ export const PLAYERS = [
     primeRating: 60,
   },
   {
-    id: 'eliot_bujupi_907483',
-    name: 'Eliot Bujupi',
-    positions: ['ST', 'SS', 'RW'],
-    seasons: [{ club: 'VfB Stuttgart', season: '2024-25', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'luca_raimund_907489',
     name: 'Luca Raimund',
     positions: ['RW', 'LW'],
@@ -28250,13 +26997,6 @@ export const PLAYERS = [
     primeRating: 60,
   },
   {
-    id: 'yurij_obert_917042',
-    name: 'Yurij Obert',
-    positions: ['GK'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2024-25', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'paris_brunner_918414',
     name: 'Paris Brunner',
     positions: ['ST', 'LW'],
@@ -28269,13 +27009,6 @@ export const PLAYERS = [
     positions: ['CB', 'LB', 'LW'],
     seasons: [{ club: 'Bayer 04 Leverkusen', season: '2024-25', rating: 70 }, { club: 'VfL Wolfsburg', season: '2025-26', rating: 70 }],
     primeRating: 70,
-  },
-  {
-    id: 'matteo_p_rez_vinloef_920283',
-    name: 'Matteo Pérez Vinlöf',
-    positions: ['LB', 'LW'],
-    seasons: [{ club: 'Bayern München', season: '2023-24', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'adam_koelle_921431',
@@ -28304,13 +27037,6 @@ export const PLAYERS = [
     positions: ['ST'],
     seasons: [{ club: 'TSG Hoffenheim', season: '2023-24', rating: 60 }, { club: 'TSG Hoffenheim', season: '2024-25', rating: 66 }, { club: 'TSG Hoffenheim', season: '2025-26', rating: 69 }],
     primeRating: 69,
-  },
-  {
-    id: 'tim_philipp_923606',
-    name: 'Tim Philipp',
-    positions: ['GK'],
-    seasons: [{ club: 'TSG Hoffenheim', season: '2024-25', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'lars_strobl_923608',
@@ -28565,13 +27291,6 @@ export const PLAYERS = [
     primeRating: 70,
   },
   {
-    id: 'nestory_irankunda_956920',
-    name: 'Nestory Irankunda',
-    positions: ['RW', 'LW', 'ST'],
-    seasons: [{ club: 'Bayern München', season: '2024-25', rating: 50 }],
-    primeRating: 50,
-  },
-  {
     id: 'r_mulo_957874',
     name: 'Rômulo',
     positions: ['ST'],
@@ -28640,13 +27359,6 @@ export const PLAYERS = [
     positions: ['RB', 'DM', 'CB'],
     seasons: [{ club: 'Bayer 04 Leverkusen', season: '2024-25', rating: 59 }],
     primeRating: 59,
-  },
-  {
-    id: 'simon_kalambayi_997566',
-    name: 'Simon Kalambayi',
-    positions: ['ST'],
-    seasons: [{ club: 'TSG Hoffenheim', season: '2024-25', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'kau_santos_997861',
@@ -29109,13 +27821,6 @@ export const PLAYERS = [
     positions: ['LW', 'ST', 'RW'],
     seasons: [{ club: '1. FC Heidenheim', season: '2025-26', rating: 60 }],
     primeRating: 60,
-  },
-  {
-    id: 'eba_bekir_is_1154106',
-    name: 'Eba Bekir Is',
-    positions: ['DM', 'CM'],
-    seasons: [{ club: 'Eintracht Frankfurt', season: '2024-25', rating: 50 }],
-    primeRating: 50,
   },
   {
     id: 'kasey_bos_1154876',

@@ -250,6 +250,10 @@ def main():
 
         prime_rating = max(season_ratings) if season_ratings else PLACEHOLDER_RATING
 
+        if prime_rating == PLACEHOLDER_RATING:
+            skipped += 1
+            continue
+
         seasons_js_parts = []
         for (club, year), rating in zip(season_entries, season_ratings):
             sl = season_label(year)
