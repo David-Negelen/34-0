@@ -5,7 +5,7 @@ import RatingsPanel from './RatingsPanel';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
-export default function DraftScreen({ state, fillSlot, useReroll, setPendingSpin, setResult }) {
+export default function DraftScreen({ state, league, players, clubs, fillSlot, useReroll, setPendingSpin, setResult }) {
   const { setup, draft } = state;
   const { slots, rerollsLeft, filledCount, pendingSpin } = draft;
   const { draftMode, showRatings } = setup;
@@ -27,8 +27,8 @@ export default function DraftScreen({ state, fillSlot, useReroll, setPendingSpin
       const updatedSlots = slots.map(s =>
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
-      const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots);
-      setResult({ ...result, achievements: getAchievements(result, updatedSlots), table, playerMatches, playerStats, tableHistory });
+      const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league);
+      setResult({ ...result, achievements: getAchievements(result, updatedSlots, league), table, playerMatches, playerStats, tableHistory });
     }
   }
 
@@ -41,7 +41,7 @@ export default function DraftScreen({ state, fillSlot, useReroll, setPendingSpin
       {/* ── Top bar ── */}
       <header className="draft-header">
         <div className="draft-header-left">
-          <span className="draft-title">BUNDESLIGA DREAM XI</span>
+          <span className="draft-title">{league === '2bl' ? '2. BUNDESLIGA' : 'BUNDESLIGA'} DREAM XI</span>
           <span className="draft-formation badge badge-muted">{setup.formation}</span>
           {!showRatings && <span className="badge badge-gold">Blind-Modus</span>}
         </div>
@@ -84,6 +84,8 @@ export default function DraftScreen({ state, fillSlot, useReroll, setPendingSpin
           <SpinPanel
             slots={slots}
             setup={setup}
+            players={players}
+            clubs={clubs}
             rerollsLeft={rerollsLeft}
             pendingSpin={pendingSpin}
             selectedSlotId={selectedSlotId}

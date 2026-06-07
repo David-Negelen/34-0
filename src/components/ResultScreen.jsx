@@ -26,7 +26,7 @@ const ACHIEVEMENT_ICONS = {
   all_stars:      '⭐',
 };
 
-export default function ResultScreen({ state, onPlayAgain }) {
+export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
   const { W, D, L, GF, GA, pts, pos = 18, achievements, table, playerMatches, playerStats, tableHistory } = result;
@@ -46,7 +46,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
   async function doSubmit(name) {
     const ovr = scoreRef.current?.ovr ?? calcOvr();
     try {
-      const mode = `${setup.difficulty}_${setup.ratingMode}`;
+      const mode = `${league === '2bl' ? '2bl_' : ''}${setup.difficulty}_${setup.ratingMode}`;
       await submitScore({ name, ovr, formation: setup.formation, pts, pos, w: W, d: D, l: L, mode });
       setSubmitToast('saved');
     } catch {
@@ -108,12 +108,17 @@ export default function ResultScreen({ state, onPlayAgain }) {
             <h1 className="result-title">Saison abgeschlossen</h1>
           </div>
           <div className="result-header-actions">
-<button className="btn btn-secondary btn-sm" onClick={handleShare} disabled={sharing}>
+            <button className="btn btn-secondary btn-sm" onClick={handleShare} disabled={sharing}>
               Teilen
             </button>
             <button className="btn btn-primary" onClick={onPlayAgain}>
               Nochmal spielen
             </button>
+            {onHome && (
+              <button className="btn btn-ghost btn-sm" onClick={onHome}>
+                Liga wechseln
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -1,7 +1,10 @@
 import { useReducer, useEffect } from 'react';
 import { FORMATIONS } from '../data/formations';
 
-const STORAGE_KEY = 'bundesliga_draft_v1';
+const STORAGE_KEYS = {
+  bl:  'bundesliga_draft_v1',
+  '2bl': 'zweite_liga_draft_v1',
+};
 
 const REROLLS = { easy: 3, normal: 1, hard: 0 };
 
@@ -20,9 +23,9 @@ const defaultState = {
   result: null,
 };
 
-function loadState() {
+function loadState(league) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS[league] ?? STORAGE_KEYS.bl);
     if (raw) return JSON.parse(raw);
   } catch {}
   return defaultState;
@@ -82,12 +85,13 @@ function reducer(state, action) {
   }
 }
 
-export function useGameState() {
-  const [state, dispatch] = useReducer(reducer, null, loadState);
+export function useGameState(league = 'bl') {
+  const [state, dispatch] = useReducer(reducer, league, loadState);
+  const storageKey = STORAGE_KEYS[league] ?? STORAGE_KEYS.bl;
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }, [state, storageKey]);
 
   const actions = {
     updateSetup: payload => dispatch({ type: 'UPDATE_SETUP', payload }),

@@ -67,7 +67,7 @@ function simulateMatch(hAtt, hDef, aAtt, aDef) {
 
 // ── League teams ──────────────────────────────────────────────────────────────
 
-const LEAGUE_TEAMS = [
+const BUNDESLIGA_TEAMS = [
   { name: 'FC Bayern München',          strength: 90 },
   { name: 'Borussia Dortmund',          strength: 82 },
   { name: 'Bayer 04 Leverkusen',        strength: 81 },
@@ -77,14 +77,34 @@ const LEAGUE_TEAMS = [
   { name: 'SC Freiburg',                strength: 71 },
   { name: 'Borussia Mönchengladbach',   strength: 70 },
   { name: 'Werder Bremen',              strength: 68 },
-  { name: 'Hamburger SV',               strength: 68 },
-  { name: '1. FC Union Berlin',         strength: 67 },
-  { name: '1. FC Köln',                 strength: 67 },
+  { name: '1. FC Union Berlin',         strength: 68 },
   { name: 'FC Augsburg',                strength: 66 },
   { name: '1. FSV Mainz 05',            strength: 66 },
-  { name: 'FC Schalke 04',              strength: 63 },
+  { name: 'VfL Wolfsburg',              strength: 65 },
+  { name: 'VfL Bochum',                 strength: 63 },
+  { name: 'FC St. Pauli',               strength: 62 },
+  { name: 'Holstein Kiel',              strength: 60 },
+  { name: 'SV Darmstadt 98',            strength: 58 },
+];
+
+const ZWEITE_LIGA_TEAMS = [
+  { name: 'Hamburger SV',               strength: 73 },
+  { name: '1. FC Köln',                 strength: 70 },
+  { name: 'FC Schalke 04',              strength: 68 },
+  { name: 'Hannover 96',                strength: 67 },
+  { name: 'Fortuna Düsseldorf',         strength: 66 },
+  { name: 'Hertha BSC',                 strength: 65 },
+  { name: '1. FC Kaiserslautern',       strength: 64 },
+  { name: 'SC Paderborn 07',            strength: 63 },
+  { name: '1. FC Nürnberg',             strength: 62 },
+  { name: 'SpVgg Greuther Fürth',       strength: 62 },
+  { name: 'Karlsruher SC',              strength: 61 },
   { name: 'SV Elversberg',              strength: 60 },
-  { name: 'SC Paderborn 07',            strength: 58 },
+  { name: 'Eintracht Braunschweig',     strength: 59 },
+  { name: 'SSV Ulm 1846',               strength: 57 },
+  { name: 'Preußen Münster',            strength: 57 },
+  { name: 'Jahn Regensburg',            strength: 56 },
+  { name: 'FC Energie Cottbus',         strength: 55 },
 ];
 
 // ── Schedule builder ─────────────────────────────────────────────────────────
@@ -109,7 +129,7 @@ function buildRoundRobinRounds(n) {
 // 34-round proper Bundesliga schedule (17 Hinrunde + 17 Rückrunde).
 // Returns { result, table, playerMatches, playerStats, tableHistory } where:
 //   tableHistory — 34 sorted table snapshots (one per matchday)
-export function simulateFullLeague(slots) {
+export function simulateFullLeague(slots, league = 'bl') {
   const ratings = calcSquadRatings(slots);
   // Separate attack/defense strengths derived from positional ratings.
   // att drives goals scored; def drives goals conceded.
@@ -118,6 +138,7 @@ export function simulateFullLeague(slots) {
 
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
+  const LEAGUE_TEAMS = league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS;
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
@@ -224,22 +245,34 @@ export function simulateFullLeague(slots) {
 
 // ── Achievements ──────────────────────────────────────────────────────────────
 
-export function getAchievements(result, slots = []) {
+export function getAchievements(result, slots = [], league = 'bl') {
   const { W, D, L, GF, GA, pts, pos = 18, gkGoal = false } = result;
   const achievements = [];
+  const is2bl = league === '2bl';
 
-  if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfekte Saison',      desc: '34-0-0 – Eine Legende der Bundesliga.' });
+  if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfekte Saison',      desc: '34-0-0 – Eine Legende des deutschen Fußballs.' });
   else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',          desc: 'Die gesamte Saison unbesiegt.' });
 
-  if (pos === 1)          achievements.push({ key: 'champions',  label: 'Deutscher Meister!',   desc: 'Bundesliga-Champion – die Schale geholt.' });
-  else if (pos <= 4)      achievements.push({ key: 'top4',       label: 'Champions League',      desc: 'Top-4 – ein Platz in der Königsklasse.' });
-  else if (pos === 5)     achievements.push({ key: 'europe',     label: 'Europa League',         desc: 'Europacup-Platz gesichert.' });
-  else if (pos === 6)     achievements.push({ key: 'conference', label: 'Conference League',     desc: 'Europäischer Fußball – ein Platz in der Conference League.' });
-  else if (pos <= 9)      achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',     desc: 'Solide Saison in der oberen Tabellenhälfte.' });
-  else if (pos <= 15)     achievements.push({ key: 'midtable',   label: 'Gerettet',              desc: 'Klassenerhalt gesichert.' });
-  else if (pos === 16)    achievements.push({ key: 'playoff',    label: 'Relegation',            desc: 'Platz 16 – muss in die Relegation.' });
-  else if (pts <= 15)     achievements.push({ key: 'derby',      label: 'Historisches Desaster', desc: 'Einer der schlechtesten Absteiger aller Zeiten.' });
-  else                    achievements.push({ key: 'relegated',  label: 'Abgestiegen',           desc: 'Ab in die 2. Bundesliga.' });
+  if (is2bl) {
+    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!', desc: 'Staffelsieger und direkter Aufstieg in die Bundesliga.' });
+    else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',         desc: 'Direkter Aufstieg – zurück im Fußballoberhaus.' });
+    else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation',            desc: 'Platz 3 – Aufstiegsspiel gegen einen Bundesligisten.' });
+    else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',     desc: 'Solide Saison in der oberen Tabellenhälfte.' });
+    else if (pos <= 15)   achievements.push({ key: 'midtable',   label: 'Gerettet',              desc: 'Klassenerhalt gesichert.' });
+    else if (pos === 16)  achievements.push({ key: 'relegpl',    label: 'Relegation',            desc: 'Platz 16 – Abstiegsspiel gegen einen Drittligisten.' });
+    else if (pts <= 15)   achievements.push({ key: 'derby',      label: 'Historisches Desaster', desc: 'Einer der schwächsten Absteiger aller Zeiten.' });
+    else                  achievements.push({ key: 'relegated',  label: 'Abgestiegen',           desc: 'Ab in die 3. Liga.' });
+  } else {
+    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Deutscher Meister!',   desc: 'Bundesliga-Champion – die Schale geholt.' });
+    else if (pos <= 4)    achievements.push({ key: 'top4',       label: 'Champions League',      desc: 'Top-4 – ein Platz in der Königsklasse.' });
+    else if (pos === 5)   achievements.push({ key: 'europe',     label: 'Europa League',         desc: 'Europacup-Platz gesichert.' });
+    else if (pos === 6)   achievements.push({ key: 'conference', label: 'Conference League',     desc: 'Europäischer Fußball – ein Platz in der Conference League.' });
+    else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',     desc: 'Solide Saison in der oberen Tabellenhälfte.' });
+    else if (pos <= 15)   achievements.push({ key: 'midtable',   label: 'Gerettet',              desc: 'Klassenerhalt gesichert.' });
+    else if (pos === 16)  achievements.push({ key: 'playoff',    label: 'Relegation',            desc: 'Platz 16 – muss in die Relegation.' });
+    else if (pts <= 15)   achievements.push({ key: 'derby',      label: 'Historisches Desaster', desc: 'Einer der schlechtesten Absteiger aller Zeiten.' });
+    else                  achievements.push({ key: 'relegated',  label: 'Abgestiegen',           desc: 'Ab in die 2. Bundesliga.' });
+  }
 
   if (GF >= 100)          achievements.push({ key: 'century',    label: 'Tormaschine',           desc: '100+ Tore – historische Offensivleistung.' });
   else if (GF >= 85)      achievements.push({ key: 'goalflood',  label: 'Torflut',               desc: '85+ Tore – Angriffspower auf höchstem Niveau.' });
