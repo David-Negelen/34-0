@@ -125,7 +125,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
           <div className="result-pitch-wrap">
             <FormationBoard
               slots={slots}
-              showRatings={setup.showRatings}
+              showRatings={true}
               draftMode="squad-first"
             />
           </div>
@@ -231,9 +231,7 @@ export default function ResultScreen({ state, onPlayAgain }) {
                     <div key={s.id} className="squad-row">
                       <span className="squad-pos">{labelDE(s.label)}</span>
                       <span className="squad-name">{s.player.name}</span>
-                      {setup.showRatings && (
-                        <span className="squad-rating">{s.player.displayRating}</span>
-                      )}
+                      <span className="squad-rating">{s.player.displayRating}</span>
                     </div>
                   ))}
               </div>
