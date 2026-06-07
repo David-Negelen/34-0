@@ -1,0 +1,129 @@
+.lb-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ── Header ── */
+.lb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.lb-title {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--red);
+  text-transform: uppercase;
+}
+
+/* ── Tabs ── */
+.lb-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 14px 20px 0;
+}
+
+/* ── Body ── */
+.lb-body {
+  flex: 1;
+  padding: 14px 20px;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.lb-status {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.lb-error { color: var(--red); }
+
+/* ── Table ── */
+.lb-table {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 48px 80px 48px;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  gap: 8px;
+}
+
+.lb-row:last-child { border-bottom: none; }
+
+.lb-row-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background: var(--bg);
+}
+
+.lb-row-mine {
+  background: rgba(227, 0, 11, 0.06);
+  border-left: 2px solid var(--red);
+}
+
+.lb-col-rank {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+.lb-col-name {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-col-ovr {
+  font-weight: 800;
+  color: var(--gold);
+  text-align: center;
+}
+
+.lb-col-form {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.lb-col-pts {
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .lb-header { padding: 10px 14px; }
+  .lb-body   { padding: 10px 12px; }
+  .lb-tabs   { padding: 12px 12px 0; }
+
+  .lb-row {
+    grid-template-columns: 32px 1fr 40px 64px 40px;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+}

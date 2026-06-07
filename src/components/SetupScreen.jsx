@@ -7,7 +7,7 @@ const DIFFICULTIES = [
   { key: 'hard',   label: 'Schwer', sub: 'Kein Joker · Bewertungen verborgen' },
 ];
 
-export default function SetupScreen({ setup, onUpdate, onStart }) {
+export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard }) {
   const { formation, difficulty, showRatings, draftMode, ratingMode } = setup;
 
   return (
@@ -123,6 +123,10 @@ export default function SetupScreen({ setup, onUpdate, onStart }) {
 
         <button className="start-btn" onClick={onStart}>
           Draft starten →
+        </button>
+
+        <button className="lb-link" onClick={onLeaderboard}>
+          Rangliste ansehen
         </button>
 
         <footer className="setup-footer">

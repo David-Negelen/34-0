@@ -730,3 +730,36 @@
   .stat-pill-val { font-size: 24px; }
   .season-stat-val.big { font-size: 22px; }
 }
+
+/* ── Name input ── */
+.name-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  padding: 10px 14px;
+  outline: none;
+}
+.name-input:focus {
+  border-color: var(--red);
+}
+
+/* ── Submit toast ── */
+.submit-toast {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 200;
+  animation: fadeIn 0.2s ease both;
+}
+.submit-toast-saved { background: var(--green);  color: #fff; }
+.submit-toast-error { background: var(--red);    color: #fff; }

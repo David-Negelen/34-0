@@ -1,10 +1,17 @@
+import { useState } from 'react';
 import { useGameState } from './hooks/useGameState';
 import SetupScreen from './components/SetupScreen';
 import DraftScreen from './components/DraftScreen';
 import ResultScreen from './components/ResultScreen';
+import LeaderboardScreen from './components/LeaderboardScreen';
 
 export default function App() {
   const { state, updateSetup, startDraft, fillSlot, useReroll, setResult, reset } = useGameState();
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+  if (showLeaderboard) {
+    return <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />;
+  }
 
   if (state.phase === 'setup') {
     return (
@@ -12,6 +19,7 @@ export default function App() {
         setup={state.setup}
         onUpdate={updateSetup}
         onStart={startDraft}
+        onLeaderboard={() => setShowLeaderboard(true)}
       />
     );
   }

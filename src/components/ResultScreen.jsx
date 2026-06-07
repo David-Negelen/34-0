@@ -3,6 +3,7 @@ import FormationBoard from './FormationBoard';
 import { generateResultCanvas, shareResult, downloadResult } from '../utils/export';
 import { buildShareText } from '../utils/simulation';
 import { labelDE } from '../utils/playerUtils';
+import { getSavedName, saveName, randomGuestName, submitScore } from '../utils/leaderboard';
 import './ResultScreen.css';
 
 const ACHIEVEMENT_ICONS = {
@@ -32,6 +33,39 @@ export default function ResultScreen({ state, onPlayAgain }) {
   const [sharing, setSharing] = useState(false);
   const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
   const [tableTab, setTableTab] = useState('table');
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [submitToast, setSubmitToast] = useState(null); // 'saved' | 'error' | null
+  const scoreRef = useRef(null);
+
+  function calcOvr() {
+    const filled = slots.filter(s => s.player);
+    return Math.round(filled.reduce((sum, s) => sum + s.player.displayRating, 0) / filled.length);
+  }
+
+  async function doSubmit(name) {
+    const ovr = scoreRef.current?.ovr ?? calcOvr();
+    try {
+      await submitScore({ name, ovr, formation: setup.formation, pts, pos });
+      setSubmitToast('saved');
+    } catch {
+      setSubmitToast('error');
+    }
+    setTimeout(() => setSubmitToast(null), 3000);
+  }
+
+  useEffect(() => {
+    if (!matchLogDone) return;
+    const ovr = calcOvr();
+    scoreRef.current = { ovr };
+    const saved = getSavedName();
+    if (saved) {
+      doSubmit(saved);
+    } else {
+      setNameInput(randomGuestName());
+      setShowNameModal(true);
+    }
+  }, [matchLogDone]);
 
   const GD = GF - GA;
   const topAchievement = achievements?.[0];
@@ -208,6 +242,50 @@ export default function ResultScreen({ state, onPlayAgain }) {
 
         </div>
       </div>
+      {/* Name modal — shown on first ever submission */}
+      {showNameModal && (
+        <div className="overlay" onClick={() => {}}>
+          <div className="overlay-card">
+            <div className="result-section-label" style={{ marginBottom: 8 }}>Wähle deinen Namen</div>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+              Dein Score wird in der Rangliste gespeichert.
+            </p>
+            <input
+              className="name-input"
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              maxLength={24}
+              autoFocus
+              onKeyDown={e => {
+                if (e.key === 'Enter' && nameInput.trim()) {
+                  saveName(nameInput.trim());
+                  setShowNameModal(false);
+                  doSubmit(nameInput.trim());
+                }
+              }}
+            />
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: 12 }}
+              disabled={!nameInput.trim()}
+              onClick={() => {
+                saveName(nameInput.trim());
+                setShowNameModal(false);
+                doSubmit(nameInput.trim());
+              }}
+            >
+              Speichern
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Submit toast */}
+      {submitToast && (
+        <div className={`submit-toast submit-toast-${submitToast}`}>
+          {submitToast === 'saved' ? 'In Rangliste gespeichert' : 'Speichern fehlgeschlagen'}
+        </div>
+      )}
     </div>
   );
 }
