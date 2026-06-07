@@ -267,12 +267,12 @@ export function getAchievements(result, slots = [], league = 'bl') {
   else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',          desc: 'Die gesamte Saison unbesiegt.' });
 
   if (is2bl) {
-    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!', desc: 'Staffelsieger und direkter Aufstieg in die Bundesliga.' });
-    else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',         desc: 'Direkter Aufstieg – zurück im Fußballoberhaus.' });
-    else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation',            desc: 'Platz 3 – Aufstiegsspiel gegen einen Bundesligisten.' });
-    else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',     desc: 'Solide Saison in der oberen Tabellenhälfte.' });
-    else if (pos <= 15)   achievements.push({ key: 'midtable',   label: 'Gerettet',              desc: 'Klassenerhalt gesichert.' });
-    else if (pos === 16)  achievements.push({ key: 'relegpl',    label: 'Relegation',            desc: 'Platz 16 – Abstiegsspiel gegen einen Drittligisten.' });
+    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!',  desc: 'Staffelsieger und direkter Aufstieg in die Bundesliga.' });
+    else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',          desc: 'Direkter Aufstieg – zurück im Fußballoberhaus.' });
+    else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation Aufstieg',    desc: 'Platz 3 – Aufstiegsspiel gegen einen Bundesligisten.' });
+    else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',      desc: 'Solide Saison in der oberen Tabellenhälfte.' });
+    else if (pos <= 15)   achievements.push({ key: 'midtable',   label: 'Gerettet',               desc: 'Klassenerhalt gesichert.' });
+    else if (pos === 16)  achievements.push({ key: 'relegpl',    label: 'Relegation Abstieg',     desc: 'Platz 16 – Abstiegsspiel gegen einen Drittligisten.' });
     else if (pts <= 15)   achievements.push({ key: 'derby',      label: 'Historisches Desaster', desc: 'Einer der schwächsten Absteiger aller Zeiten.' });
     else                  achievements.push({ key: 'relegated',  label: 'Abgestiegen',           desc: 'Ab in die 3. Liga.' });
   } else {
@@ -305,7 +305,7 @@ export function getAchievements(result, slots = [], league = 'bl') {
     if (clubs.length === 1) {
       achievements.push({ key: 'one_club', label: `${clubs[0]} XI`, desc: 'Alle 11 Spieler aus demselben Klub.' });
     } else if (clubs.length >= 9) {
-      achievements.push({ key: 'all_stars', label: 'Liga-Allstars', desc: `Spieler aus ${clubs.length} verschiedenen Klubs – die beste Liga der Welt vertreten.` });
+      achievements.push({ key: 'all_stars', label: 'Liga-Allstars', desc: `Spieler aus ${clubs.length} verschiedenen Klubs – ${is2bl ? 'die 2. Bundesliga' : 'die beste Liga der Welt'} vertreten.` });
     }
   }
 
