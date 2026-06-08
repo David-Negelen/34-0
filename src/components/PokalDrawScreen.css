@@ -1,0 +1,97 @@
+.draw-screen {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 120px;
+}
+
+.draw-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.draw-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.draw-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+/* ── Pairings list ── */
+.draw-list {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+@keyframes drawReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.draw-pair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  opacity: 0;
+  animation: drawReveal 0.25s ease forwards;
+}
+
+.draw-pair--you {
+  border-color: #c8a84b;
+  background: color-mix(in srgb, #c8a84b 8%, var(--bg-card));
+}
+
+.draw-team {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.draw-team--r { text-align: right; }
+
+.draw-vs {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+
+.draw-pair--you .draw-team { color: #c8a84b; font-weight: 700; }
+
+/* ── Footer CTA ── */
+.draw-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  display: flex;
+  justify-content: center;
+}
+
+.draw-footer .btn {
+  max-width: 340px;
+  width: 100%;
+}

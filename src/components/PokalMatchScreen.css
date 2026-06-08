@@ -1,0 +1,260 @@
+.ms-screen {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 48px;
+  gap: 12px;
+}
+
+.ms-round-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Teams + score ── */
+.ms-matchup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.ms-team {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ms-team--opp { text-align: right; color: var(--text-muted); }
+
+.ms-scorebox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ms-score {
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  min-width: 36px;
+  text-align: center;
+  transition: color 0.2s;
+}
+
+.ms-score--lead  { color: var(--green); }
+.ms-score--trail { color: var(--red-light); }
+.ms-score--level { color: var(--text); }
+
+.ms-sep {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* ── Clock ── */
+.ms-clock-row {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-clock {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Progress bar ── */
+.ms-progress-track {
+  width: 100%;
+  max-width: 480px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+  overflow: visible;
+}
+
+.ms-progress-fill {
+  height: 100%;
+  background: var(--red);
+  border-radius: 2px;
+  transition: width 50ms linear;
+}
+
+.ms-et-mark {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 10px;
+  background: #c8a84b;
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
+
+/* ── Banners ── */
+.ms-banner {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  animation: bannerPop 0.3s ease;
+}
+
+.ms-banner--aet  { background: color-mix(in srgb, #c8a84b 15%, var(--bg-card)); color: #c8a84b; border: 1px solid #c8a84b; }
+.ms-banner--pens { background: color-mix(in srgb, var(--red) 15%, var(--bg-card)); color: var(--red); border: 1px solid var(--red); }
+
+@keyframes bannerPop {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Goal events ── */
+.ms-goals {
+  display: flex;
+  width: 100%;
+  max-width: 480px;
+  gap: 8px;
+  min-height: 60px;
+}
+
+.ms-goals-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ms-goals--opp { align-items: flex-end; }
+
+.ms-goal {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: goalPop 0.25s ease;
+}
+
+.ms-goal--opp { flex-direction: row-reverse; }
+
+.ms-goal-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-goals--opp .ms-goal-name { color: #e05555; }
+
+.ms-goal-min {
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+@keyframes goalPop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Penalty section ── */
+.ms-pen-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.ms-pen-header {
+  display: flex;
+  justify-content: space-between;
+  width: 160px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.ms-pen-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.ms-pen-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: goalPop 0.2s ease;
+}
+
+.ms-pen-num {
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 16px;
+  text-align: center;
+}
+
+.ms-pen-dot {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.ms-pen-dot--r { text-align: center; }
+
+.dot--in  { color: var(--green); }
+.dot--out { color: var(--red-light); }
+
+.ms-pen-final {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
+  margin-top: 4px;
+  letter-spacing: -1px;
+  animation: bannerPop 0.3s ease;
+}
+
+/* ── Result badge + continue ── */
+.ms-result-badge {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 6px 18px;
+  border-radius: 20px;
+  animation: bannerPop 0.3s ease;
+}
+
+.ms-result--win  { background: color-mix(in srgb, var(--green) 15%, var(--bg-card)); color: var(--green); border: 1px solid var(--green); }
+.ms-result--loss { background: color-mix(in srgb, var(--red) 12%, var(--bg-card)); color: var(--red-light); border: 1px solid var(--red-light); }
+
+.ms-continue {
+  margin-top: 4px;
+  max-width: 280px;
+  width: 100%;
+}
+
+@media (max-width: 380px) {
+  .ms-score { font-size: 32px; min-width: 28px; }
+  .ms-team  { font-size: 11px; }
+}

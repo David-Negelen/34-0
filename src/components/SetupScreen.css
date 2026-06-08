@@ -43,6 +43,17 @@
   letter-spacing: -6px;
 }
 
+.setup-subtitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
 .title-rule {
   width: 56px;
   height: 2px;

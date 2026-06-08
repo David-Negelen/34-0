@@ -8,7 +8,7 @@ const DIFFICULTIES = [
   { key: 'hard',   label: 'Schwer', sub: 'Kein Joker · Bewertungen verborgen' },
 ];
 
-export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, onBack }) {
+export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, onBack, titleLeft = '34', titleRight = '0', subtitle = null }) {
   const { formation, difficulty, showRatings, draftMode, ratingMode } = setup;
 
   return (
@@ -20,10 +20,11 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
           )}
         </div>
         <div className="setup-title">
-          <span className="title-num">34</span>
+          <span className="title-num">{titleLeft}</span>
           <span className="title-dash">-</span>
-          <span className="title-num">0</span>
+          <span className="title-num">{titleRight}</span>
         </div>
+        {subtitle && <div className="setup-subtitle">{subtitle}</div>}
       </header>
 
       <div className="setup-body">

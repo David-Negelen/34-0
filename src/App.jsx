@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useGameState } from './hooks/useGameState';
 import HomeScreen from './components/HomeScreen';
@@ -5,6 +6,8 @@ import SetupScreen from './components/SetupScreen';
 import DraftScreen from './components/DraftScreen';
 import ResultScreen from './components/ResultScreen';
 import PokalResultScreen from './components/PokalResultScreen';
+import PokalDrawScreen from './components/PokalDrawScreen';
+import PokalMatchScreen from './components/PokalMatchScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
 import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
@@ -74,13 +77,34 @@ function PokalGame() {
   const players = [...BL_PLAYERS, ...BL2_PLAYERS];
   const clubs   = { ...BL_CLUBS, ...BL2_CLUBS };
 
+  // Local flow state: draw → match (per round) → summary
+  const [pokalPhase, setPokalPhase] = useState('draw');
+  const [matchIdx, setMatchIdx] = useState(0);
+
+  // Reset local flow when returning to setup (play again)
+  useEffect(() => {
+    if (state.phase === 'setup') {
+      setPokalPhase('draw');
+      setMatchIdx(0);
+    }
+  }, [state.phase]);
+
+  function handleReset() {
+    reset();
+    setPokalPhase('draw');
+    setMatchIdx(0);
+  }
+
   if (state.phase === 'setup') {
     return (
       <SetupScreen
         setup={state.setup}
         onUpdate={updateSetup}
         onStart={startDraft}
-        onBack={() => { reset(); navigate('/'); }}
+        onBack={() => { handleReset(); navigate('/'); }}
+        titleLeft="6"
+        titleRight="0"
+        subtitle="Gewinne den DFB-Pokal"
       />
     );
   }
@@ -96,18 +120,48 @@ function PokalGame() {
         useReroll={useReroll}
         setPendingSpin={setPendingSpin}
         setResult={setResult}
-        onGoHome={() => { reset(); navigate('/'); }}
-        onReset={reset}
+        onGoHome={() => { handleReset(); navigate('/'); }}
+        onReset={handleReset}
       />
     );
   }
 
   if (state.phase === 'result') {
+    const result = state.result ?? {};
+    const playerMatches = result.playerMatches ?? [];
+
+    if (pokalPhase === 'draw') {
+      return (
+        <PokalDrawScreen
+          bracket={result.bracket ?? []}
+          onContinue={() => { setPokalPhase('match'); setMatchIdx(0); }}
+        />
+      );
+    }
+
+    if (pokalPhase === 'match') {
+      const match = playerMatches[matchIdx];
+      if (!match) { setPokalPhase('summary'); return null; }
+      const isLast = matchIdx >= playerMatches.length - 1;
+      return (
+        <PokalMatchScreen
+          key={matchIdx}
+          match={match}
+          roundIndex={matchIdx}
+          onContinue={() => {
+            if (isLast) setPokalPhase('summary');
+            else setMatchIdx(i => i + 1);
+          }}
+        />
+      );
+    }
+
+    // summary
     return (
       <PokalResultScreen
         state={state}
-        onPlayAgain={reset}
-        onHome={() => { reset(); navigate('/'); }}
+        onPlayAgain={handleReset}
+        onHome={() => { handleReset(); navigate('/'); }}
       />
     );
   }

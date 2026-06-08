@@ -453,17 +453,27 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
   const hWinProb = hAtt >= aAtt ? 0.5 + edge : 0.5 - edge;
   const hWins = Math.random() < hWinProb;
 
-  // Simulate 5-kick shootout to get a score
+  // Simulate 5-kick shootout, recording each kick for animation
+  const kicks = [];
   let hPen = 0, aPen = 0;
   for (let i = 0; i < 5; i++) {
-    if (Math.random() < 0.75) hPen++;
-    if (Math.random() < 0.75) aPen++;
+    const hScored = Math.random() < 0.75;
+    const aScored = Math.random() < 0.75;
+    if (hScored) hPen++;
+    if (aScored) aPen++;
+    kicks.push({ home: hScored, away: aScored });
   }
-  // Ensure the winner actually wins in the display score too
-  if (hWins && hPen <= aPen) hPen = aPen + 1;
-  if (!hWins && aPen <= hPen) aPen = hPen + 1;
+  // Ensure the winner wins in the displayed sequence
+  if (hWins && hPen <= aPen) {
+    const idx = kicks.findIndex(k => !k.home);
+    if (idx >= 0) { kicks[idx] = { ...kicks[idx], home: true }; hPen++; }
+  }
+  if (!hWins && aPen <= hPen) {
+    const idx = kicks.findIndex(k => !k.away);
+    if (idx >= 0) { kicks[idx] = { ...kicks[idx], away: true }; aPen++; }
+  }
 
-  return { hg: hTotal, ag: aTotal, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins };
+  return { hg: hTotal, ag: aTotal, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins, kicks };
 }
 
 // Simulate the full 64-team bracket. Returns player's match list.
@@ -545,6 +555,7 @@ export function simulateDFBPokal(slots, allPlayers = []) {
           won: homeWon === home.isPlayer,
           events,
           oppGoals,
+          kicks: result.kicks ?? [],
         });
       }
 
@@ -558,7 +569,7 @@ export function simulateDFBPokal(slots, allPlayers = []) {
   const roundReached = playerMatches.length;
   const won = roundReached === 6 && playerMatches[5]?.won;
 
-  return { playerMatches, roundReached, won };
+  return { playerMatches, roundReached, won, bracket: [...bracket] };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────
