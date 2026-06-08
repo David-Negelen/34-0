@@ -128,11 +128,26 @@ function ptsToStrength(pts, league) {
   return Math.round(Math.min(92, Math.max(55, 55 + (pts - 16) / 75 * 37)));
 }
 
+// Draft-appeal weight: bucket teams into bad / icons / allround.
+// bad = 0 draftable players → weight 1  (~5%)
+// icons = 1–3 draftable players → weight 12 (~60%)
+// allround = 4+ draftable players → weight 7  (~35%)
+// Exact percentages depend on pool composition; ratios 1:12:7 give the right ballpark.
+const ICON_THRESHOLD = 78;
+function draftAppealW(club, season, allPlayers) {
+  const key = seasonLabelToKey(season);
+  const good = allPlayers.filter(p =>
+    p.seasons.some(s => s.club === club && s.season === key && s.rating >= ICON_THRESHOLD)
+  ).length;
+  if (good === 0) return 1;
+  if (good <= 3)  return 12;
+  return 7;
+}
+
 // Build 17 historic opponents stratified by final table position tier.
 // One entry per club; strength derived from actual season points.
-// Within each tier, selection is weighted: good tiers favour high pts (prime seasons);
-// bottom tier favours low pts (iconic failures like Schalke 20/21).
-function buildHistoricOpponents(league) {
+// Within each tier, selection weighted by draft appeal (icon players > raw strength).
+function buildHistoricOpponents(league, allPlayers = []) {
   const tables = HISTORIC_TABLES[league] ?? {};
   const all = [];
   for (const [club, seasons] of Object.entries(tables)) {
@@ -149,15 +164,13 @@ function buildHistoricOpponents(league) {
   }
 
   // Tiers: top(1-3), strong(4-9), mid(10-15), bottom(16+) → targets: 4/8/3/2 = 17
-  // Good tiers: pts^2.5 weights prime seasons heavily over mediocre ones.
-  // Bottom tier: inverse weight pulls iconic disasters (16 pts) above forgettable near-misses (38 pts).
-  const primW  = e => Math.pow(e.pts, 2.5);
-  const badW   = e => Math.pow(Math.max(1, 55 - e.pts), 2.5);
+  // All tiers weighted by draft appeal so icon players from any tier appear often.
+  const w = e => draftAppealW(e.club, e.season, allPlayers);
   const tiers = [
-    { entries: all.filter(e => e.pos <= 3),                 target: 4, weightFn: primW },
-    { entries: all.filter(e => e.pos >= 4 && e.pos <= 9),   target: 8, weightFn: primW },
-    { entries: all.filter(e => e.pos >= 10 && e.pos <= 15), target: 3, weightFn: primW },
-    { entries: all.filter(e => e.pos >= 16),                target: 2, weightFn: badW  },
+    { entries: all.filter(e => e.pos <= 3),                 target: 4, weightFn: w },
+    { entries: all.filter(e => e.pos >= 4 && e.pos <= 9),   target: 8, weightFn: w },
+    { entries: all.filter(e => e.pos >= 10 && e.pos <= 15), target: 3, weightFn: w },
+    { entries: all.filter(e => e.pos >= 16),                target: 2, weightFn: w },
   ];
 
   const selected = [];
@@ -224,7 +237,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
 
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
-  const historicOpponents = buildHistoricOpponents(league);
+  const historicOpponents = buildHistoricOpponents(league, allPlayers);
   const LEAGUE_TEAMS = historicOpponents.length === 17
     ? historicOpponents
     : (league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
@@ -413,12 +426,12 @@ function buildPokalOpponents(allPlayers) {
     return picked;
   }
 
-  const primW = e => Math.pow(e.strength, 2.5);
+  const primW = e => draftAppealW(e.club, e.season, allWithPokal);
   const usedClubs = new Set();
 
   const blPicks    = pickWeightedUniq(byTier.bl,    usedClubs, 18, primW);
   const tblPicks   = pickWeightedUniq(byTier['2bl'], usedClubs, 18, primW);
-  const lowerPicks = pickWeightedUniq(byTier.lower,  usedClubs, 27, e => 1);
+  const lowerPicks = pickWeightedUniq(byTier.lower,  usedClubs, 27, primW);
 
   const opponents = [...blPicks, ...tblPicks, ...lowerPicks].map(e => {
     const seasonKey = seasonLabelToKey(e.season);
@@ -490,16 +503,20 @@ export function simulateDFBPokal(slots, allPlayers = []) {
   // Build 64-slot bracket. Slot 63 = player.
   // R1 pairs: (0,1), (2,3), ..., (62,63)
   // We place lower-tier in even slots 0,2,4,... so they face bl/2bl in odd slots.
-  // Player is in slot 63 (odd) → faces a lower-tier team in slot 62 in R1.
+  // Player is in slot 63 (odd) → faces slot 62 in R1.
+  // Reserve one lower-tier team for slot 62 so the player always faces a lower-tier R1 opponent.
+  // (Only 27 lower picks exist for 32 even slots; without reservation the last 5 even slots get BL teams.)
+  const playerR1Opp = lower.pop();
   const bracket = new Array(64);
   let blIdx = 0, lowIdx = 0;
-  for (let i = 0; i < 63; i++) {
+  for (let i = 0; i < 62; i++) {
     if (i % 2 === 0) {
       bracket[i] = lower[lowIdx++] ?? blAnd2bl[blIdx++]; // even = lower
     } else {
       bracket[i] = blAnd2bl[blIdx++] ?? lower[lowIdx++]; // odd  = bl/2bl
     }
   }
+  bracket[62] = playerR1Opp;
   bracket[63] = { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true, scorerPool: [] };
 
   const playerMatches = [];
