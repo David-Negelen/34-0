@@ -549,7 +549,6 @@
 .ml-scorers {
   margin-top: 3px;
   font-size: 11px;
-  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -560,8 +559,7 @@
 }
 
 .ml-scorers-opp {
-  color: var(--red-light);
-  opacity: 0.8;
+  color: #e05555;
 }
 
 /* ── Player stats table ── */
