@@ -11894,8 +11894,8 @@ export const PLAYERS = [
     id: 'david_alaba_59016',
     name: 'David Alaba',
     positions: ['CB', 'LB', 'CM'],
-    seasons: [{ club: 'Bayern München', season: '2009-10', rating: 66 }, { club: 'Bayern München', season: '2010-11', rating: 66 }, { club: 'TSG Hoffenheim', season: '2010-11', rating: 66 }, { club: 'Bayern München', season: '2011-12', rating: 76 }, { club: 'Bayern München', season: '2012-13', rating: 79 }, { club: 'Bayern München', season: '2013-14', rating: 82 }, { club: 'Bayern München', season: '2014-15', rating: 83 }, { club: 'Bayern München', season: '2015-16', rating: 55 }, { club: 'Bayern München', season: '2016-17', rating: 64 }, { club: 'Bayern München', season: '2017-18', rating: 56 }, { club: 'Bayern München', season: '2018-19', rating: 62 }, { club: 'Bayern München', season: '2019-20', rating: 66 }, { club: 'Bayern München', season: '2020-21', rating: 66 }],
-    primeRating: 83,
+    seasons: [{ club: 'Bayern München', season: '2009-10', rating: 66 }, { club: 'Bayern München', season: '2010-11', rating: 66 }, { club: 'TSG Hoffenheim', season: '2010-11', rating: 66 }, { club: 'Bayern München', season: '2011-12', rating: 76 }, { club: 'Bayern München', season: '2012-13', rating: 79 }, { club: 'Bayern München', season: '2013-14', rating: 82 }, { club: 'Bayern München', season: '2014-15', rating: 83 }, { club: 'Bayern München', season: '2015-16', rating: 85 }, { club: 'Bayern München', season: '2016-17', rating: 86 }, { club: 'Bayern München', season: '2017-18', rating: 85 }, { club: 'Bayern München', season: '2018-19', rating: 84 }, { club: 'Bayern München', season: '2019-20', rating: 83 }, { club: 'Bayern München', season: '2020-21', rating: 83 }],
+    primeRating: 86,
   },
   {
     id: 'roman_buerki_59027',
