@@ -184,7 +184,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
       {/* Penalty section */}
       {showPenSection && (
         <div className="ms-pen-section">
-          <div className="ms-banner ms-banner--pens">ELFMETERSCHISSEN</div>
+          <div className="ms-banner ms-banner--pens">ELFMETERSCHIESSEN</div>
           <div className="ms-pen-header">
             <span>Deine 11</span>
             <span>{opponent}</span>

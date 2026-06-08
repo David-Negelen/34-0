@@ -134,13 +134,23 @@ function PokalGame() {
     const isFinal   = pk.round === 5;
 
     if (!playerWon || isFinal) {
+      // Simulate the remaining rounds so the full bracket is visible on the summary screen.
+      const remainingMatchups = [];
+      if (!playerWon && !isFinal) {
+        let teams = pk.winners;
+        for (let r = pk.round + 1; r <= 5 && teams.length > 1; r++) {
+          const { matchups, winners } = drawPokalRound(teams, r, pk.slots);
+          remainingMatchups.push(matchups);
+          teams = winners;
+        }
+      }
       setResult({
         mode: 'pokal',
         playerMatches: pk.playerMatches,
         roundReached: pk.playerMatches.length,
         won: isFinal && playerWon,
         slots: pk.slots,
-        roundMatchups: pk.roundMatchups ?? [],
+        roundMatchups: [...(pk.roundMatchups ?? []), ...remainingMatchups],
       });
       setPk(prev => ({ ...prev, phase: 'summary' }));
       return;
