@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FormationBoard from './FormationBoard';
 import SpinPanel from './SpinPanel';
 import RatingsPanel from './RatingsPanel';
-import { simulateFullLeague, getAchievements } from '../utils/simulation';
+import { simulateFullLeague, simulateDFBPokal, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
 export default function DraftScreen({ state, league, players, clubs, fillSlot, useReroll, setPendingSpin, setResult, onGoHome, onReset }) {
@@ -27,8 +27,13 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
       const updatedSlots = slots.map(s =>
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
-      const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league, players);
-      setResult({ ...result, achievements: getAchievements(result, updatedSlots, league), table, playerMatches, playerStats, tableHistory });
+      if (league === 'pokal') {
+        const pokalResult = simulateDFBPokal(updatedSlots, players);
+        setResult({ ...pokalResult, mode: 'pokal' });
+      } else {
+        const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league, players);
+        setResult({ ...result, achievements: getAchievements(result, updatedSlots, league), table, playerMatches, playerStats, tableHistory });
+      }
     }
   }
 
@@ -45,7 +50,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             className="btn btn-ghost btn-sm draft-nav-btn"
             onClick={() => window.confirm('Draft abbrechen und zum Menü?') && onGoHome()}
           >← <span className="draft-nav-label">Menü</span></button>
-          <span className="draft-title">{league === '2bl' ? '2. BUNDESLIGA' : 'BUNDESLIGA'} DREAM XI</span>
+          <span className="draft-title">{league === 'pokal' ? 'DFB-POKAL' : league === '2bl' ? '2. BUNDESLIGA' : 'BUNDESLIGA'} DREAM XI</span>
           <span className="draft-formation badge badge-muted">{setup.formation}</span>
           {!showRatings && <span className="badge badge-gold">Blind-Modus</span>}
         </div>

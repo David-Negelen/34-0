@@ -1,0 +1,142 @@
+.pk-screen {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 48px;
+  gap: 20px;
+}
+
+.pk-header {
+  text-align: center;
+}
+
+.pk-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Campaign list ── */
+.pk-campaign {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pk-match {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pk-match--loss {
+  opacity: 0.75;
+}
+
+.pk-match--loss:last-child {
+  opacity: 1;
+  border-color: var(--red);
+}
+
+.pk-match-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.pk-round-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.pk-opponent {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.pk-score {
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.pk-score--win  { color: var(--green); }
+.pk-score--loss { color: var(--red-light); }
+
+.pk-result-icon {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.pk-scorers {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 100px;
+}
+
+.pk-scorers--ours { color: var(--text); }
+.pk-scorers--opp  { color: #e05555; }
+
+/* ── Achievement ── */
+.pk-achievement {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.pk-achievement--winner {
+  border-color: #c8a84b;
+  background: color-mix(in srgb, #c8a84b 8%, var(--bg-card));
+}
+
+.pk-ach-label {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.pk-ach-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Actions ── */
+.pk-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .pk-round-label { min-width: 70px; font-size: 9px; }
+  .pk-scorers     { padding-left: 75px; }
+}

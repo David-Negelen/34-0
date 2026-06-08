@@ -2,8 +2,9 @@ import { useReducer, useEffect } from 'react';
 import { FORMATIONS } from '../data/formations';
 
 const STORAGE_KEYS = {
-  bl:  'bundesliga_draft_v1',
+  bl:    'bundesliga_draft_v1',
   '2bl': 'zweite_liga_draft_v1',
+  pokal: 'dfb_pokal_draft_v1',
 };
 
 const REROLLS = { easy: 3, normal: 1, hard: 0 };

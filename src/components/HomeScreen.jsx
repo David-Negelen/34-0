@@ -32,6 +32,12 @@ export default function HomeScreen() {
             Rangliste ansehen →
           </button>
         </div>
+        <div className="league-group">
+          <button className="league-card league-card--pokal" onClick={() => navigate('/pokal')}>
+            <span className="league-card-name">DFB-Pokal</span>
+            <span className="league-card-sub">Pokal · 6 Runden · K.o.-System</span>
+          </button>
+        </div>
       </div>
     </div>
   );
