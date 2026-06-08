@@ -1,6 +1,7 @@
 import { calcSquadRatings } from './ratingCalc';
 import { HISTORIC_TABLES } from '../data/historicTables';
 import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
+import { POKAL_PLAYERS } from '../data/pokalPlayers';
 
 function poisson(lambda) {
   const L = Math.exp(-lambda);
@@ -389,6 +390,7 @@ function pokalStrength(club, season) {
 // Tier composition: ~18 bl, ~18 2bl, ~27 lower (one-club constraint).
 // Bracket seeding ensures no lower vs lower matchup in R1.
 function buildPokalOpponents(allPlayers) {
+  const allWithPokal = [...allPlayers, ...POKAL_PLAYERS];
   const pool = dfbPokalParticipants
     .filter(e => !POKAL_BLACKLIST.has(e.club))
     .map(e => ({ ...e, tier: pokalTier(e.club, e.season), strength: pokalStrength(e.club, e.season) }));
@@ -420,7 +422,7 @@ function buildPokalOpponents(allPlayers) {
 
   const opponents = [...blPicks, ...tblPicks, ...lowerPicks].map(e => {
     const seasonKey = seasonLabelToKey(e.season);
-    const scorerPool = allPlayers.filter(p => p.seasons.some(s => s.club === e.club && s.season === seasonKey));
+    const scorerPool = allWithPokal.filter(p => p.seasons.some(s => s.club === e.club && s.season === seasonKey));
     const eff = Math.round(Math.min(98, Math.max(40, e.strength + gauss(5))));
     return { name: `${e.club} ${e.season}`, club: e.club, season: e.season, tier: e.tier, att: eff, def: eff, scorerPool };
   });
