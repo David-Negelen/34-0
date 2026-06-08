@@ -52,13 +52,24 @@ export function getCompatibleSlots(player, openSlots) {
   return openSlots.filter(slot => canPlayerFillSlot(player, slot.type));
 }
 
-// Weighting parameters: pairs with avg prime rating above WEIGHT_CENTER
-// get exponentially higher weight, pulling stronger clubs into the spin more often.
-const WEIGHT_CENTER = 78;
-const WEIGHT_TEMP   = 8;
+// Tier targets: bad=10%, mid=55%, good=35%
+// bad  — no player in squad > 75
+// mid  — 1–3 players > 77 eligible for open slots
+// good — 4+ players > 77 eligible for open slots
+const TIER_TARGETS = { bad: 0.10, mid: 0.55, good: 0.35 };
+
+function spinTier(pool, openSlots) {
+  const maxRating = Math.max(...pool.map(p => p.seasonRating ?? p.primeRating));
+  if (maxRating <= 75) return 'bad';
+  const eligible77 = pool.filter(p =>
+    (p.seasonRating ?? p.primeRating) > 77 &&
+    openSlots.some(s => canPlayerFillSlot(p, s.type))
+  );
+  return eligible77.length >= 1 && eligible77.length <= 3 ? 'mid' : 'good';
+}
 
 // Pick a random club and season that has eligible candidates for the open slots.
-// Weighted by avg prime rating so stronger squads appear more often.
+// Tiers: bad 10% / mid 55% / good 35% — each pair within a tier has equal probability.
 // excludeIds: Set of player IDs already placed in the squad — excluded from pool and eligibility check.
 // Returns { club, season, candidates } or null if no eligible pair exists.
 export function randomSpin(players, openSlots, excludeIds = new Set()) {
@@ -68,18 +79,23 @@ export function randomSpin(players, openSlots, excludeIds = new Set()) {
       const pool = getPlayersForClubSeason(players, club, season)
         .filter(p => !excludeIds.has(p.id));
       if (!getEligiblePlayers(pool, openSlots).length) continue;
-      const avg = pool.reduce((s, p) => s + (p.seasonRating ?? p.primeRating), 0) / pool.length;
-      const weight = Math.exp((avg - WEIGHT_CENTER) / WEIGHT_TEMP);
-      pairs.push({ club, season, pool, weight });
+      pairs.push({ club, season, pool, tier: spinTier(pool, openSlots) });
     }
   }
   if (!pairs.length) return null;
 
-  const totalWeight = pairs.reduce((s, p) => s + p.weight, 0);
+  const counts = { bad: 0, mid: 0, good: 0 };
+  for (const p of pairs) counts[p.tier]++;
+
+  // Normalize targets across non-empty tiers, then divide evenly within each tier.
+  const activeSum = Object.keys(TIER_TARGETS).reduce((s, t) => s + (counts[t] > 0 ? TIER_TARGETS[t] : 0), 0);
+  const pairWeight = t => counts[t] > 0 ? (TIER_TARGETS[t] / activeSum) / counts[t] : 0;
+
+  const totalWeight = pairs.reduce((s, p) => s + pairWeight(p.tier), 0);
   let r = Math.random() * totalWeight;
   let picked = pairs[pairs.length - 1];
   for (const p of pairs) {
-    r -= p.weight;
+    r -= pairWeight(p.tier);
     if (r <= 0) { picked = p; break; }
   }
   return { club: picked.club, season: picked.season, candidates: picked.pool };
