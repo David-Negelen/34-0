@@ -131,9 +131,11 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
           Draft starten →
         </button>
 
-        <button className="lb-link" onClick={onLeaderboard}>
-          Rangliste ansehen
-        </button>
+        {onLeaderboard && (
+          <button className="lb-link" onClick={onLeaderboard}>
+            Rangliste ansehen
+          </button>
+        )}
 
         <footer className="setup-footer">
           <span>Inspiriert von 38-0.app/game</span>
