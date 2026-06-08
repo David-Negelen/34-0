@@ -370,7 +370,7 @@ export function getAchievements(result, slots = [], league = 'bl') {
   else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',          desc: 'Die gesamte Saison unbesiegt.' });
 
   if (is2bl) {
-    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!',  desc: 'Staffelsieger und direkter Aufstieg in die Bundesliga.' });
+    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!',  desc: 'Direkter Aufstieg in die Bundesliga.' });
     else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',          desc: 'Direkter Aufstieg – zurück im Fußballoberhaus.' });
     else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation Aufstieg',    desc: 'Platz 3 – Aufstiegsspiel gegen einen Bundesligisten.' });
     else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',      desc: 'Solide Saison in der oberen Tabellenhälfte.' });
