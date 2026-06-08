@@ -222,9 +222,9 @@ export function simulateFullLeague(slots, league = 'bl') {
   const hinRunde  = buildRoundRobinRounds(n);
   const ruckRunde = hinRunde.map(round => round.map(([h, a]) => [a, h]));
 
-  // Soft-sort matchdays so the player faces weaker opponents early and stronger ones later.
-  // Noise (σ=8) keeps it feeling natural — not perfectly predictable, but a clear trend.
-  const allRounds = [...hinRunde, ...ruckRunde]
+  // Soft-sort only the Hinrunde so the player faces weaker opponents early.
+  // Rückrunde mirrors the sorted Hinrunde (same order, home/away flipped) — like a real season.
+  const sortedHin = hinRunde
     .map(round => {
       const pm     = round.find(([hi, ai]) => hi === playerIdx || ai === playerIdx);
       const oppIdx = pm ? (pm[0] === playerIdx ? pm[1] : pm[0]) : -1;
@@ -233,6 +233,8 @@ export function simulateFullLeague(slots, league = 'bl') {
     })
     .sort((a, b) => a.sortKey - b.sortKey)
     .map(r => r.round);
+  const sortedRuck = sortedHin.map(round => round.map(([h, a]) => [a, h]));
+  const allRounds = [...sortedHin, ...sortedRuck];
 
   const playerMatches = [];
   const tableHistory  = [];
