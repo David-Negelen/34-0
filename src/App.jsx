@@ -82,16 +82,24 @@ function PokalGame() {
   // pk drives the round-by-round tournament: draw → match → round-results, repeated per round.
   // null while in setup/draft phase.
   const [pk, setPk] = useState(null);
+  const PK_KEY = 'dfb_pokal_pk_v1';
 
-  // Init or restore tournament state when phase becomes 'result'.
+  // Persist pk so a reload mid-tournament resumes where you left off.
+  useEffect(() => {
+    if (pk === null) return;
+    if (pk.phase === 'summary') { localStorage.removeItem(PK_KEY); return; }
+    localStorage.setItem(PK_KEY, JSON.stringify(pk));
+  }, [pk]);
+
+  // Init: restore from localStorage or build fresh from slots.
   useEffect(() => {
     if (state.phase !== 'result' || state.result?.mode !== 'pokal' || pk !== null) return;
-    if (state.result.playerMatches) {
-      // Tournament already finished (reloaded from localStorage)
-      setPk({ phase: 'summary' });
-      return;
-    }
+    if (state.result.playerMatches) { setPk({ phase: 'summary' }); return; }
     if (!state.result.slots) return;
+    try {
+      const saved = localStorage.getItem(PK_KEY);
+      if (saved) { setPk(JSON.parse(saved)); return; }
+    } catch {}
     const teams = buildPokalField(state.result.slots, players);
     const { matchups, winners } = drawPokalRound(teams, 0, state.result.slots);
     setPk({ phase: 'draw', round: 0, teams, matchups, winners, slots: state.result.slots, playerMatches: [] });
@@ -102,6 +110,7 @@ function PokalGame() {
   }, [state.phase]);
 
   function handleReset() {
+    localStorage.removeItem(PK_KEY);
     reset();
     setPk(null);
   }

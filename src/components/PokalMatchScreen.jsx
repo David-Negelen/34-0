@@ -99,7 +99,8 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
   }, [simState.phase, simState.penRevealed, kicks.length]);
 
   const { clockMin, phase, penRevealed } = simState;
-  const maxMin = aet ? 120 : 90;
+  const inAet = phase === 'aet' || phase === 'aet-banner';
+  const maxMin = inAet ? 120 : 90;
   const progress = Math.min(100, (clockMin / maxMin) * 100);
 
   // Visible goals at current clock minute
@@ -152,7 +153,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
       )}
       <div className="ms-progress-track">
         <div className="ms-progress-fill" style={{ width: `${progress}%` }} />
-        {aet && <div className="ms-et-mark" style={{ left: `${(90 / maxMin) * 100}%` }} />}
+        {inAet && <div className="ms-et-mark" style={{ left: `75%` }} />}
       </div>
 
       {/* VERLÄNGERUNG banner */}
