@@ -1,4 +1,5 @@
 import { calcSquadRatings } from './ratingCalc';
+import { HISTORIC_TABLES } from '../data/historicTables';
 
 function poisson(lambda) {
   const L = Math.exp(-lambda);
@@ -107,6 +108,81 @@ const ZWEITE_LIGA_TEAMS = [
   { name: 'Preußen Münster',            strength: 56 },
 ];
 
+// ── Historic opponent generation ──────────────────────────────────────────────
+
+function shuffleArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Map final-table points to simulation strength range.
+// BL:  [16, 91] pts → [55, 92]; 2BL: [19, 76] pts → [54, 71]
+function ptsToStrength(pts, league) {
+  if (league === '2bl') return Math.round(Math.min(71, Math.max(54, 54 + (pts - 19) / 57 * 17)));
+  return Math.round(Math.min(92, Math.max(55, 55 + (pts - 16) / 75 * 37)));
+}
+
+// Build 17 historic opponents stratified by final table position tier.
+// One entry per club; strength derived from actual season points.
+// Within each tier, selection is weighted: good tiers favour high pts (prime seasons);
+// bottom tier favours low pts (iconic failures like Schalke 20/21).
+function buildHistoricOpponents(league) {
+  const tables = HISTORIC_TABLES[league] ?? {};
+  const all = [];
+  for (const [club, seasons] of Object.entries(tables)) {
+    for (const [season, { pos, pts }] of Object.entries(seasons)) {
+      all.push({ club, season, pos, pts, strength: ptsToStrength(pts, league) });
+    }
+  }
+
+  function pickWeighted(pool, weightFn) {
+    const total = pool.reduce((s, e) => s + weightFn(e), 0);
+    let r = Math.random() * total;
+    for (const e of pool) { r -= weightFn(e); if (r <= 0) return e; }
+    return pool[pool.length - 1];
+  }
+
+  // Tiers: top(1-3), strong(4-9), mid(10-15), bottom(16+) → targets: 4/8/3/2 = 17
+  // Good tiers: pts^2.5 weights prime seasons heavily over mediocre ones.
+  // Bottom tier: inverse weight pulls iconic disasters (16 pts) above forgettable near-misses (38 pts).
+  const primW  = e => Math.pow(e.pts, 2.5);
+  const badW   = e => Math.pow(Math.max(1, 55 - e.pts), 2.5);
+  const tiers = [
+    { entries: all.filter(e => e.pos <= 3),                 target: 4, weightFn: primW },
+    { entries: all.filter(e => e.pos >= 4 && e.pos <= 9),   target: 8, weightFn: primW },
+    { entries: all.filter(e => e.pos >= 10 && e.pos <= 15), target: 3, weightFn: primW },
+    { entries: all.filter(e => e.pos >= 16),                target: 2, weightFn: badW  },
+  ];
+
+  const selected = [];
+  const usedClubs = new Set();
+
+  for (const { entries, target, weightFn } of tiers) {
+    let pool = entries.filter(e => !usedClubs.has(e.club));
+    for (let i = 0; i < target && pool.length > 0; i++) {
+      const e = pickWeighted(pool, weightFn);
+      selected.push(e);
+      usedClubs.add(e.club);
+      pool = pool.filter(p => !usedClubs.has(p.club));
+    }
+  }
+
+  // Fill any remaining slots (edge case: not enough unique clubs per tier)
+  let pool = all.filter(e => !usedClubs.has(e.club));
+  while (selected.length < 17 && pool.length > 0) {
+    const e = pickWeighted(pool, primW);
+    selected.push(e);
+    usedClubs.add(e.club);
+    pool = pool.filter(p => !usedClubs.has(p.club));
+  }
+
+  return selected.map(e => ({ name: `${e.club} ${e.season}`, strength: e.strength }));
+}
+
 // ── Schedule builder ─────────────────────────────────────────────────────────
 
 // Standard polygon/circle algorithm: fix team 0, rotate teams 1..n-1.
@@ -140,7 +216,10 @@ export function simulateFullLeague(slots, league = 'bl') {
 
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
-  const LEAGUE_TEAMS = league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS;
+  const historicOpponents = buildHistoricOpponents(league);
+  const LEAGUE_TEAMS = historicOpponents.length === 17
+    ? historicOpponents
+    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
@@ -158,9 +237,9 @@ export function simulateFullLeague(slots, league = 'bl') {
   const hinRunde  = buildRoundRobinRounds(n);
   const ruckRunde = hinRunde.map(round => round.map(([h, a]) => [a, h]));
 
-  // Soft-sort matchdays so the player faces weaker opponents early and stronger ones later.
-  // Noise (σ=8) keeps it feeling natural — not perfectly predictable, but a clear trend.
-  const allRounds = [...hinRunde, ...ruckRunde]
+  // Soft-sort only the Hinrunde so the player faces weaker opponents early.
+  // Rückrunde mirrors the sorted Hinrunde (same order, home/away flipped) — like a real season.
+  const sortedHin = hinRunde
     .map(round => {
       const pm     = round.find(([hi, ai]) => hi === playerIdx || ai === playerIdx);
       const oppIdx = pm ? (pm[0] === playerIdx ? pm[1] : pm[0]) : -1;
@@ -169,6 +248,8 @@ export function simulateFullLeague(slots, league = 'bl') {
     })
     .sort((a, b) => a.sortKey - b.sortKey)
     .map(r => r.round);
+  const sortedRuck = sortedHin.map(round => round.map(([h, a]) => [a, h]));
+  const allRounds = [...sortedHin, ...sortedRuck];
 
   const playerMatches = [];
   const tableHistory  = [];
