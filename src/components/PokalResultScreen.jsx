@@ -133,7 +133,9 @@ export default function PokalResultScreen({ state, onPlayAgain, onPlaySameTeam, 
 
       <div className="pk-actions">
         {result.slots && onPlaySameTeam && (
-          <button className="btn btn-secondary" onClick={onPlaySameTeam}>Gleiche Aufstellung →</button>
+          <button className="btn btn-secondary" onClick={onPlaySameTeam} style={{ lineHeight: 1.3 }}>
+            Nochmal mit<br />gleichem Team →
+          </button>
         )}
         <button className="btn btn-primary" onClick={onPlayAgain}>Nochmal spielen</button>
         <button className="btn btn-ghost" onClick={onHome}>← Menü</button>
