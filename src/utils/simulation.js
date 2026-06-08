@@ -525,9 +525,11 @@ export function simulateDFBPokal(slots, allPlayers = []) {
   bracket[63] = { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true, scorerPool: [] };
 
   const playerMatches = [];
+  const bracketRounds = [];
   let teams = [...bracket];
 
   for (let round = 0; round < 6; round++) {
+    const roundMatches = [];
     const winners = [];
     for (let i = 0; i < teams.length; i += 2) {
       const home = teams[i];
@@ -536,6 +538,19 @@ export function simulateDFBPokal(slots, allPlayers = []) {
 
       const result = simulateKnockout(home.att, home.def, away.att, away.def);
       const homeWon = result.pens ? result.hWins : result.hg > result.ag;
+
+      // Track result for full bracket display
+      roundMatches.push({
+        home: home.isPlayer ? 'Deine 11' : home.name,
+        away: away.isPlayer ? 'Deine 11' : away.name,
+        hg: result.hg,
+        ag: result.ag,
+        aet: result.aet,
+        pens: result.pens,
+        penScore: result.penScore ?? null,
+        homeWon,
+        isPlayerMatch: isPlayerGame,
+      });
 
       if (isPlayerGame) {
         const own = home.isPlayer ? result.hg : result.ag;
@@ -582,15 +597,15 @@ export function simulateDFBPokal(slots, allPlayers = []) {
 
       winners.push(homeWon ? home : away);
     }
+    bracketRounds.push(roundMatches);
     teams = winners;
-    // If player was eliminated, stop
-    if (!teams.some(t => t.isPlayer) && playerMatches.length > 0 && !playerMatches[playerMatches.length - 1].won) break;
+    // Continue even if player is eliminated — simulate the full tournament
   }
 
   const roundReached = playerMatches.length;
   const won = roundReached === 6 && playerMatches[5]?.won;
 
-  return { playerMatches, roundReached, won, bracket: [...bracket] };
+  return { playerMatches, roundReached, won, bracket: [...bracket], bracketRounds };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────
