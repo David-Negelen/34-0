@@ -19,7 +19,7 @@ import sys
 
 ROOT       = Path(__file__).parent.parent
 DB_PATH    = ROOT / "bundesliga_draft.db"
-THRESHOLD  = 7        # a drop of this many points below neighbour avg is flagged
+THRESHOLD  = 8        # a drop of this many points below neighbour avg is flagged
 MAX_PASSES = 10
 DRY_RUN    = "--dry-run" in sys.argv
 
@@ -32,15 +32,22 @@ def find_fixes(ratings_by_player: dict) -> list[tuple[int, int, int, int]]:
     """Return list of (player_id, season_year, old_rating, new_rating)."""
     fixes = []
     for tm_id, rows in ratings_by_player.items():
-        if len(rows) < 3:
+        n = len(rows)
+        if n < 2:
             continue
-        for i in range(1, len(rows) - 1):
+        # Interior points
+        for i in range(1, n - 1):
             yr, rating = rows[i]
             prev_r = rows[i - 1][1]
             next_r = rows[i + 1][1]
             neighbour_avg = (prev_r + next_r) / 2
             if neighbour_avg - rating >= THRESHOLD:
                 fixes.append((tm_id, yr, rating, round(neighbour_avg)))
+        # Edge: last season drops below previous
+        if n >= 2:
+            yr, rating = rows[-1]
+            if rows[-2][1] - rating >= THRESHOLD:
+                fixes.append((tm_id, yr, rating, rows[-2][1]))
     return fixes
 
 
