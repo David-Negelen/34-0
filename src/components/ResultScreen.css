@@ -555,12 +555,13 @@
   text-overflow: ellipsis;
 }
 
-.ml-goal-ours {
+.ml-scorers-ours {
   color: var(--text);
 }
 
-.ml-goal-opp {
-  opacity: 0.5;
+.ml-scorers-opp {
+  color: var(--red-light);
+  opacity: 0.8;
 }
 
 /* ── Player stats table ── */

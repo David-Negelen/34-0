@@ -344,12 +344,8 @@ function MatchLog({ matches, onDone }) {
           const opp = isHome ? m.ag : m.hg;
           const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
           const opponent = isHome ? m.away : m.home;
-          const ourGoals = (m.events ?? []).filter(e => e.type === 'goal');
-          const oppGoals = m.oppGoals ?? (m.oppMinutes ?? []).map(min => ({ minute: min, scorerName: null }));
-          const timeline = [
-            ...ourGoals.map(e => ({ minute: e.minute, ours: true, name: e.scorer.name })),
-            ...oppGoals.map(g => ({ minute: g.minute, ours: false, name: g.scorerName })),
-          ].sort((a, b) => a.minute - b.minute);
+          const ourGoals = (m.events ?? []).filter(e => e.type === 'goal').sort((a, b) => a.minute - b.minute);
+          const oppGoals = (m.oppGoals ?? (m.oppMinutes ?? []).map(min => ({ minute: min, scorerName: null }))).sort((a, b) => a.minute - b.minute);
           return (
             <div key={i} className={`ml-card ml-card-${res}`}>
               <div className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</div>
@@ -358,12 +354,17 @@ function MatchLog({ matches, onDone }) {
                   <span className="ml-opponent">{opponent}</span>
                   <span className={`ml-score ml-score-${res}`}>{own}–{opp}</span>
                 </div>
-                {timeline.length > 0 && (
-                  <div className="ml-scorers">
-                    {timeline.map((ev, j) => (
-                      <span key={j} className={ev.ours ? 'ml-goal-ours' : 'ml-goal-opp'}>
-                        {j > 0 && '  '}⚽ {ev.name ? `${ev.name} ${ev.minute}'` : `${ev.minute}'`}
-                      </span>
+                {ourGoals.length > 0 && (
+                  <div className="ml-scorers ml-scorers-ours">
+                    {ourGoals.map((e, j) => (
+                      <span key={j}>{j > 0 && '  '}⚽ {e.scorer.name} {e.minute}'</span>
+                    ))}
+                  </div>
+                )}
+                {oppGoals.length > 0 && (
+                  <div className="ml-scorers ml-scorers-opp">
+                    {oppGoals.map((g, j) => (
+                      <span key={j}>{j > 0 && '  '}⚽ {g.scorerName ? `${g.scorerName} ${g.minute}'` : `${g.minute}'`}</span>
                     ))}
                   </div>
                 )}
