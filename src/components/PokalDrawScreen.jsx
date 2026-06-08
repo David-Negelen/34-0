@@ -5,10 +5,9 @@ const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', '
 export default function PokalDrawScreen({ matchups, round, onContinue }) {
   if (!matchups?.length) { onContinue(); return null; }
 
-  // Player's match last — the reveal moment
   const sorted = [...matchups].sort((a, b) => {
-    if (a.isPlayerMatch) return 1;
-    if (b.isPlayerMatch) return -1;
+    if (a.isPlayerMatch) return -1;
+    if (b.isPlayerMatch) return 1;
     return 0;
   });
 

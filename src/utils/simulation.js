@@ -472,8 +472,14 @@ export function drawPokalRound(teams, round, slots) {
     for (let i = 0; i < shuffled.length; i += 2) pairs.push([shuffled[i], shuffled[i + 1]]);
   }
 
-  // Randomize home/away per pair
-  pairs = pairs.map(([a, b]) => Math.random() < 0.5 ? [b, a] : [a, b]);
+  // R1 + R2: lower-tier team always at home. Otherwise random.
+  pairs = pairs.map(([a, b]) => {
+    if (round <= 1) {
+      if (b.tier === 'lower') return [b, a];
+      if (a.tier === 'lower') return [a, b];
+    }
+    return Math.random() < 0.5 ? [b, a] : [a, b];
+  });
 
   const squad = slots.filter(s => s.player).map(s => ({
     ...s.player,
