@@ -102,7 +102,7 @@ function PokalGame() {
     } catch {}
     const teams = buildPokalField(state.result.slots, players);
     const { matchups, winners } = drawPokalRound(teams, 0, state.result.slots);
-    setPk({ phase: 'draw', round: 0, teams, matchups, winners, slots: state.result.slots, playerMatches: [] });
+    setPk({ phase: 'draw', round: 0, teams, matchups, winners, slots: state.result.slots, playerMatches: [], roundMatchups: [] });
   }, [state.phase, state.result]);
 
   useEffect(() => {
@@ -115,11 +115,16 @@ function PokalGame() {
     setPk(null);
   }
 
-  // Player finished watching their match — store it, show round results.
+  // Player finished watching their match — store it and the full round matchups, show round results.
   function handleMatchDone() {
     const pm = pk.matchups.find(m => m.isPlayerMatch)?.playerMatch;
     if (!pm) return;
-    setPk(prev => ({ ...prev, phase: 'round-results', playerMatches: [...prev.playerMatches, pm] }));
+    setPk(prev => ({
+      ...prev,
+      phase: 'round-results',
+      playerMatches: [...prev.playerMatches, pm],
+      roundMatchups: [...(prev.roundMatchups ?? []), prev.matchups],
+    }));
   }
 
   // After seeing round results: advance to next round draw or finish.
@@ -134,6 +139,8 @@ function PokalGame() {
         playerMatches: pk.playerMatches,
         roundReached: pk.playerMatches.length,
         won: isFinal && playerWon,
+        slots: pk.slots,
+        roundMatchups: pk.roundMatchups ?? [],
       });
       setPk(prev => ({ ...prev, phase: 'summary' }));
       return;
@@ -142,6 +149,18 @@ function PokalGame() {
     const nextRound = pk.round + 1;
     const { matchups, winners } = drawPokalRound(pk.winners, nextRound, pk.slots);
     setPk(prev => ({ ...prev, phase: 'draw', round: nextRound, teams: pk.winners, matchups, winners }));
+  }
+
+  // Replay the tournament with the same squad.
+  function handlePlaySameTeam() {
+    const slots = state.result.slots;
+    if (!slots) return;
+    localStorage.removeItem(PK_KEY);
+    const teams = buildPokalField(slots, players);
+    const { matchups, winners } = drawPokalRound(teams, 0, slots);
+    const freshPk = { phase: 'draw', round: 0, teams, matchups, winners, slots, playerMatches: [], roundMatchups: [] };
+    setPk(freshPk);
+    setResult({ mode: 'pokal', slots });
   }
 
   if (state.phase === 'setup') {
@@ -212,6 +231,7 @@ function PokalGame() {
         <PokalResultScreen
           state={state}
           onPlayAgain={handleReset}
+          onPlaySameTeam={handlePlaySameTeam}
           onHome={() => { handleReset(); navigate('/'); }}
         />
       );
