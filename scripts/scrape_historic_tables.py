@@ -98,6 +98,8 @@ CLUB_NAME_MAP = {
     "VfR Aalen":                "VfR Aalen",
 }
 
+CLUB_BLACKLIST = {"RB Leipzig"}  # everyone hates them
+
 LEAGUES = [
     {
         "key":   "bl",
@@ -179,6 +181,8 @@ def main():
                     print(f"{len(rows)} teams")
                     for row in rows:
                         club = row["club"]
+                        if club in CLUB_BLACKLIST:
+                            continue
                         if club not in result[key]:
                             result[key][club] = {}
                         result[key][club][label] = {"pos": row["pos"], "pts": row["pts"]}
