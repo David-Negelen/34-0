@@ -1,4 +1,5 @@
 import { calcSquadRatings } from './ratingCalc';
+import { HISTORIC_TABLES } from '../data/historicTables';
 
 function poisson(lambda) {
   const L = Math.exp(-lambda);
@@ -107,6 +108,66 @@ const ZWEITE_LIGA_TEAMS = [
   { name: 'Preußen Münster',            strength: 56 },
 ];
 
+// ── Historic opponent generation ──────────────────────────────────────────────
+
+function shuffleArr(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Map final-table points to simulation strength range.
+// BL:  [16, 91] pts → [55, 92]; 2BL: [19, 76] pts → [54, 71]
+function ptsToStrength(pts, league) {
+  if (league === '2bl') return Math.round(Math.min(71, Math.max(54, 54 + (pts - 19) / 57 * 17)));
+  return Math.round(Math.min(92, Math.max(55, 55 + (pts - 16) / 75 * 37)));
+}
+
+// Build 17 historic opponents stratified by final table position tier.
+// One entry per club; strength derived from actual season points.
+function buildHistoricOpponents(league) {
+  const tables = HISTORIC_TABLES[league] ?? {};
+  const all = [];
+  for (const [club, seasons] of Object.entries(tables)) {
+    for (const [season, { pos, pts }] of Object.entries(seasons)) {
+      all.push({ club, season, pos, strength: ptsToStrength(pts, league) });
+    }
+  }
+
+  // Tiers: top(1-3), strong(4-9), mid(10-15), bottom(16-18) → targets: 2/5/7/3 = 17
+  const tiers = [
+    { entries: all.filter(e => e.pos <= 3),                  target: 2 },
+    { entries: all.filter(e => e.pos >= 4 && e.pos <= 9),    target: 5 },
+    { entries: all.filter(e => e.pos >= 10 && e.pos <= 15),  target: 7 },
+    { entries: all.filter(e => e.pos >= 16),                 target: 3 },
+  ];
+
+  const selected = [];
+  const usedClubs = new Set();
+
+  for (const { entries, target } of tiers) {
+    let picked = 0;
+    for (const e of shuffleArr(entries)) {
+      if (picked >= target) break;
+      if (usedClubs.has(e.club)) continue;
+      selected.push(e);
+      usedClubs.add(e.club);
+      picked++;
+    }
+  }
+
+  // Fill any remaining slots (edge case: not enough unique clubs per tier)
+  for (const e of shuffleArr(all)) {
+    if (selected.length >= 17) break;
+    if (!usedClubs.has(e.club)) { selected.push(e); usedClubs.add(e.club); }
+  }
+
+  return selected.map(e => ({ name: `${e.club} ${e.season}`, strength: e.strength }));
+}
+
 // ── Schedule builder ─────────────────────────────────────────────────────────
 
 // Standard polygon/circle algorithm: fix team 0, rotate teams 1..n-1.
@@ -140,7 +201,10 @@ export function simulateFullLeague(slots, league = 'bl') {
 
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
-  const LEAGUE_TEAMS = league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS;
+  const historicOpponents = buildHistoricOpponents(league);
+  const LEAGUE_TEAMS = historicOpponents.length === 17
+    ? historicOpponents
+    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
