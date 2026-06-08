@@ -27,7 +27,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
       const updatedSlots = slots.map(s =>
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
-      const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league);
+      const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league, players);
       setResult({ ...result, achievements: getAchievements(result, updatedSlots, league), table, playerMatches, playerStats, tableHistory });
     }
   }

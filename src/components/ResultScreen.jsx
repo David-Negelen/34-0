@@ -345,7 +345,11 @@ function MatchLog({ matches, onDone }) {
           const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
           const opponent = isHome ? m.away : m.home;
           const ourGoals = (m.events ?? []).filter(e => e.type === 'goal');
-          const oppMins = m.oppMinutes ?? [];
+          const oppGoals = m.oppGoals ?? (m.oppMinutes ?? []).map(min => ({ minute: min, scorerName: null }));
+          const timeline = [
+            ...ourGoals.map(e => ({ minute: e.minute, ours: true, name: e.scorer.name })),
+            ...oppGoals.map(g => ({ minute: g.minute, ours: false, name: g.scorerName })),
+          ].sort((a, b) => a.minute - b.minute);
           return (
             <div key={i} className={`ml-card ml-card-${res}`}>
               <div className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</div>
@@ -354,14 +358,13 @@ function MatchLog({ matches, onDone }) {
                   <span className="ml-opponent">{opponent}</span>
                   <span className={`ml-score ml-score-${res}`}>{own}–{opp}</span>
                 </div>
-                {(ourGoals.length > 0 || oppMins.length > 0) && (
+                {timeline.length > 0 && (
                   <div className="ml-scorers">
-                    {ourGoals.length > 0 && (
-                      <span className="ml-our-goals">⚽ {ourGoals.map(e => `${e.scorer.name} ${e.minute}'`).join('  ')}</span>
-                    )}
-                    {oppMins.length > 0 && (
-                      <span className="ml-opp-goals">{ourGoals.length > 0 ? '  · ' : '· '}{oppMins.map(min => `${min}'`).join(' ')}</span>
-                    )}
+                    {timeline.map((ev, j) => (
+                      <span key={j} className={ev.ours ? 'ml-goal-ours' : 'ml-goal-opp'}>
+                        {j > 0 && '  '}⚽ {ev.name ? `${ev.name} ${ev.minute}'` : `${ev.minute}'`}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>

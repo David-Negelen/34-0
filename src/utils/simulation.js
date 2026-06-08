@@ -180,7 +180,7 @@ function buildHistoricOpponents(league) {
     pool = pool.filter(p => !usedClubs.has(p.club));
   }
 
-  return selected.map(e => ({ name: `${e.club} ${e.season}`, strength: e.strength }));
+  return selected.map(e => ({ name: `${e.club} ${e.season}`, strength: e.strength, club: e.club, season: e.season }));
 }
 
 // ── Schedule builder ─────────────────────────────────────────────────────────
@@ -205,7 +205,13 @@ function buildRoundRobinRounds(n) {
 // 34-round proper Bundesliga schedule (17 Hinrunde + 17 Rückrunde).
 // Returns { result, table, playerMatches, playerStats, tableHistory } where:
 //   tableHistory — 34 sorted table snapshots (one per matchday)
-export function simulateFullLeague(slots, league = 'bl') {
+// '13/14' → '2013-14'
+function seasonLabelToKey(label) {
+  const [a, b] = label.split('/');
+  return `20${a}-20${b}`;
+}
+
+export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   const ratings = calcSquadRatings(slots);
   // Hidden OVR boost: rewards good drafts exponentially above 80.
   // 85 OVR → +11 (effective ~95, dominates); 80 and below → no boost.
@@ -223,9 +229,14 @@ export function simulateFullLeague(slots, league = 'bl') {
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
-      return { ...t, att: eff, def: eff };
+      // Build scorer pool from real player data for this club+season
+      const seasonKey = t.season ? seasonLabelToKey(t.season) : null;
+      const scorerPool = seasonKey && allPlayers.length
+        ? allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey))
+        : [];
+      return { ...t, att: eff, def: eff, scorerPool };
     }),
-    { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true },
+    { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true, scorerPool: [] },
   ];
   const n = teams.length; // 18
   const playerIdx = n - 1;
@@ -298,9 +309,20 @@ export function simulateFullLeague(slots, league = 'bl') {
     const goalsAgainst = m.home === 'Deine 11' ? m.ag : m.hg;
     const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
-    m.oppMinutes = Array.from({ length: goalsAgainst }, () =>
-      Math.floor(Math.random() * 90) + 1
-    ).sort((a, b) => a - b);
+    const oppTeamName = m.home === 'Deine 11' ? m.away : m.home;
+    const oppTeam = teams.find(t => t.name === oppTeamName);
+    const oppPool = oppTeam?.scorerPool ?? [];
+    m.oppGoals = Array.from({ length: goalsAgainst }, () => {
+      const minute = Math.floor(Math.random() * 90) + 1;
+      let scorerName = null;
+      if (oppPool.length) {
+        const totalW = oppPool.reduce((s, p) => s + (SCORE_WEIGHTS[p.positions[0]] ?? 1), 0);
+        let r = Math.random() * totalW;
+        for (const p of oppPool) { r -= (SCORE_WEIGHTS[p.positions[0]] ?? 1); if (r <= 0) { scorerName = p.name; break; } }
+        if (!scorerName) scorerName = oppPool[oppPool.length - 1].name;
+      }
+      return { minute, scorerName };
+    }).sort((a, b) => a.minute - b.minute);
     events.forEach(e => {
       if (e.type === 'goal') { statsMap[e.scorer.name].goals++; if (e.assister) statsMap[e.assister.name].assists++; }
     });
