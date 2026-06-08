@@ -37,13 +37,13 @@ function weightedPick(pool, weights) {
   return pool[pool.length - 1];
 }
 
-function generateMatchEvents(goalsFor, goalsAgainst, squad) {
+function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.02, aet = false) {
   const events = [];
   const gk = squad.find(p => p.slotType === 'GK');
 
   // GK last-minute heroics: only when losing by exactly 1 and team scored at least once.
-  // ~2% per qualifying match → roughly 1-in-20 full seasons has a GK goal.
-  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < 0.02;
+  // Triggers at 90+ (or 119+ in AET) — a desperate push from the keeper.
+  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < gkGoalChance;
 
   for (let i = 0; i < goalsFor; i++) {
     const isLast = i === goalsFor - 1;
@@ -51,7 +51,12 @@ function generateMatchEvents(goalsFor, goalsAgainst, squad) {
     const hasAssist = Math.random() < 0.62;
     const pool2    = squad.filter(p => p !== scorer);
     const assister = hasAssist && pool2.length ? weightedPick(pool2, ASSIST_WEIGHTS) : null;
-    const minute   = gkLateGoal && isLast ? Math.floor(Math.random() * 6) + 90 : Math.floor(Math.random() * 90) + 1;
+    let minute;
+    if (gkLateGoal && isLast) {
+      minute = aet ? Math.floor(Math.random() * 6) + 119 : Math.floor(Math.random() * 6) + 90;
+    } else {
+      minute = Math.floor(Math.random() * (aet ? 120 : 90)) + 1;
+    }
     events.push({ type: 'goal', minute, scorer, assister });
   }
   return events.sort((a, b) => a.minute - b.minute);
@@ -538,8 +543,12 @@ export function simulateDFBPokal(slots, allPlayers = []) {
         const oppTeam = home.isPlayer ? away : home;
 
         // Generate scorer events for player's side
-        const squad = slots.filter(s => s.player).map(s => s.player);
-        const events = generateMatchEvents(own, opp, squad);
+        const squad = slots.filter(s => s.player).map(s => ({
+          ...s.player,
+          slotType: s.type,
+          rating: s.player.displayRating ?? s.player.primeRating ?? 75,
+        }));
+        const events = generateMatchEvents(own, opp, squad, 0.03, result.aet);
 
         // Generate opponent scorers
         const oppPool = oppTeam.scorerPool ?? [];
