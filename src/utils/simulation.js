@@ -208,7 +208,7 @@ function buildRoundRobinRounds(n) {
 // '13/14' → '2013-14'
 function seasonLabelToKey(label) {
   const [a, b] = label.split('/');
-  return `20${a}-20${b}`;
+  return `20${a}-${b}`;
 }
 
 export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
