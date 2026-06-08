@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FormationBoard from './FormationBoard';
 import SpinPanel from './SpinPanel';
 import RatingsPanel from './RatingsPanel';
-import { simulateFullLeague, simulateDFBPokal, getAchievements } from '../utils/simulation';
+import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
 export default function DraftScreen({ state, league, players, clubs, fillSlot, useReroll, setPendingSpin, setResult, onGoHome, onReset }) {
@@ -28,8 +28,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
       if (league === 'pokal') {
-        const pokalResult = simulateDFBPokal(updatedSlots, players);
-        setResult({ ...pokalResult, mode: 'pokal' });
+        setResult({ mode: 'pokal', slots: updatedSlots });
       } else {
         const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league, players);
         setResult({ ...result, achievements: getAchievements(result, updatedSlots, league), table, playerMatches, playerStats, tableHistory });

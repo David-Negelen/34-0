@@ -8,6 +8,8 @@ import ResultScreen from './components/ResultScreen';
 import PokalResultScreen from './components/PokalResultScreen';
 import PokalDrawScreen from './components/PokalDrawScreen';
 import PokalMatchScreen from './components/PokalMatchScreen';
+import PokalRoundResultsScreen from './components/PokalRoundResultsScreen';
+import { buildPokalField, drawPokalRound } from './utils/simulation';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
 import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
@@ -77,22 +79,60 @@ function PokalGame() {
   const players = [...BL_PLAYERS, ...BL2_PLAYERS];
   const clubs   = { ...BL_CLUBS, ...BL2_CLUBS };
 
-  // Local flow state: draw → match (per round) → summary
-  const [pokalPhase, setPokalPhase] = useState('draw');
-  const [matchIdx, setMatchIdx] = useState(0);
+  // pk drives the round-by-round tournament: draw → match → round-results, repeated per round.
+  // null while in setup/draft phase.
+  const [pk, setPk] = useState(null);
 
-  // Reset local flow when returning to setup (play again)
+  // Init or restore tournament state when phase becomes 'result'.
   useEffect(() => {
-    if (state.phase === 'setup') {
-      setPokalPhase('draw');
-      setMatchIdx(0);
+    if (state.phase !== 'result' || state.result?.mode !== 'pokal' || pk !== null) return;
+    if (state.result.playerMatches) {
+      // Tournament already finished (reloaded from localStorage)
+      setPk({ phase: 'summary' });
+      return;
     }
+    if (!state.result.slots) return;
+    const teams = buildPokalField(state.result.slots, players);
+    const { matchups, winners } = drawPokalRound(teams, 0, state.result.slots);
+    setPk({ phase: 'draw', round: 0, teams, matchups, winners, slots: state.result.slots, playerMatches: [] });
+  }, [state.phase, state.result]);
+
+  useEffect(() => {
+    if (state.phase === 'setup') setPk(null);
   }, [state.phase]);
 
   function handleReset() {
     reset();
-    setPokalPhase('draw');
-    setMatchIdx(0);
+    setPk(null);
+  }
+
+  // Player finished watching their match — store it, show round results.
+  function handleMatchDone() {
+    const pm = pk.matchups.find(m => m.isPlayerMatch)?.playerMatch;
+    if (!pm) return;
+    setPk(prev => ({ ...prev, phase: 'round-results', playerMatches: [...prev.playerMatches, pm] }));
+  }
+
+  // After seeing round results: advance to next round draw or finish.
+  function handleRoundContinue() {
+    const last = pk.playerMatches[pk.playerMatches.length - 1];
+    const playerWon = last?.won ?? false;
+    const isFinal   = pk.round === 5;
+
+    if (!playerWon || isFinal) {
+      setResult({
+        mode: 'pokal',
+        playerMatches: pk.playerMatches,
+        roundReached: pk.playerMatches.length,
+        won: isFinal && playerWon,
+      });
+      setPk(prev => ({ ...prev, phase: 'summary' }));
+      return;
+    }
+
+    const nextRound = pk.round + 1;
+    const { matchups, winners } = drawPokalRound(pk.winners, nextRound, pk.slots);
+    setPk(prev => ({ ...prev, phase: 'draw', round: nextRound, teams: pk.winners, matchups, winners }));
   }
 
   if (state.phase === 'setup') {
@@ -126,44 +166,47 @@ function PokalGame() {
     );
   }
 
-  if (state.phase === 'result') {
-    const result = state.result ?? {};
-    const playerMatches = result.playerMatches ?? [];
-
-    if (pokalPhase === 'draw') {
+  if (state.phase === 'result' && pk) {
+    if (pk.phase === 'draw') {
       return (
         <PokalDrawScreen
-          bracket={result.bracket ?? []}
-          onContinue={() => { setPokalPhase('match'); setMatchIdx(0); }}
+          matchups={pk.matchups}
+          round={pk.round}
+          onContinue={() => setPk(p => ({ ...p, phase: 'match' }))}
         />
       );
     }
-
-    if (pokalPhase === 'match') {
-      const match = playerMatches[matchIdx];
-      if (!match) { setPokalPhase('summary'); return null; }
-      const isLast = matchIdx >= playerMatches.length - 1;
+    if (pk.phase === 'match') {
+      const matchup = pk.matchups.find(m => m.isPlayerMatch);
       return (
         <PokalMatchScreen
-          key={matchIdx}
-          match={match}
-          roundIndex={matchIdx}
-          onContinue={() => {
-            if (isLast || !match.won) setPokalPhase('summary');
-            else setMatchIdx(i => i + 1);
-          }}
+          key={pk.round}
+          match={matchup.playerMatch}
+          roundIndex={pk.round}
+          onContinue={handleMatchDone}
         />
       );
     }
-
-    // summary
-    return (
-      <PokalResultScreen
-        state={state}
-        onPlayAgain={handleReset}
-        onHome={() => { handleReset(); navigate('/'); }}
-      />
-    );
+    if (pk.phase === 'round-results') {
+      const last = pk.playerMatches[pk.playerMatches.length - 1];
+      return (
+        <PokalRoundResultsScreen
+          matchups={pk.matchups}
+          round={pk.round}
+          playerWon={last?.won ?? false}
+          onContinue={handleRoundContinue}
+        />
+      );
+    }
+    if (pk.phase === 'summary') {
+      return (
+        <PokalResultScreen
+          state={state}
+          onPlayAgain={handleReset}
+          onHome={() => { handleReset(); navigate('/'); }}
+        />
+      );
+    }
   }
 
   return null;
