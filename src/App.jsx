@@ -72,7 +72,7 @@ function PokalGame() {
     useGameState('pokal');
 
   const players = [...BL_PLAYERS, ...BL2_PLAYERS];
-  const clubs   = [...BL_CLUBS, ...BL2_CLUBS];
+  const clubs   = { ...BL_CLUBS, ...BL2_CLUBS };
 
   if (state.phase === 'setup') {
     return (
