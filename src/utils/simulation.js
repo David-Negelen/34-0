@@ -128,41 +128,56 @@ function ptsToStrength(pts, league) {
 
 // Build 17 historic opponents stratified by final table position tier.
 // One entry per club; strength derived from actual season points.
+// Within each tier, selection is weighted: good tiers favour high pts (prime seasons);
+// bottom tier favours low pts (iconic failures like Schalke 20/21).
 function buildHistoricOpponents(league) {
   const tables = HISTORIC_TABLES[league] ?? {};
   const all = [];
   for (const [club, seasons] of Object.entries(tables)) {
     for (const [season, { pos, pts }] of Object.entries(seasons)) {
-      all.push({ club, season, pos, strength: ptsToStrength(pts, league) });
+      all.push({ club, season, pos, pts, strength: ptsToStrength(pts, league) });
     }
   }
 
-  // Tiers: top(1-3), strong(4-9), mid(10-15), bottom(16-18) → targets: 2/5/7/3 = 17
+  function pickWeighted(pool, weightFn) {
+    const total = pool.reduce((s, e) => s + weightFn(e), 0);
+    let r = Math.random() * total;
+    for (const e of pool) { r -= weightFn(e); if (r <= 0) return e; }
+    return pool[pool.length - 1];
+  }
+
+  // Tiers: top(1-3), strong(4-9), mid(10-15), bottom(16+) → targets: 4/8/3/2 = 17
+  // Good tiers: pts^2.5 weights prime seasons heavily over mediocre ones.
+  // Bottom tier: inverse weight pulls iconic disasters (16 pts) above forgettable near-misses (38 pts).
+  const primW  = e => Math.pow(e.pts, 2.5);
+  const badW   = e => Math.pow(Math.max(1, 55 - e.pts), 2.5);
   const tiers = [
-    { entries: all.filter(e => e.pos <= 3),                  target: 2 },
-    { entries: all.filter(e => e.pos >= 4 && e.pos <= 9),    target: 5 },
-    { entries: all.filter(e => e.pos >= 10 && e.pos <= 15),  target: 7 },
-    { entries: all.filter(e => e.pos >= 16),                 target: 3 },
+    { entries: all.filter(e => e.pos <= 3),                 target: 4, weightFn: primW },
+    { entries: all.filter(e => e.pos >= 4 && e.pos <= 9),   target: 8, weightFn: primW },
+    { entries: all.filter(e => e.pos >= 10 && e.pos <= 15), target: 3, weightFn: primW },
+    { entries: all.filter(e => e.pos >= 16),                target: 2, weightFn: badW  },
   ];
 
   const selected = [];
   const usedClubs = new Set();
 
-  for (const { entries, target } of tiers) {
-    let picked = 0;
-    for (const e of shuffleArr(entries)) {
-      if (picked >= target) break;
-      if (usedClubs.has(e.club)) continue;
+  for (const { entries, target, weightFn } of tiers) {
+    let pool = entries.filter(e => !usedClubs.has(e.club));
+    for (let i = 0; i < target && pool.length > 0; i++) {
+      const e = pickWeighted(pool, weightFn);
       selected.push(e);
       usedClubs.add(e.club);
-      picked++;
+      pool = pool.filter(p => !usedClubs.has(p.club));
     }
   }
 
   // Fill any remaining slots (edge case: not enough unique clubs per tier)
-  for (const e of shuffleArr(all)) {
-    if (selected.length >= 17) break;
-    if (!usedClubs.has(e.club)) { selected.push(e); usedClubs.add(e.club); }
+  let pool = all.filter(e => !usedClubs.has(e.club));
+  while (selected.length < 17 && pool.length > 0) {
+    const e = pickWeighted(pool, primW);
+    selected.push(e);
+    usedClubs.add(e.club);
+    pool = pool.filter(p => !usedClubs.has(p.club));
   }
 
   return selected.map(e => ({ name: `${e.club} ${e.season}`, strength: e.strength }));
