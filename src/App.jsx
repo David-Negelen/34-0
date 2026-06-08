@@ -149,7 +149,7 @@ function PokalGame() {
           match={match}
           roundIndex={matchIdx}
           onContinue={() => {
-            if (isLast) setPokalPhase('summary');
+            if (isLast || !match.won) setPokalPhase('summary');
             else setMatchIdx(i => i + 1);
           }}
         />

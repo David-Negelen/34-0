@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import './PokalMatchScreen.css';
 
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
-const TICK_MS = 22;   // ms per in-game minute → 90 min ≈ 2 s, ET 30 min ≈ 0.66 s
+const TICK_MS = 60;   // ms per in-game minute → 90 min ≈ 5.4 s, ET 30 min ≈ 1.8 s
 
 export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
   const {
@@ -119,7 +119,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
     const theirScored = home ? kick.away : kick.home;
     const myRunning   = kicks.slice(0, i + 1).filter(k => home ? k.home : k.away).length;
     const oppRunning  = kicks.slice(0, i + 1).filter(k => home ? k.away : k.home).length;
-    return { mineScored, theirScored, myRunning, oppRunning, idx: i };
+    return { mineScored, theirScored, myRunning, oppRunning, idx: i, sd: !!kick.sd };
   });
 
   const finalPenMine = kicks.filter(k => home ? k.home : k.away).length;
@@ -189,15 +189,20 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
             <span>{opponent}</span>
           </div>
           <div className="ms-pen-rows">
-            {penRows.map(row => (
-              <div key={row.idx} className="ms-pen-row">
-                <span className={`ms-pen-dot ${row.mineScored ? 'dot--in' : 'dot--out'}`}>
-                  {row.mineScored ? '●' : '○'}
-                </span>
-                <span className="ms-pen-num">{row.idx + 1}</span>
-                <span className={`ms-pen-dot ms-pen-dot--r ${row.theirScored ? 'dot--in' : 'dot--out'}`}>
-                  {row.theirScored ? '●' : '○'}
-                </span>
+            {penRows.map((row, i) => (
+              <div key={row.idx}>
+                {row.sd && (i === 0 || !penRows[i - 1].sd) && (
+                  <div className="ms-pen-sd-label">SUDDEN DEATH</div>
+                )}
+                <div className="ms-pen-row">
+                  <span className={`ms-pen-dot ${row.mineScored ? 'dot--in' : 'dot--out'}`}>
+                    {row.mineScored ? '●' : '○'}
+                  </span>
+                  <span className="ms-pen-num">{row.sd ? 'SD' : row.idx + 1}</span>
+                  <span className={`ms-pen-dot ms-pen-dot--r ${row.theirScored ? 'dot--in' : 'dot--out'}`}>
+                    {row.theirScored ? '●' : '○'}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

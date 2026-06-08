@@ -448,12 +448,7 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
 
   if (hTotal !== aTotal) return { hg: hTotal, ag: aTotal, aet: true, pens: false };
 
-  // Penalties: slight edge to stronger team (55/45 max)
-  const edge = Math.min(0.1, Math.abs(hAtt - aAtt) / 200);
-  const hWinProb = hAtt >= aAtt ? 0.5 + edge : 0.5 - edge;
-  const hWins = Math.random() < hWinProb;
-
-  // Simulate 5-kick shootout, recording each kick for animation
+  // Simulate 5-kick shootout + sudden death until a winner emerges
   const kicks = [];
   let hPen = 0, aPen = 0;
   for (let i = 0; i < 5; i++) {
@@ -463,15 +458,15 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
     if (aScored) aPen++;
     kicks.push({ home: hScored, away: aScored });
   }
-  // Ensure the winner wins in the displayed sequence
-  if (hWins && hPen <= aPen) {
-    const idx = kicks.findIndex(k => !k.home);
-    if (idx >= 0) { kicks[idx] = { ...kicks[idx], home: true }; hPen++; }
+  // Sudden death: both score or both miss → continue; otherwise decisive
+  while (hPen === aPen && kicks.length < 50) {
+    const hSD = Math.random() < 0.75;
+    const aSD = Math.random() < 0.75;
+    if (hSD) hPen++;
+    if (aSD) aPen++;
+    kicks.push({ home: hSD, away: aSD, sd: true });
   }
-  if (!hWins && aPen <= hPen) {
-    const idx = kicks.findIndex(k => !k.away);
-    if (idx >= 0) { kicks[idx] = { ...kicks[idx], away: true }; aPen++; }
-  }
+  const hWins = hPen > aPen;
 
   return { hg: hTotal, ag: aTotal, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins, kicks };
 }

@@ -226,6 +226,16 @@
 .dot--in  { color: var(--green); }
 .dot--out { color: var(--red-light); }
 
+.ms-pen-sd-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin: 6px 0 2px;
+}
+
 .ms-pen-final {
   font-size: 28px;
   font-weight: 900;
