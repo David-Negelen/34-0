@@ -1,5 +1,6 @@
 import { calcSquadRatings } from './ratingCalc';
 import { HISTORIC_TABLES } from '../data/historicTables';
+import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
 
 function poisson(lambda) {
   const L = Math.exp(-lambda);
@@ -357,6 +358,205 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   };
 
   return { result, table, playerMatches, playerStats, tableHistory };
+}
+
+// ── DFB-Pokal simulation ──────────────────────────────────────────────────────
+
+const POKAL_BLACKLIST = new Set(['RB Leipzig']);
+const POKAL_LOWER_STRENGTH = 52; // 3. Liga / Regional / Amateur flat strength
+
+const POKAL_ROUNDS = [
+  '1. Runde', '2. Runde', 'Achtelfinale', 'Viertelfinale', 'Halbfinale', 'Finale',
+];
+
+// Derive tier from historicTables: bl / 2bl / lower
+function pokalTier(club, season) {
+  if (HISTORIC_TABLES.bl[club]?.[season])    return 'bl';
+  if (HISTORIC_TABLES['2bl'][club]?.[season]) return '2bl';
+  return 'lower';
+}
+
+// Strength for a DFB-Pokal opponent: use historicTables pts if available, else flat.
+function pokalStrength(club, season) {
+  const bl  = HISTORIC_TABLES.bl[club]?.[season];
+  const tbl = HISTORIC_TABLES['2bl'][club]?.[season];
+  if (bl)  return ptsToStrength(bl.pts, 'bl');
+  if (tbl) return ptsToStrength(tbl.pts, '2bl');
+  return POKAL_LOWER_STRENGTH;
+}
+
+// Build 63 opponent teams sampled from the full Pokal participant pool.
+// Tier composition: ~18 bl, ~18 2bl, ~27 lower (one-club constraint).
+// Bracket seeding ensures no lower vs lower matchup in R1.
+function buildPokalOpponents(allPlayers) {
+  const pool = dfbPokalParticipants
+    .filter(e => !POKAL_BLACKLIST.has(e.club))
+    .map(e => ({ ...e, tier: pokalTier(e.club, e.season), strength: pokalStrength(e.club, e.season) }));
+
+  const byTier = { bl: [], '2bl': [], lower: [] };
+  pool.forEach(e => byTier[e.tier].push(e));
+
+  function pickWeightedUniq(entries, usedClubs, n, weightFn) {
+    const picked = [];
+    let avail = entries.filter(e => !usedClubs.has(e.club));
+    for (let i = 0; i < n && avail.length; i++) {
+      const total = avail.reduce((s, e) => s + weightFn(e), 0);
+      let r = Math.random() * total;
+      let choice = avail[avail.length - 1];
+      for (const e of avail) { r -= weightFn(e); if (r <= 0) { choice = e; break; } }
+      picked.push(choice);
+      usedClubs.add(choice.club);
+      avail = avail.filter(e => !usedClubs.has(e.club));
+    }
+    return picked;
+  }
+
+  const primW = e => Math.pow(e.strength, 2.5);
+  const usedClubs = new Set();
+
+  const blPicks    = pickWeightedUniq(byTier.bl,    usedClubs, 18, primW);
+  const tblPicks   = pickWeightedUniq(byTier['2bl'], usedClubs, 18, primW);
+  const lowerPicks = pickWeightedUniq(byTier.lower,  usedClubs, 27, e => 1);
+
+  const opponents = [...blPicks, ...tblPicks, ...lowerPicks].map(e => {
+    const seasonKey = seasonLabelToKey(e.season);
+    const scorerPool = allPlayers.filter(p => p.seasons.some(s => s.club === e.club && s.season === seasonKey));
+    const eff = Math.round(Math.min(98, Math.max(40, e.strength + gauss(5))));
+    return { name: `${e.club} ${e.season}`, club: e.club, season: e.season, tier: e.tier, att: eff, def: eff, scorerPool };
+  });
+
+  return opponents; // 63 opponents
+}
+
+// Simulate a single knockout game (90 min → optional ET → optional pens).
+// Returns { hg, ag, aet, pens, penScore }
+function simulateKnockout(hAtt, hDef, aAtt, aDef) {
+  // More variance than league: upset factor ±15% of strength
+  const hAdjAtt = Math.max(40, hAtt + gauss(8));
+  const aAdjAtt = Math.max(40, aAtt + gauss(8));
+  const { hg, ag } = simulateMatch(hAdjAtt, hDef, aAdjAtt, aDef);
+
+  if (hg !== ag) return { hg, ag, aet: false, pens: false };
+
+  // Extra time: lower-scoring but another chance (each team ~0.4 expected)
+  const etH = poisson(0.35);
+  const etA = poisson(0.35);
+  const hTotal = hg + etH;
+  const aTotal = ag + etA;
+
+  if (hTotal !== aTotal) return { hg: hTotal, ag: aTotal, aet: true, pens: false };
+
+  // Penalties: slight edge to stronger team (55/45 max)
+  const edge = Math.min(0.1, Math.abs(hAtt - aAtt) / 200);
+  const hWinProb = hAtt >= aAtt ? 0.5 + edge : 0.5 - edge;
+  const hWins = Math.random() < hWinProb;
+
+  // Simulate 5-kick shootout to get a score
+  let hPen = 0, aPen = 0;
+  for (let i = 0; i < 5; i++) {
+    if (Math.random() < 0.75) hPen++;
+    if (Math.random() < 0.75) aPen++;
+  }
+  // Ensure the winner actually wins in the display score too
+  if (hWins && hPen <= aPen) hPen = aPen + 1;
+  if (!hWins && aPen <= hPen) aPen = hPen + 1;
+
+  return { hg: hTotal, ag: aTotal, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins };
+}
+
+// Simulate the full 64-team bracket. Returns player's match list.
+export function simulateDFBPokal(slots, allPlayers = []) {
+  const ratings   = calcSquadRatings(slots);
+  const overall   = ratings.overall ?? 75;
+  const ovrBoost  = overall > 82 ? Math.pow(overall - 82, 1.5) : 0;
+  const attStr    = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
+  const defStr    = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
+
+  const opponents = buildPokalOpponents(allPlayers);
+  // opponents is 63 entries; player is slot 0 (index 63 in the 64-slot bracket)
+
+  // Sort opponents: lower-tier teams go into even slots so in R1 they always face
+  // a bl/2bl team (odd slots). bl/2bl fill odd slots, lower fill even slots.
+  const blAnd2bl  = shuffleArr(opponents.filter(o => o.tier === 'bl' || o.tier === '2bl'));
+  const lower     = shuffleArr(opponents.filter(o => o.tier === 'lower'));
+
+  // Build 64-slot bracket. Slot 63 = player.
+  // R1 pairs: (0,1), (2,3), ..., (62,63)
+  // We place lower-tier in even slots 0,2,4,... so they face bl/2bl in odd slots.
+  // Player is in slot 63 (odd) → faces a lower-tier team in slot 62 in R1.
+  const bracket = new Array(64);
+  let blIdx = 0, lowIdx = 0;
+  for (let i = 0; i < 63; i++) {
+    if (i % 2 === 0) {
+      bracket[i] = lower[lowIdx++] ?? blAnd2bl[blIdx++]; // even = lower
+    } else {
+      bracket[i] = blAnd2bl[blIdx++] ?? lower[lowIdx++]; // odd  = bl/2bl
+    }
+  }
+  bracket[63] = { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true, scorerPool: [] };
+
+  const playerMatches = [];
+  let teams = [...bracket];
+
+  for (let round = 0; round < 6; round++) {
+    const winners = [];
+    for (let i = 0; i < teams.length; i += 2) {
+      const home = teams[i];
+      const away = teams[i + 1];
+      const isPlayerGame = home.isPlayer || away.isPlayer;
+
+      const result = simulateKnockout(home.att, home.def, away.att, away.def);
+      const homeWon = result.pens ? result.hWins : result.hg > result.ag;
+
+      if (isPlayerGame) {
+        const own = home.isPlayer ? result.hg : result.ag;
+        const opp = home.isPlayer ? result.ag : result.hg;
+        const oppTeam = home.isPlayer ? away : home;
+
+        // Generate scorer events for player's side
+        const squad = slots.filter(s => s.player).map(s => s.player);
+        const events = generateMatchEvents(own, opp, squad);
+
+        // Generate opponent scorers
+        const oppPool = oppTeam.scorerPool ?? [];
+        const oppGoals = Array.from({ length: opp }, () => {
+          const minute = Math.floor(Math.random() * (result.aet ? 120 : 90)) + 1;
+          let scorerName = null;
+          if (oppPool.length) {
+            const totalW = oppPool.reduce((s, p) => s + (SCORE_WEIGHTS[p.positions[0]] ?? 1), 0);
+            let r = Math.random() * totalW;
+            for (const p of oppPool) { r -= (SCORE_WEIGHTS[p.positions[0]] ?? 1); if (r <= 0) { scorerName = p.name; break; } }
+            if (!scorerName) scorerName = oppPool[oppPool.length - 1].name;
+          }
+          return { minute, scorerName };
+        }).sort((a, b) => a.minute - b.minute);
+
+        playerMatches.push({
+          round: POKAL_ROUNDS[round],
+          opponent: oppTeam.name,
+          home: home.isPlayer,
+          ownGoals: own,
+          oppGoals2: opp,
+          aet: result.aet,
+          pens: result.pens,
+          penScore: result.penScore ?? null,
+          won: homeWon === home.isPlayer,
+          events,
+          oppGoals,
+        });
+      }
+
+      winners.push(homeWon ? home : away);
+    }
+    teams = winners;
+    // If player was eliminated, stop
+    if (!teams.some(t => t.isPlayer) && playerMatches.length > 0 && !playerMatches[playerMatches.length - 1].won) break;
+  }
+
+  const roundReached = playerMatches.length;
+  const won = roundReached === 6 && playerMatches[5]?.won;
+
+  return { playerMatches, roundReached, won };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────
