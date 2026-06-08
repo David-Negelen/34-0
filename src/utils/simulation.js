@@ -36,9 +36,11 @@ function weightedPick(pool, weights) {
   return pool[pool.length - 1];
 }
 
-function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01, aet = false) {
+// goalsForReg: goals scored in regular time (so ET goals get minutes 91–120)
+function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01, aet = false, goalsForReg = null) {
   const events = [];
   const gk = squad.find(p => p.slotType === 'GK');
+  const regGoals = goalsForReg ?? goalsFor;
 
   // GK last-minute heroics: only when losing by exactly 1 and team scored at least once.
   // Triggers at 90+ (or 119+ in AET) — a desperate push from the keeper.
@@ -53,8 +55,10 @@ function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01,
     let minute;
     if (gkLateGoal && isLast) {
       minute = aet ? Math.floor(Math.random() * 6) + 119 : Math.floor(Math.random() * 6) + 90;
+    } else if (aet && i >= regGoals) {
+      minute = Math.floor(Math.random() * 30) + 91;
     } else {
-      minute = Math.floor(Math.random() * (aet ? 120 : 90)) + 1;
+      minute = Math.floor(Math.random() * 90) + 1;
     }
     events.push({ type: 'goal', minute, scorer, assister });
   }
@@ -508,12 +512,15 @@ export function drawPokalRound(teams, round, slots) {
       const oppTeam = playerIsHome ? away : home;
       const own = playerIsHome ? result.hg : result.ag;
       const opp = playerIsHome ? result.ag : result.hg;
+      const ownReg = playerIsHome ? result.hgReg : result.agReg;
+      const oppReg = playerIsHome ? result.agReg : result.hgReg;
       const won = playerIsHome ? homeWon : !homeWon;
 
-      const events = squad.length ? generateMatchEvents(own, opp, squad, 0.04, result.aet) : [];
+      const events = squad.length ? generateMatchEvents(own, opp, squad, 0.04, result.aet, ownReg) : [];
       const oppPool = oppTeam.scorerPool ?? [];
-      const oppGoals = Array.from({ length: opp }, () => {
-        const minute = Math.floor(Math.random() * (result.aet ? 120 : 90)) + 1;
+      const oppGoals = Array.from({ length: opp }, (_, gi) => {
+        const inEt = result.aet && gi >= oppReg;
+        const minute = inEt ? Math.floor(Math.random() * 30) + 91 : Math.floor(Math.random() * 90) + 1;
         let scorerName = null;
         if (oppPool.length) {
           const totalW = oppPool.reduce((s, p) => s + (SCORE_WEIGHTS[p.positions[0]] ?? 1), 0);
@@ -552,7 +559,7 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
   const hg = poisson(lambdaH);
   const ag = poisson(lambdaA);
 
-  if (hg !== ag) return { hg, ag, aet: false, pens: false };
+  if (hg !== ag) return { hg, ag, hgReg: hg, agReg: ag, aet: false, pens: false };
 
   // Extra time: 30 min each side
   const etH = poisson(0.45);
@@ -560,7 +567,7 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
   const hTotal = hg + etH;
   const aTotal = ag + etA;
 
-  if (hTotal !== aTotal) return { hg: hTotal, ag: aTotal, aet: true, pens: false };
+  if (hTotal !== aTotal) return { hg: hTotal, ag: aTotal, hgReg: hg, agReg: ag, aet: true, pens: false };
 
   // Simulate 5-kick shootout + sudden death until a winner emerges
   const kicks = [];
@@ -582,7 +589,7 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
   }
   const hWins = hPen > aPen;
 
-  return { hg: hTotal, ag: aTotal, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins, kicks };
+  return { hg: hTotal, ag: aTotal, hgReg: hg, agReg: ag, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins, kicks };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────

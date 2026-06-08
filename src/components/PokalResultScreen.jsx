@@ -65,7 +65,6 @@ function TournamentBracket({ roundMatchups }) {
       <div className="pk-bracket-title">Turnierverlauf</div>
       {roundMatchups.map((matchups, roundIdx) => {
         const isOpen = openRounds.has(roundIdx);
-        const playerM = matchups.find(m => m.isPlayerMatch);
         const sorted = [...matchups].sort((a, b) => {
           if (a.isPlayerMatch) return -1;
           if (b.isPlayerMatch) return 1;
@@ -76,9 +75,6 @@ function TournamentBracket({ roundMatchups }) {
           <div key={roundIdx} className="pk-bracket-round">
             <button className="pk-bracket-toggle" onClick={() => toggle(roundIdx)}>
               <span className="pk-br-label">{ROUND_LABELS[roundIdx]}</span>
-              <span className="pk-br-player-score">
-                {playerM ? `${brakScoreStr(playerM)} ${playerM.homeWon === (playerM.home === 'Deine 11') ? '✓' : '✗'}` : ''}
-              </span>
               <span className="pk-br-count">{matchups.length} Spiele</span>
               <span className="pk-br-chevron">{isOpen ? '▲' : '▼'}</span>
             </button>
