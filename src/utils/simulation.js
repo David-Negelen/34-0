@@ -543,17 +543,20 @@ export function drawPokalRound(teams, round, slots) {
 
 // Simulate a single knockout game (90 min → optional ET → optional pens).
 // Returns { hg, ag, aet, pens, penScore }
+// Tuned for Pokal: lower base scoring → ~32% draws for equal teams, more AET + pens.
 function simulateKnockout(hAtt, hDef, aAtt, aDef) {
-  // More variance than league: upset factor ±15% of strength
-  const hAdjAtt = Math.max(40, hAtt + gauss(8));
-  const aAdjAtt = Math.max(40, aAtt + gauss(8));
-  const { hg, ag } = simulateMatch(hAdjAtt, hDef, aAdjAtt, aDef);
+  const hAdj = Math.max(40, hAtt + gauss(5));
+  const aAdj = Math.max(40, aAtt + gauss(5));
+  const lambdaH = Math.max(0.25, 0.95 + (hAdj - aDef) * 0.022);
+  const lambdaA = Math.max(0.25, 0.80 + (aAdj - hDef) * 0.022);
+  const hg = poisson(lambdaH);
+  const ag = poisson(lambdaA);
 
   if (hg !== ag) return { hg, ag, aet: false, pens: false };
 
-  // Extra time: lower-scoring but another chance (each team ~0.4 expected)
-  const etH = poisson(0.35);
-  const etA = poisson(0.35);
+  // Extra time: 30 min each side
+  const etH = poisson(0.45);
+  const etA = poisson(0.45);
   const hTotal = hg + etH;
   const aTotal = ag + etA;
 
