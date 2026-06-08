@@ -37,13 +37,13 @@ function weightedPick(pool, weights) {
   return pool[pool.length - 1];
 }
 
-function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.02, aet = false) {
+function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01, aet = false) {
   const events = [];
   const gk = squad.find(p => p.slotType === 'GK');
 
   // GK last-minute heroics: only when losing by exactly 1 and team scored at least once.
   // Triggers at 90+ (or 119+ in AET) — a desperate push from the keeper.
-  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < gkGoalChance;
+  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < gkGoalChance;  // league: 1%, pokal: 4%
 
   for (let i = 0; i < goalsFor; i++) {
     const isLast = i === goalsFor - 1;
@@ -548,7 +548,7 @@ export function simulateDFBPokal(slots, allPlayers = []) {
           slotType: s.type,
           rating: s.player.displayRating ?? s.player.primeRating ?? 75,
         }));
-        const events = generateMatchEvents(own, opp, squad, 0.03, result.aet);
+        const events = generateMatchEvents(own, opp, squad, 0.04, result.aet);
 
         // Generate opponent scorers
         const oppPool = oppTeam.scorerPool ?? [];
