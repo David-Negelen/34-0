@@ -357,14 +357,14 @@ function MatchLog({ matches, onDone }) {
                 {ourGoals.length > 0 && (
                   <div className="ml-scorers ml-scorers-ours">
                     {ourGoals.map((e, j) => (
-                      <span key={j}>{j > 0 && '  '}⚽ {e.scorer.name} {e.minute}'</span>
+                      <span key={j}>{j > 0 && '  '}{e.scorer.name} {e.minute}'</span>
                     ))}
                   </div>
                 )}
                 {oppGoals.length > 0 && (
                   <div className="ml-scorers ml-scorers-opp">
                     {oppGoals.map((g, j) => (
-                      <span key={j}>{j > 0 && '  '}⚽ {g.scorerName ? `${g.scorerName} ${g.minute}'` : `${g.minute}'`}</span>
+                      <span key={j}>{j > 0 && '  '}{g.scorerName ? `${g.scorerName} ${g.minute}'` : `${g.minute}'`}</span>
                     ))}
                   </div>
                 )}
