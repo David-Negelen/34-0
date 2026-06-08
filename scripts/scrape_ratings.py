@@ -277,7 +277,7 @@ def run(con: sqlite3.Connection):
         norm_list.append((name, tm_id, key))
 
     THRESHOLD          = 0.80   # confident match
-    FALLBACK_THRESHOLD = 0.55   # close result — use but accept some noise
+    FALLBACK_THRESHOLD = 0.75   # raised from 0.55 — 0.55 allowed false positives that overwrote correct ratings
 
     # Build last-name → list of (tm_id, full_normalized) for abbreviation matching
     lastname_index: dict[str, list[tuple[int, str]]] = {}
