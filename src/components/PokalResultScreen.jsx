@@ -115,7 +115,7 @@ export default function PokalResultScreen({ state, onPlayAgain, onPlaySameTeam, 
   return (
     <div className="pk-screen">
       <header className="pk-header">
-        <div className="pk-title">DFB-POKAL DREAM XI</div>
+        <div className="pk-title">DFB-POKAL</div>
       </header>
 
       <div className="pk-campaign">
