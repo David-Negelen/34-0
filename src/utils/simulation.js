@@ -1,7 +1,6 @@
 import { calcSquadRatings } from './ratingCalc';
 import { HISTORIC_TABLES } from '../data/historicTables';
 import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
-import { POKAL_PLAYERS } from '../data/pokalPlayers';
 
 function poisson(lambda) {
   const L = Math.exp(-lambda);
@@ -403,7 +402,6 @@ function pokalStrength(club, season) {
 }
 
 // Build a scorer name index: Map<"club|seasonKey", [{name, positions}]>
-// De-duplicates across allPlayers + POKAL_PLAYERS in O(n) — no repeated scanning.
 function buildScorerIndex(players) {
   const index = new Map();
   const seen = new Set();
@@ -429,7 +427,7 @@ export function buildPokalField(slots, allPlayers = []) {
   const attStr   = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
   const defStr   = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
 
-  const scorerIdx = buildScorerIndex([...allPlayers, ...POKAL_PLAYERS]);
+  const scorerIdx = buildScorerIndex(allPlayers);
 
   const pool = dfbPokalParticipants
     .filter(e => !POKAL_BLACKLIST.has(e.club))
