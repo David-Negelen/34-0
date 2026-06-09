@@ -84,7 +84,7 @@ function PokalGame() {
   // pk drives the round-by-round tournament: draw → match → round-results, repeated per round.
   // null while in setup/draft phase.
   const [pk, setPk] = useState(null);
-  const PK_KEY = 'dfb_pokal_pk_v1';
+  const PK_KEY = 'dfb_pokal_pk_v2';
 
   // Persist pk so a reload mid-tournament resumes where you left off.
   useEffect(() => {

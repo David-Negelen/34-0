@@ -188,24 +188,31 @@
 .ms-pen-kicks {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
-  max-width: 260px;
+  max-width: 300px;
 }
 
 .ms-pen-kick {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 20px 36px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   animation: goalPop 0.2s ease;
-  padding: 2px 0;
+  padding: 3px 0;
+}
+
+.ms-pen-kick--opp {
+  padding-left: 14px;
 }
 
 .ms-pen-kick-team {
   font-size: 12px;
   font-weight: 700;
-  flex: 1;
   color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ms-pen-kick--mine .ms-pen-kick-team { color: var(--text); }
@@ -214,7 +221,6 @@
   font-size: 12px;
   font-weight: 800;
   color: var(--text);
-  min-width: 28px;
   text-align: right;
 }
 

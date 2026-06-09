@@ -85,16 +85,20 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
     return () => { active = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Penalty kick reveal — one individual kick per 950 ms
+  // Penalty kick reveal — one kick at a time.
+  // 900 ms between kicks within a round; 1500 ms pause before the start of a new round.
   useEffect(() => {
     if (simState.phase !== 'pens') return;
     if (simState.penRevealed >= kicks.length) {
-      const t = setTimeout(() => setSimState(s => ({ ...s, phase: 'done' })), 900);
+      const t = setTimeout(() => setSimState(s => ({ ...s, phase: 'done' })), 1000);
       return () => clearTimeout(t);
     }
+    const nextKick = kicks[simState.penRevealed];
+    const isRoundStart = nextKick?.side === 'home' && simState.penRevealed > 0;
+    const delay = isRoundStart ? 1500 : 900;
     const t = setTimeout(() => {
       setSimState(s => ({ ...s, penRevealed: s.penRevealed + 1 }));
-    }, 950);
+    }, delay);
     return () => clearTimeout(t);
   }, [simState.phase, simState.penRevealed, kicks.length]);
 
