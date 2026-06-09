@@ -38,12 +38,12 @@ export function randomGuestName() {
 }
 
 export async function submitScore({ name, ovr, formation, pts, pos, w, d, l, mode }) {
-  const data = await encryptScore({ name, ovr, formation, pts, pos, w, d, l, mode });
-  if (!data) throw new Error('Score key not configured');
+  const fields = { name, ovr, formation, pts, pos, w, d, l, mode };
+  const data = await encryptScore(fields); // null if SCORE_KEY not set
   const res = await fetch(`${PB_URL}/api/collections/scores/records`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data }),
+    body: JSON.stringify({ ...fields, ...(data ? { data } : {}) }),
   });
   if (!res.ok) throw new Error('Submit failed');
   return res.json();
