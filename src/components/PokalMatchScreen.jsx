@@ -85,7 +85,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
     return () => { active = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Penalty kick reveal — one kick-round per 780 ms
+  // Penalty kick reveal — one individual kick per 950 ms
   useEffect(() => {
     if (simState.phase !== 'pens') return;
     if (simState.penRevealed >= kicks.length) {
@@ -94,7 +94,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
     }
     const t = setTimeout(() => {
       setSimState(s => ({ ...s, penRevealed: s.penRevealed + 1 }));
-    }, 780);
+    }, 950);
     return () => clearTimeout(t);
   }, [simState.phase, simState.penRevealed, kicks.length]);
 
@@ -114,17 +114,18 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
   const showPenSection = phase === 'pen-banner' || phase === 'pens' || (phase === 'done' && pens);
   const isDone = phase === 'done';
 
-  // Running pen tallies for display
+  // Build flat kick rows for display, each kick revealed one at a time
+  const mySide  = home ? 'home' : 'away';
+  const oppSide = home ? 'away' : 'home';
+  let _myPen = 0, _oppPen = 0;
   const penRows = kicks.slice(0, penRevealed).map((kick, i) => {
-    const mineScored  = home ? kick.home : kick.away;
-    const theirScored = home ? kick.away : kick.home;
-    const myRunning   = kicks.slice(0, i + 1).filter(k => home ? k.home : k.away).length;
-    const oppRunning  = kicks.slice(0, i + 1).filter(k => home ? k.away : k.home).length;
-    return { mineScored, theirScored, myRunning, oppRunning, idx: i, sd: !!kick.sd };
+    const isMine = kick.side === mySide;
+    if (kick.scored) { if (isMine) _myPen++; else _oppPen++; }
+    return { isMine, scored: kick.scored, myScore: _myPen, oppScore: _oppPen, sd: !!kick.sd, idx: i };
   });
 
-  const finalPenMine = kicks.filter(k => home ? k.home : k.away).length;
-  const finalPenOpp  = kicks.filter(k => home ? k.away : k.home).length;
+  const finalPenMine = kicks.filter(k => k.side === mySide  && k.scored).length;
+  const finalPenOpp  = kicks.filter(k => k.side === oppSide && k.scored).length;
 
   return (
     <div className="ms-screen">
@@ -185,24 +186,18 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
       {showPenSection && (
         <div className="ms-pen-section">
           <div className="ms-banner ms-banner--pens">ELFMETERSCHIESSEN</div>
-          <div className="ms-pen-header">
-            <span>Deine 11</span>
-            <span>{opponent}</span>
-          </div>
-          <div className="ms-pen-rows">
+          <div className="ms-pen-kicks">
             {penRows.map((row, i) => (
               <div key={row.idx}>
                 {row.sd && (i === 0 || !penRows[i - 1].sd) && (
                   <div className="ms-pen-sd-label">SUDDEN DEATH</div>
                 )}
-                <div className="ms-pen-row">
-                  <span className={`ms-pen-dot ${row.mineScored ? 'dot--in' : 'dot--out'}`}>
-                    {row.mineScored ? '●' : '○'}
+                <div className={`ms-pen-kick ${row.isMine ? 'ms-pen-kick--mine' : 'ms-pen-kick--opp'}`}>
+                  <span className="ms-pen-kick-team">{row.isMine ? 'Deine 11' : opponent}</span>
+                  <span className={`ms-pen-dot ${row.scored ? 'dot--in' : 'dot--out'}`}>
+                    {row.scored ? '●' : '○'}
                   </span>
-                  <span className="ms-pen-num">{row.sd ? 'SD' : row.idx + 1}</span>
-                  <span className={`ms-pen-dot ms-pen-dot--r ${row.theirScored ? 'dot--in' : 'dot--out'}`}>
-                    {row.theirScored ? '●' : '○'}
-                  </span>
+                  <span className="ms-pen-kick-score">{row.myScore}:{row.oppScore}</span>
                 </div>
               </div>
             ))}
