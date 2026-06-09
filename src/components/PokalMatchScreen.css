@@ -185,53 +185,47 @@
   max-width: 320px;
 }
 
-.ms-pen-kicks {
+.ms-pen-header {
+  display: flex;
+  justify-content: space-between;
+  width: 160px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.ms-pen-rows {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  max-width: 300px;
-}
-
-.ms-pen-kick {
-  display: grid;
-  grid-template-columns: 1fr 20px 36px;
-  align-items: center;
   gap: 6px;
+  align-items: center;
+}
+
+.ms-pen-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   animation: goalPop 0.2s ease;
-  padding: 3px 0;
 }
 
-.ms-pen-kick--opp {
-  padding-left: 14px;
-}
-
-.ms-pen-kick-team {
-  font-size: 12px;
-  font-weight: 700;
+.ms-pen-num {
+  font-size: 11px;
   color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ms-pen-kick--mine .ms-pen-kick-team { color: var(--text); }
-
-.ms-pen-kick-score {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--text);
-  text-align: right;
-}
-
-.ms-pen-dot {
-  font-size: 16px;
-  width: 20px;
+  width: 16px;
   text-align: center;
 }
 
-.dot--in  { color: var(--green); }
-.dot--out { color: var(--red-light); }
+.ms-pen-dot {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.ms-pen-dot--r { text-align: center; }
+
+.dot--in      { color: var(--green); }
+.dot--out     { color: var(--red-light); }
+.dot--pending { color: var(--text-dim); opacity: 0.35; }
 
 .ms-pen-sd-label {
   font-size: 9px;
