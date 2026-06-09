@@ -35,3 +35,28 @@ export async function fetchLeaderboard({ mode = 'easy_prime' } = {}) {
   const data = await res.json();
   return data.items;
 }
+
+export async function submitPokalWin(winner) {
+  const res = await fetch(`${PB_URL}/api/collections/pokal_stats/records`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ winner }),
+  });
+  if (!res.ok) throw new Error('Submit failed');
+  return res.json();
+}
+
+export async function fetchPokalStats() {
+  // Fetch all records (up to 500) and aggregate client-side by winner.
+  const res = await fetch(`${PB_URL}/api/collections/pokal_stats/records?perPage=500`);
+  if (!res.ok) throw new Error('Fetch failed');
+  const data = await res.json();
+  const counts = {};
+  for (const r of data.items) {
+    counts[r.winner] = (counts[r.winner] ?? 0) + 1;
+  }
+  const total = data.items.length;
+  return Object.entries(counts)
+    .map(([winner, wins]) => ({ winner, wins, pct: total ? (wins / total) * 100 : 0 }))
+    .sort((a, b) => b.wins - a.wins);
+}
