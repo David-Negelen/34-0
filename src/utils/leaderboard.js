@@ -1,4 +1,26 @@
 const PB_URL = import.meta.env.VITE_PB_URL ?? 'https://api.34-0.app';
+const SCORE_KEY = import.meta.env.VITE_SCORE_KEY ?? '';
+
+// HMAC-SHA256 stream cipher: each 32-byte keystream block = HMAC(key, iv+":"+blockIndex).
+// Both client (Web Crypto) and server ($security.hs256) produce identical output for the same key.
+async function encryptScore(fields) {
+  if (!SCORE_KEY) return null;
+  const bytes = new TextEncoder().encode(JSON.stringify(fields));
+  const ivBytes = crypto.getRandomValues(new Uint8Array(16));
+  const iv = Array.from(ivBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const hmacKey = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(SCORE_KEY),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const cipher = new Uint8Array(bytes.length);
+  for (let i = 0; i * 32 < bytes.length; i++) {
+    const ks = new Uint8Array(await crypto.subtle.sign('HMAC', hmacKey, new TextEncoder().encode(iv + ':' + i)));
+    for (let j = 0; j < 32 && i * 32 + j < bytes.length; j++) {
+      cipher[i * 32 + j] = bytes[i * 32 + j] ^ ks[j];
+    }
+  }
+  return iv + btoa(String.fromCharCode(...cipher));
+}
 
 const PREFIXES = ['Bundes', 'Kaiser', 'Tor', 'Traum', 'Liga', 'Adler', 'Stern', 'Elf'];
 
@@ -16,10 +38,12 @@ export function randomGuestName() {
 }
 
 export async function submitScore({ name, ovr, formation, pts, pos, w, d, l, mode }) {
+  const data = await encryptScore({ name, ovr, formation, pts, pos, w, d, l, mode });
+  if (!data) throw new Error('Score key not configured');
   const res = await fetch(`${PB_URL}/api/collections/scores/records`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, ovr, formation, pts, pos, w, d, l, mode }),
+    body: JSON.stringify({ data }),
   });
   if (!res.ok) throw new Error('Submit failed');
   return res.json();

@@ -4,8 +4,12 @@ services:
     restart: unless-stopped
     ports:
       - "8090:8090"
+    environment:
+      - SCORE_KEY=4716ceb04a8af374263e675b850e764e637466057d00da54012d12dce096ab53
     volumes:
       - ./pb_data:/pb_data
+      - ./pb_hooks:/pb_hooks
+    command: serve --http="0.0.0.0:8090" --dir=/pb_data --hooksDir=/pb_hooks
 
   umami:
     image: ghcr.io/umami-software/umami:postgresql-latest
