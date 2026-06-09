@@ -197,6 +197,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
           <div className="ms-banner ms-banner--pens">ELFMETERSCHIESSEN</div>
           <div className="ms-pen-header">
             <span>Deine 11</span>
+            <span />
             <span>{opponent}</span>
           </div>
           <div className="ms-pen-rows">
