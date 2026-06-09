@@ -187,12 +187,16 @@
 
 .ms-pen-header {
   display: flex;
-  justify-content: space-between;
-  width: 160px;
+  align-items: flex-end;
+  gap: 12px;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
+  text-align: center;
 }
+.ms-pen-header span:nth-child(1) { width: 64px; }
+.ms-pen-header span:nth-child(2) { width: 16px; }
+.ms-pen-header span:nth-child(3) { width: 64px; }
 
 .ms-pen-rows {
   display: flex;
@@ -223,8 +227,9 @@
 
 .ms-pen-dot--r { text-align: center; }
 
-.dot--in  { color: var(--green); }
-.dot--out { color: var(--red-light); }
+.dot--in      { color: var(--green); }
+.dot--out     { color: var(--red-light); }
+.dot--pending { color: var(--text-dim); opacity: 0.35; }
 
 .ms-pen-sd-label {
   font-size: 9px;

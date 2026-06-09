@@ -10,7 +10,9 @@ import PokalDrawScreen from './components/PokalDrawScreen';
 import PokalMatchScreen from './components/PokalMatchScreen';
 import PokalRoundResultsScreen from './components/PokalRoundResultsScreen';
 import { buildPokalField, drawPokalRound } from './utils/simulation';
+import { submitPokalWin } from './utils/leaderboard';
 import LeaderboardScreen from './components/LeaderboardScreen';
+import PokalStatsScreen from './components/PokalStatsScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
 import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
 
@@ -82,7 +84,7 @@ function PokalGame() {
   // pk drives the round-by-round tournament: draw → match → round-results, repeated per round.
   // null while in setup/draft phase.
   const [pk, setPk] = useState(null);
-  const PK_KEY = 'dfb_pokal_pk_v1';
+  const PK_KEY = 'dfb_pokal_pk_v2';
 
   // Persist pk so a reload mid-tournament resumes where you left off.
   useEffect(() => {
@@ -136,14 +138,22 @@ function PokalGame() {
     if (!playerWon || isFinal) {
       // Simulate the remaining rounds so the full bracket is visible on the summary screen.
       const remainingMatchups = [];
-      if (!playerWon && !isFinal) {
+      let tournamentWinner = isFinal && playerWon ? 'user' : null;
+
+      if (!playerWon && isFinal) {
+        tournamentWinner = pk.winners[0]?.club ?? pk.winners[0]?.name ?? null;
+      } else if (!playerWon) {
         let teams = pk.winners;
         for (let r = pk.round + 1; r <= 5 && teams.length > 1; r++) {
           const { matchups, winners } = drawPokalRound(teams, r, pk.slots);
           remainingMatchups.push(matchups);
           teams = winners;
         }
+        tournamentWinner = teams[0]?.club ?? teams[0]?.name ?? null;
       }
+
+      if (tournamentWinner) submitPokalWin(tournamentWinner).catch(() => {});
+
       setResult({
         mode: 'pokal',
         playerMatches: pk.playerMatches,
@@ -264,6 +274,7 @@ export default function App() {
       <Route path="/pokal" element={<PokalGame />} />
       <Route path="/:league" element={<LeagueGame />} />
       <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
+      <Route path="/pokal-stats" element={<PokalStatsScreen />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

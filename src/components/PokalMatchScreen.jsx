@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import './PokalMatchScreen.css';
 
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
-const TICK_MS = 60;   // ms per in-game minute → 90 min ≈ 5.4 s, ET 30 min ≈ 1.8 s
+const TICK_MS = 83;   // ms per in-game minute → 90 min ≈ 7.5 s, full 120 min ≈ 10 s
 
 export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
   const {
@@ -85,16 +85,16 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
     return () => { active = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Penalty kick reveal — one kick-round per 780 ms
+  // Penalty kick reveal — one individual kick every 900 ms.
   useEffect(() => {
     if (simState.phase !== 'pens') return;
     if (simState.penRevealed >= kicks.length) {
-      const t = setTimeout(() => setSimState(s => ({ ...s, phase: 'done' })), 900);
+      const t = setTimeout(() => setSimState(s => ({ ...s, phase: 'done' })), 1000);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => {
       setSimState(s => ({ ...s, penRevealed: s.penRevealed + 1 }));
-    }, 780);
+    }, 900);
     return () => clearTimeout(t);
   }, [simState.phase, simState.penRevealed, kicks.length]);
 
@@ -114,17 +114,27 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
   const showPenSection = phase === 'pen-banner' || phase === 'pens' || (phase === 'done' && pens);
   const isDone = phase === 'done';
 
-  // Running pen tallies for display
-  const penRows = kicks.slice(0, penRevealed).map((kick, i) => {
-    const mineScored  = home ? kick.home : kick.away;
-    const theirScored = home ? kick.away : kick.home;
-    const myRunning   = kicks.slice(0, i + 1).filter(k => home ? k.home : k.away).length;
-    const oppRunning  = kicks.slice(0, i + 1).filter(k => home ? k.away : k.home).length;
-    return { mineScored, theirScored, myRunning, oppRunning, idx: i, sd: !!kick.sd };
-  });
+  // Rebuild round rows from flat kicks, revealing one kick at a time.
+  // Each round row shows mine dot | round# | opp dot; the second dot starts as pending (·).
+  const mySide  = home ? 'home' : 'away';
+  const oppSide = home ? 'away' : 'home';
+  const roundRows = [];
+  for (const kick of kicks.slice(0, penRevealed)) {
+    if (kick.side === 'home') {
+      roundRows.push({ homeKick: kick, awayKick: null, sd: !!kick.sd });
+    } else if (roundRows.length > 0) {
+      roundRows[roundRows.length - 1].awayKick = kick;
+    }
+  }
+  const penRoundRows = roundRows.map((r, i) => ({
+    mineScored: (home ? r.homeKick : r.awayKick)?.scored ?? null,
+    oppScored:  (home ? r.awayKick : r.homeKick)?.scored ?? null,
+    sd: r.sd,
+    roundNum: i + 1,
+  }));
 
-  const finalPenMine = kicks.filter(k => home ? k.home : k.away).length;
-  const finalPenOpp  = kicks.filter(k => home ? k.away : k.home).length;
+  const finalPenMine = kicks.filter(k => k.side === mySide  && k.scored).length;
+  const finalPenOpp  = kicks.filter(k => k.side === oppSide && k.scored).length;
 
   return (
     <div className="ms-screen">
@@ -187,21 +197,22 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue }) {
           <div className="ms-banner ms-banner--pens">ELFMETERSCHIESSEN</div>
           <div className="ms-pen-header">
             <span>Deine 11</span>
+            <span />
             <span>{opponent}</span>
           </div>
           <div className="ms-pen-rows">
-            {penRows.map((row, i) => (
-              <div key={row.idx}>
-                {row.sd && (i === 0 || !penRows[i - 1].sd) && (
+            {penRoundRows.map((row, i) => (
+              <div key={i}>
+                {row.sd && (i === 0 || !penRoundRows[i - 1].sd) && (
                   <div className="ms-pen-sd-label">SUDDEN DEATH</div>
                 )}
                 <div className="ms-pen-row">
-                  <span className={`ms-pen-dot ${row.mineScored ? 'dot--in' : 'dot--out'}`}>
-                    {row.mineScored ? '●' : '○'}
+                  <span className={`ms-pen-dot ${row.mineScored === null ? 'dot--pending' : row.mineScored ? 'dot--in' : 'dot--out'}`}>
+                    {row.mineScored === null ? '·' : row.mineScored ? '●' : '○'}
                   </span>
-                  <span className="ms-pen-num">{row.sd ? 'SD' : row.idx + 1}</span>
-                  <span className={`ms-pen-dot ms-pen-dot--r ${row.theirScored ? 'dot--in' : 'dot--out'}`}>
-                    {row.theirScored ? '●' : '○'}
+                  <span className="ms-pen-num">{row.sd ? 'SD' : row.roundNum}</span>
+                  <span className={`ms-pen-dot ms-pen-dot--r ${row.oppScored === null ? 'dot--pending' : row.oppScored ? 'dot--in' : 'dot--out'}`}>
+                    {row.oppScored === null ? '·' : row.oppScored ? '●' : '○'}
                   </span>
                 </div>
               </div>

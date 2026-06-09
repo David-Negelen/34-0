@@ -569,23 +569,34 @@ function simulateKnockout(hAtt, hDef, aAtt, aDef) {
 
   if (hTotal !== aTotal) return { hg: hTotal, ag: aTotal, hgReg: hg, agReg: ag, aet: true, pens: false };
 
-  // Simulate 5-kick shootout + sudden death until a winner emerges
+  // Simulate 5-kick shootout + sudden death. Kicks are stored as a flat alternating
+  // array [{side:'home'|'away', scored:bool, sd?:bool}] and stop as soon as one
+  // team can no longer be caught (no unnecessary kicks after the result is decided).
   const kicks = [];
   let hPen = 0, aPen = 0;
   for (let i = 0; i < 5; i++) {
+    const awayKicksLeft = 5 - i;   // away kicks remaining including this round
+    const roundsAfter   = 4 - i;   // full rounds left after this one completes
+
     const hScored = Math.random() < 0.75;
-    const aScored = Math.random() < 0.75;
     if (hScored) hPen++;
+    kicks.push({ side: 'home', scored: hScored });
+    if (hPen > aPen + awayKicksLeft) break; // home wins; away can't catch up
+
+    const aScored = Math.random() < 0.75;
     if (aScored) aPen++;
-    kicks.push({ home: hScored, away: aScored });
+    kicks.push({ side: 'away', scored: aScored });
+    if (aPen > hPen + roundsAfter) break;   // away wins
+    if (hPen > aPen + roundsAfter) break;   // home wins
   }
-  // Sudden death: both score or both miss → continue; otherwise decisive
-  while (hPen === aPen && kicks.length < 50) {
+  // Sudden death: both teams always kick each round; stop when scores diverge
+  while (hPen === aPen && kicks.length < 100) {
     const hSD = Math.random() < 0.75;
-    const aSD = Math.random() < 0.75;
     if (hSD) hPen++;
+    kicks.push({ side: 'home', scored: hSD, sd: true });
+    const aSD = Math.random() < 0.75;
     if (aSD) aPen++;
-    kicks.push({ home: hSD, away: aSD, sd: true });
+    kicks.push({ side: 'away', scored: aSD, sd: true });
   }
   const hWins = hPen > aPen;
 
