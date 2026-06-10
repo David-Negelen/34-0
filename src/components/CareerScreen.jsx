@@ -27,6 +27,25 @@ export default function CareerScreen() {
   const navigate = useNavigate();
   const career = useCareerState();
   const { state } = career;
+  const [endData, setEndData] = useState(null);
+
+  function handleEndCareer() {
+    const currentRecord = state.result
+      ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts }
+      : null;
+    const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
+    setEndData({ history });
+  }
+
+  if (endData) {
+    return (
+      <CareerEndScreen
+        data={endData}
+        onNewCareer={() => { career.reset(); setEndData(null); }}
+        onHome={() => { career.reset(); navigate('/'); }}
+      />
+    );
+  }
 
   if (state.phase === 'setup') {
     return (
@@ -84,6 +103,7 @@ export default function CareerScreen() {
           const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg);
           career.beginTransfer(newDivision, offers);
         }}
+        onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
       />
     );
@@ -105,6 +125,7 @@ export default function CareerScreen() {
             table, playerMatches, playerStats, tableHistory,
           });
         }}
+        onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
       />
     );
@@ -147,18 +168,9 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
         </section>
 
         <div className="career-setup-info">
-          <div className="career-info-row">
-            <span className="career-info-icon">🎯</span>
-            <span>Wähle deine Startelf aus 25 zufälligen 2.-Liga-Spielern</span>
-          </div>
-          <div className="career-info-row">
-            <span className="career-info-icon">⬆️</span>
-            <span>Platz 1 oder 2: Aufstieg in die Bundesliga</span>
-          </div>
-          <div className="career-info-row">
-            <span className="career-info-icon">🔄</span>
-            <span>Nach jeder Saison: 5 neue Spielerangebote</span>
-          </div>
+          <div className="career-info-row">Wähle deine Startelf aus 25 zufälligen 2.-Liga-Spielern</div>
+          <div className="career-info-row">Platz 1 oder 2: Aufstieg in die Bundesliga</div>
+          <div className="career-info-row">Nach jeder Saison: 5 neue Spielerangebote</div>
         </div>
 
         <button className="start-btn" onClick={onStart}>
@@ -197,13 +209,6 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   function commit(slotId, player) {
     const displayRating = player.seasonRating;
     onPlace(slotId, player, displayRating);
-
-    if (filledCount + 1 === 11) {
-      const updatedSlots = slots.map(s =>
-        s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
-      );
-      onResult(updatedSlots);
-    }
     setSlotPickTarget(null);
   }
 
@@ -233,9 +238,16 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
         </div>
 
         <div className="career-draft-right">
-          <div className="career-pool-label">
-            Wähle deine Startelf
-          </div>
+          {filledCount === 11 ? (
+            <button
+              className="btn btn-primary btn-lg career-draft-start-btn"
+              onClick={() => onResult(slots)}
+            >
+              Saison starten →
+            </button>
+          ) : (
+            <div className="career-pool-label">Wähle deine Startelf</div>
+          )}
           <div className="career-pool-grid">
             {draftPool.map(player => {
               const picked = placedIds.has(player.id);
@@ -289,7 +301,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
 
 // ── Result ────────────────────────────────────────────────────────────────────
 
-function CareerResult({ state, promoted, relegated, onContinue, onHome }) {
+function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome }) {
   const { result, division, seasonNumber, seasonHistory, slots } = state;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
 
@@ -310,8 +322,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onHome }) {
               <button className="btn btn-primary" onClick={onContinue}>
                 Transferfenster →
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={onHome}>
-                Beenden
+              <button className="btn btn-ghost btn-sm" onClick={onEnd}>
+                Karriere beenden
               </button>
             </div>
           )}
@@ -399,8 +411,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onHome }) {
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={onContinue}>
                   Transferfenster →
                 </button>
-                <button className="btn btn-ghost btn-sm" onClick={onHome}>
-                  Beenden
+                <button className="btn btn-ghost btn-sm" onClick={onEnd}>
+                  Karriere beenden
                 </button>
               </div>
 
@@ -414,7 +426,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onHome }) {
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onHome }) {
+function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome }) {
   const { slots, transferOffers, division, seasonNumber, seasonHistory } = state;
   const [activeOffer, setActiveOffer] = useState(null);
 
@@ -452,7 +464,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onHome }) {
             </div>
           )}
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={onHome}>Karriere beenden</button>
+        <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
       </header>
 
       <div className="career-transfer-layout">
@@ -734,6 +746,74 @@ function PitchMini({ slots }) {
           {labelDE(s.label)}
         </span>
       ))}
+    </div>
+  );
+}
+
+// ── End Screen ────────────────────────────────────────────────────────────────
+
+function CareerEndScreen({ data, onNewCareer, onHome }) {
+  const { history } = data;
+  const totalSeasons = history.length;
+  const bestPos = history.length ? Math.min(...history.map(s => s.pos)) : null;
+  const promotions = history.filter((s, i) =>
+    i > 0 && history[i - 1].division === '2bl' && s.division === 'bl'
+  ).length;
+
+  return (
+    <div className="career-screen slide-up">
+      <header className="career-header">
+        <div />
+        <div className="career-header-title">
+          <span className="career-eyebrow">34-0</span>
+          <h1 className="career-main-title">KARRIERE BEENDET</h1>
+        </div>
+        <div />
+      </header>
+
+      <div className="career-end-body">
+        <div className="career-end-stats">
+          <div className="career-end-stat">
+            <div className="career-end-stat-val">{totalSeasons}</div>
+            <div className="career-end-stat-label">Saisonen</div>
+          </div>
+          {bestPos !== null && (
+            <div className="career-end-stat">
+              <div className="career-end-stat-val">{bestPos}.</div>
+              <div className="career-end-stat-label">Bestes Ergebnis</div>
+            </div>
+          )}
+          {promotions > 0 && (
+            <div className="career-end-stat">
+              <div className="career-end-stat-val">{promotions}×</div>
+              <div className="career-end-stat-label">{promotions === 1 ? 'Aufstieg' : 'Aufstiege'}</div>
+            </div>
+          )}
+        </div>
+
+        {history.length > 0 && (
+          <div className="career-history-card">
+            <div className="result-section-label">Karriere-Verlauf</div>
+            {history.map((s, i) => (
+              <div key={i} className="career-history-row">
+                <span className="ch-season">Saison {s.season}</span>
+                <span className="ch-division">{DIV_LABEL[s.division]}</span>
+                <span className="ch-pos">{s.pos}. Platz</span>
+                <span className="ch-pts">{s.pts} Pkt</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="career-end-actions">
+          <button className="btn btn-primary btn-lg" onClick={onNewCareer}>
+            Neue Karriere
+          </button>
+          <button className="btn btn-ghost" onClick={onHome}>
+            Startseite
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

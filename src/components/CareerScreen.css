@@ -183,7 +183,13 @@
   background: rgba(76, 175, 80, 0.08);
   border-color: rgba(76, 175, 80, 0.3);
   opacity: 0.6;
-  cursor: default;
+  cursor: pointer;
+}
+
+.career-card--picked:hover {
+  opacity: 0.85;
+  border-color: rgba(227, 0, 11, 0.4);
+  background: rgba(227, 0, 11, 0.05);
 }
 
 .career-card--dim {
@@ -562,6 +568,60 @@
 
 .career-offer-status--used    { color: var(--green); }
 .career-offer-status--skipped { color: var(--text-dim); }
+
+/* ── Draft start button ── */
+.career-draft-start-btn {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* ── End screen ── */
+.career-end-body {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.career-end-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.career-end-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+  text-align: center;
+  flex: 1;
+}
+
+.career-end-stat-val {
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.career-end-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.career-end-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 /* ── Responsive ── */
 @media (max-width: 800px) {
