@@ -354,16 +354,6 @@
 .lt-zone-relegated  { border-left-color: var(--red); }
 .lt-zone-mid        { border-left-color: transparent; }
 
-.lt-separator {
-  height: 2px;
-  margin: 0;
-}
-.lt-separator-champion  { background: var(--gold); }
-.lt-separator-ucl       { background: var(--blue); }
-.lt-separator-uel       { background: #00bcd4; }
-.lt-separator-playoff   { background: #ff9800; }
-.lt-separator-relegated { background: var(--red); }
-.lt-separator-mid       { background: var(--border); height: 1px; }
 
 .lt-pos {
   width: 20px;
