@@ -42,7 +42,7 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
   }, [view, mode, league]);
 
   return (
-    <div className="lb-screen slide-up">
+    <div className="lb-screen">
       <header className="lb-header">
         <button className="btn btn-ghost btn-sm" onClick={onBack}>← Zurück</button>
         <h1 className="lb-title">{league === '2bl' ? '2. Liga' : 'Bundesliga'}</h1>

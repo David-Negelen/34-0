@@ -40,7 +40,7 @@ export default function PokalStatsScreen({ onBack }) {
   const lastWinRank = rows ? rows.filter(r => r.wins > 0).length : 0;
 
   return (
-    <div className="lb-screen slide-up">
+    <div className="lb-screen">
       <header className="lb-header">
         <button className="btn btn-ghost btn-sm" onClick={onBack}>← Zurück</button>
         <h1 className="lb-title">DFB-Pokal · Sieger</h1>
