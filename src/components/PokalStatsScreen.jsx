@@ -110,7 +110,7 @@ export default function PokalStatsScreen({ onBack }) {
                     )}
                   </div>
                   <span style={{ textAlign: 'right', fontWeight: hasWins ? 800 : 400, color: hasWins ? (isUser ? 'var(--green)' : 'var(--text)') : 'var(--text-dim)', alignSelf: 'center' }}>
-                    {hasWins ? `${r.wins}×` : '—'}
+                    {hasWins ? r.wins : '—'}
                   </span>
                   <span style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: 12, alignSelf: 'center' }}>
                     {hasWins ? `${r.pct.toFixed(1)}%` : '—'}
