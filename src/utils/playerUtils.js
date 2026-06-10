@@ -54,18 +54,20 @@ export function getCompatibleSlots(player, openSlots) {
 
 // Per-league tier config.
 // bad    — maxRating <= badMaxRating
-// mid    — maxRating > badMaxRating, but 0 eligible players above decentThreshold
-// decent — 1–3 eligible players above decentThreshold
-// good   — 4+ eligible players above decentThreshold
+// mid    — 0 eligible players above decentThreshold
+// decent — 1+ eligible players above decentThreshold, but 0 above goodThreshold
+// good   — 1+ eligible players above goodThreshold
 const TIER_CONFIG = {
   bl: {
-    badMaxRating:     75,
-    decentThreshold:  81,
+    badMaxRating:    75,
+    decentThreshold: 81,
+    goodThreshold:   85,
     targets: { bad: 0.05, mid: 0.20, decent: 0.40, good: 0.35 },
   },
   '2bl': {
-    badMaxRating:     65,
-    decentThreshold:  74,
+    badMaxRating:    65,
+    decentThreshold: 74,
+    goodThreshold:   78,
     targets: { bad: 0.05, mid: 0.20, decent: 0.40, good: 0.35 },
   },
 };
@@ -74,13 +76,16 @@ function spinTier(pool, openSlots, league = 'bl') {
   const cfg = TIER_CONFIG[league] ?? TIER_CONFIG.bl;
   const maxRating = Math.max(...pool.map(p => p.seasonRating ?? p.primeRating));
   if (maxRating <= cfg.badMaxRating) return 'bad';
-  const eligibleDecent = pool.filter(p =>
+  const hasDecent = pool.some(p =>
     (p.seasonRating ?? p.primeRating) > cfg.decentThreshold &&
     openSlots.some(s => canPlayerFillSlot(p, s.type))
   );
-  if (eligibleDecent.length === 0) return 'mid';
-  if (eligibleDecent.length <= 3)  return 'decent';
-  return 'good';
+  if (!hasDecent) return 'mid';
+  const hasGood = pool.some(p =>
+    (p.seasonRating ?? p.primeRating) > cfg.goodThreshold &&
+    openSlots.some(s => canPlayerFillSlot(p, s.type))
+  );
+  return hasGood ? 'good' : 'decent';
 }
 
 // Build a weighted-random picker for a set of pairs using a given league config.
