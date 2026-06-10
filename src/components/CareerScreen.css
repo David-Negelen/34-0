@@ -187,9 +187,9 @@
 }
 
 .career-card--picked:hover {
-  opacity: 0.85;
-  border-color: rgba(227, 0, 11, 0.4);
-  background: rgba(227, 0, 11, 0.05);
+  opacity: 1;
+  border-color: rgba(76, 175, 80, 0.5);
+  background: rgba(76, 175, 80, 0.14);
 }
 
 .career-card--dim {
