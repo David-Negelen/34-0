@@ -34,7 +34,7 @@ export default function CareerScreen() {
       ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts }
       : null;
     const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
-    setEndData({ history });
+    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers });
   }
 
   if (endData) {
@@ -789,12 +789,17 @@ function PitchMini({ slots }) {
 // ── End Screen ────────────────────────────────────────────────────────────────
 
 function CareerEndScreen({ data, onNewCareer, onHome }) {
-  const { history } = data;
+  const { history, slots = [], allPlayers = [] } = data;
   const totalSeasons = history.length;
   const bestPos = history.length ? Math.min(...history.map(s => s.pos)) : null;
   const promotions = history.filter((s, i) =>
     i > 0 && history[i - 1].division === '2bl' && s.division === 'bl'
   ).length;
+  const lastDivision = history[history.length - 1]?.division ?? '2bl';
+
+  // Players who passed through but are no longer in the final squad
+  const finalIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
+  const pastPlayers = allPlayers.filter(p => !finalIds.has(p.id));
 
   return (
     <div className="career-screen slide-up">
@@ -807,47 +812,75 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
         <div />
       </header>
 
-      <div className="career-end-body">
-        <div className="career-end-stats">
-          <div className="career-end-stat">
-            <div className="career-end-stat-val">{totalSeasons}</div>
-            <div className="career-end-stat-label">Saisonen</div>
-          </div>
-          {bestPos !== null && (
-            <div className="career-end-stat">
-              <div className="career-end-stat-val">{bestPos}.</div>
-              <div className="career-end-stat-label">Bestes Ergebnis</div>
-            </div>
-          )}
-          {promotions > 0 && (
-            <div className="career-end-stat">
-              <div className="career-end-stat-val">{promotions}×</div>
-              <div className="career-end-stat-label">{promotions === 1 ? 'Aufstieg' : 'Aufstiege'}</div>
-            </div>
-          )}
-        </div>
-
-        {history.length > 0 && (
-          <div className="career-history-card">
-            <div className="result-section-label">Karriere-Verlauf</div>
-            {history.map((s, i) => (
-              <div key={i} className="career-history-row">
-                <span className="ch-season">Saison {s.season}</span>
-                <span className="ch-division">{DIV_LABEL[s.division]}</span>
-                <span className="ch-pos">{s.pos}. Platz</span>
-                <span className="ch-pts">{s.pts} Pkt</span>
-              </div>
-            ))}
+      <div className="career-end-layout">
+        {/* Left: final squad */}
+        {slots.some(s => s.player) && (
+          <div className="career-end-left">
+            <div className="result-section-label">Letzte Startelf</div>
+            <FormationBoard slots={slots} showRatings league={lastDivision} />
           </div>
         )}
 
-        <div className="career-end-actions">
-          <button className="btn btn-primary btn-lg" onClick={onNewCareer}>
-            Neue Karriere
-          </button>
-          <button className="btn btn-ghost" onClick={onHome}>
-            Startseite
-          </button>
+        {/* Right: stats + history + past players */}
+        <div className="career-end-right">
+          <div className="career-end-stats">
+            <div className="career-end-stat">
+              <div className="career-end-stat-val">{totalSeasons}</div>
+              <div className="career-end-stat-label">Saisons</div>
+            </div>
+            {bestPos !== null && (
+              <div className="career-end-stat">
+                <div className="career-end-stat-val">{bestPos}.</div>
+                <div className="career-end-stat-label">Bestes Ergebnis</div>
+              </div>
+            )}
+            {promotions > 0 && (
+              <div className="career-end-stat">
+                <div className="career-end-stat-val">{promotions}×</div>
+                <div className="career-end-stat-label">{promotions === 1 ? 'Aufstieg' : 'Aufstiege'}</div>
+              </div>
+            )}
+          </div>
+
+          {history.length > 0 && (
+            <div className="career-history-card">
+              <div className="result-section-label">Karriere-Verlauf</div>
+              {history.map((s, i) => (
+                <div key={i} className="career-history-row">
+                  <span className="ch-season">Saison {s.season}</span>
+                  <span className="ch-division">{DIV_LABEL[s.division]}</span>
+                  <span className="ch-pos">{s.pos}. Platz</span>
+                  <span className="ch-pts">{s.pts} Pkt</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {pastPlayers.length > 0 && (
+            <div className="career-history-card">
+              <div className="result-section-label">Ehemalige Spieler</div>
+              {pastPlayers.map((p, i) => (
+                <div key={`${p.id}-${i}`} className="career-end-player-row">
+                  <span className={`rating rating-sm ${ratingClass(p.displayRating, lastDivision)}`}>
+                    {p.displayRating}
+                  </span>
+                  <span className="career-end-player-name">{p.name}</span>
+                  <span className="career-end-player-meta">
+                    {p.spunClub} · {shortSeason(p.spunSeason)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="career-end-actions">
+            <button className="btn btn-primary btn-lg" onClick={onNewCareer}>
+              Neue Karriere
+            </button>
+            <button className="btn btn-ghost" onClick={onHome}>
+              Startseite
+            </button>
+          </div>
         </div>
       </div>
     </div>

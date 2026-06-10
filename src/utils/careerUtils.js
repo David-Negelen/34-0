@@ -79,7 +79,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     .filter(p => p.seasonRating >= teamAvg + 5);
 
   const normalPool = shuffled
-    .map(p => attachSeasonNear(p, teamAvg + 2))
+    .map(p => attachSeasonNear(p, teamAvg + 1.5))
     .filter(p => p.seasonRating >= teamAvg - 3);
 
   const result = [];

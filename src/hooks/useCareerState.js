@@ -13,6 +13,7 @@ const defaultState = {
   result: null,
   transferOffers: [],
   seasonHistory: [],
+  allPlayers: [],
 };
 
 function buildSlots(formationKey) {
@@ -37,11 +38,14 @@ function reducer(state, action) {
 
     case 'PLACE_PLAYER': {
       const { slotId, player, displayRating } = action.payload;
+      const placed = { ...player, displayRating };
+      const alreadyTracked = state.allPlayers.some(p => p.id === player.id);
       return {
         ...state,
         slots: state.slots.map(s =>
-          s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
+          s.id === slotId ? { ...s, player: placed } : s
         ),
+        allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, placed],
       };
     }
 
@@ -73,14 +77,17 @@ function reducer(state, action) {
       const { offerIndex, slotId } = action.payload;
       const offer = state.transferOffers[offerIndex];
       if (!offer || offer.used || offer.skipped) return state;
+      const swappedIn = { ...offer, displayRating: offer.seasonRating };
+      const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
       return {
         ...state,
         slots: state.slots.map(s =>
-          s.id === slotId ? { ...s, player: { ...offer, displayRating: offer.seasonRating } } : s
+          s.id === slotId ? { ...s, player: swappedIn } : s
         ),
         transferOffers: state.transferOffers.map((o, i) =>
           i === offerIndex ? { ...o, used: true } : o
         ),
+        allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, swappedIn],
       };
     }
 
