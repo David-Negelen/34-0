@@ -54,6 +54,7 @@ export default function SpinPanel({
   // Slot locked at spin-start so changing selection mid-spin can't redirect placement.
   const [lockedSlotId, setLockedSlotId] = useState(null);
   const [missedCandidates, setMissedCandidates] = useState([]);
+  const [eligibleIds, setEligibleIds] = useState(new Set());
 
   const animRef = useRef(null);
 
@@ -109,9 +110,22 @@ export default function SpinPanel({
           ? pool.filter(p => getCompatibleSlots(p, spinSlots).length > 0)
           : getEligiblePlayers(pool, openSlots);
 
-        const sorted = showRatings
-          ? [...eligible].sort((a, b) => getDisplayRating(b, ratingMode) - getDisplayRating(a, ratingMode))
-          : shuffle(eligible);
+        const ids = new Set(eligible.map(p => p.id));
+        setEligibleIds(ids);
+
+        // Position-first: prefilter to compatible only.
+        // Squad-first: show full pool — eligible sorted first, disabled ones after.
+        let sorted;
+        if (draftMode === 'position-first') {
+          sorted = showRatings
+            ? [...eligible].sort((a, b) => getDisplayRating(b, ratingMode) - getDisplayRating(a, ratingMode))
+            : shuffle(eligible);
+        } else {
+          const byRating = (a, b) => getDisplayRating(b, ratingMode) - getDisplayRating(a, ratingMode);
+          const elig = [...eligible].sort(byRating);
+          const inelig = pool.filter(p => !ids.has(p.id)).sort(byRating);
+          sorted = showRatings ? [...elig, ...inelig] : [...shuffle(elig), ...inelig];
+        }
 
         setCandidates(sorted);
         setPhase('picking');
@@ -127,7 +141,7 @@ export default function SpinPanel({
     if (draftMode === 'position-first') {
       const targetSlot = lockedSlotId ?? selectedSlotId;
       if (targetSlot !== null) {
-        setMissedCandidates(candidates.filter(p => p.id !== player.id));
+        setMissedCandidates(candidates.filter(p => p.id !== player.id && eligibleIds.has(p.id)));
         onPlayerPlaced(targetSlot, player, rating);
         resetToIdle();
         return;
@@ -136,7 +150,7 @@ export default function SpinPanel({
 
     const compat = getCompatibleSlots(player, openSlots);
     if (compat.length === 1) {
-      setMissedCandidates(candidates.filter(p => p.id !== player.id));
+      setMissedCandidates(candidates.filter(p => p.id !== player.id && eligibleIds.has(p.id)));
       onPlayerPlaced(compat[0].id, player, rating);
       resetToIdle();
     } else {
@@ -147,7 +161,7 @@ export default function SpinPanel({
 
   function handleSlotChoice(slotId) {
     if (!pendingPlayer) return;
-    setMissedCandidates(candidates.filter(p => p.id !== pendingPlayer.player.id));
+    setMissedCandidates(candidates.filter(p => p.id !== pendingPlayer.player.id && eligibleIds.has(p.id)));
     onPlayerPlaced(slotId, pendingPlayer.player, pendingPlayer.rating);
     setPendingPlayer(null);
     resetToIdle();
@@ -160,6 +174,7 @@ export default function SpinPanel({
     setDeadSpin(false);
     setPendingPlayer(null);
     setLockedSlotId(null);
+    setEligibleIds(new Set());
     onSetPendingSpin(null);
     onSpinActiveChange?.(false);
   }
@@ -320,7 +335,8 @@ export default function SpinPanel({
                 player={player}
                 showRatings={showRatings}
                 ratingMode={ratingMode}
-                onClick={() => handlePlayerClick(player)}
+                onClick={eligibleIds.has(player.id) ? () => handlePlayerClick(player) : undefined}
+                disabled={!eligibleIds.has(player.id)}
                 league={league}
               />
             ))
