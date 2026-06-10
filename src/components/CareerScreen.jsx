@@ -12,6 +12,13 @@ import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
 
+function shortSeason(s) {
+  if (!s) return '';
+  const parts = s.split('-');
+  if (parts.length === 2) return `${parts[0].slice(2)}/${parts[1]}`;
+  return s;
+}
+
 function getPlayers(div) {
   return div === 'bl' ? BL_PLAYERS : BL2_PLAYERS;
 }
@@ -40,6 +47,7 @@ export default function CareerScreen() {
       <CareerDraft
         state={state}
         onPlace={career.placePlayer}
+        onRemove={career.removePlayer}
         onResult={(slots) => {
           const { result, table, playerMatches, playerStats, tableHistory } =
             simulateFullLeague(slots, '2bl', getPlayers('2bl'));
@@ -68,8 +76,12 @@ export default function CareerScreen() {
         relegated={relegated}
         onContinue={() => {
           const divPlayers = getPlayers(newDivision);
-          const excludeIds = new Set(state.slots.filter(s => s.player).map(s => s.player.id));
-          const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation]);
+          const filled = state.slots.filter(s => s.player);
+          const excludeIds = new Set(filled.map(s => s.player.id));
+          const teamAvg = filled.length
+            ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? s.player.seasonRating ?? 0), 0) / filled.length)
+            : null;
+          const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg);
           career.beginTransfer(newDivision, offers);
         }}
         onHome={() => { career.reset(); navigate('/'); }}
@@ -159,15 +171,20 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
 
 // ── Draft ─────────────────────────────────────────────────────────────────────
 
-function CareerDraft({ state, onPlace, onResult, onReset, onHome }) {
+function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
 
   const filledCount = slots.filter(s => s.player !== null).length;
   const openSlots   = slots.filter(s => s.player === null);
   const placedIds   = new Set(slots.filter(s => s.player).map(s => s.player.id));
+  const playerSlotMap = Object.fromEntries(slots.filter(s => s.player).map(s => [s.player.id, s.id]));
 
   function handleCardClick(player) {
+    if (placedIds.has(player.id)) {
+      onRemove(playerSlotMap[player.id]);
+      return;
+    }
     const compat = getCompatibleSlots(player, openSlots);
     if (!compat.length) return;
     if (compat.length === 1) {
@@ -217,7 +234,7 @@ function CareerDraft({ state, onPlace, onResult, onReset, onHome }) {
 
         <div className="career-draft-right">
           <div className="career-pool-label">
-            Wähle {11 - filledCount} weitere Spieler
+            Wähle deine Startelf
           </div>
           <div className="career-pool-grid">
             {draftPool.map(player => {
@@ -230,7 +247,7 @@ function CareerDraft({ state, onPlace, onResult, onReset, onHome }) {
                   league="2bl"
                   picked={picked}
                   incompatible={!picked && !compat.length}
-                  onClick={!picked && compat.length ? () => handleCardClick(player) : undefined}
+                  onClick={() => handleCardClick(player)}
                 />
               );
             })}
@@ -378,6 +395,15 @@ function CareerResult({ state, promoted, relegated, onContinue, onHome }) {
                 </div>
               )}
 
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={onContinue}>
+                  Transferfenster →
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={onHome}>
+                  Beenden
+                </button>
+              </div>
+
             </div>
           )}
         </div>
@@ -410,7 +436,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onHome }) {
     setActiveOffer(null);
   }
 
-  const pending = transferOffers.filter(o => !o.used && !o.skipped).length;
+  const usedCount = transferOffers.filter(o => o.used).length;
 
   return (
     <div className="career-screen slide-up">
@@ -472,7 +498,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onHome }) {
         {/* Right: offer cards */}
         <div className="career-transfer-right">
           <div className="result-section-label">
-            Angebote — {pending} von {transferOffers.length} ausstehend
+            Angebote — {usedCount} von {transferOffers.length} eingesetzt
           </div>
 
           {transferOffers.map((offer, i) => (
@@ -482,7 +508,6 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onHome }) {
               division={division}
               isActive={activeOffer === i}
               onUse={() => handleUseOffer(i)}
-              onSkip={() => { onSkip(i); if (activeOffer === i) setActiveOffer(null); }}
             />
           ))}
 
@@ -500,20 +525,21 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onHome }) {
   );
 }
 
-function TransferOfferCard({ offer, division, isActive, onUse, onSkip }) {
+function TransferOfferCard({ offer, division, isActive, onUse }) {
   const rcls = ratingClass(offer.seasonRating, division);
 
-  if (offer.used || offer.skipped) {
+  if (offer.used) {
     return (
-      <div className={`career-offer-card career-offer-card--done`}>
+      <div className="career-offer-card career-offer-card--done">
         <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
         <div className="career-offer-info">
           <div className="career-offer-name">{offer.name}</div>
-          <div className="career-offer-meta">{offer.spunClub}</div>
+          <div className="career-offer-meta">
+            <span>{offer.spunClub}</span>
+            <span>{shortSeason(offer.spunSeason)}</span>
+          </div>
         </div>
-        <span className={`career-offer-status ${offer.used ? 'career-offer-status--used' : 'career-offer-status--skipped'}`}>
-          {offer.used ? '✓' : '—'}
-        </span>
+        <span className="career-offer-status career-offer-status--used">✓</span>
       </div>
     );
   }
@@ -525,6 +551,7 @@ function TransferOfferCard({ offer, division, isActive, onUse, onSkip }) {
         <div className="career-offer-name">{offer.name}</div>
         <div className="career-offer-meta">
           <span>{offer.spunClub}</span>
+          <span>{shortSeason(offer.spunSeason)}</span>
           <span>
             {offer.positions.slice(0, 2).map(p => (
               <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 4 }}>
@@ -537,9 +564,6 @@ function TransferOfferCard({ offer, division, isActive, onUse, onSkip }) {
       <div className="career-offer-actions">
         <button className="btn btn-primary btn-sm" onClick={onUse}>
           {isActive ? 'Abbrechen' : 'Einsetzen'}
-        </button>
-        <button className="btn btn-ghost btn-sm" onClick={onSkip}>
-          Überspringen
         </button>
       </div>
     </div>
@@ -554,13 +578,13 @@ function CareerCard({ player, league, picked, incompatible, onClick }) {
     <button
       className={`career-card ${picked ? 'career-card--picked' : ''} ${incompatible ? 'career-card--dim' : ''}`}
       onClick={onClick}
-      disabled={!onClick}
     >
       <div className={`rating rating-sm ${rcls}`}>{player.seasonRating}</div>
       <div className="career-card-info">
         <div className="career-card-name">{player.name}</div>
         <div className="career-card-meta">
           <span className="career-card-club">{player.spunClub}</span>
+          <span className="career-card-season">{shortSeason(player.spunSeason)}</span>
           <span>
             {player.positions.slice(0, 2).map(p => (
               <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 3 }}>

@@ -84,6 +84,12 @@ function reducer(state, action) {
       };
     }
 
+    case 'REMOVE_PLAYER':
+      return {
+        ...state,
+        slots: state.slots.map(s => s.id === action.payload ? { ...s, player: null } : s),
+      };
+
     case 'SKIP_OFFER':
       return {
         ...state,
@@ -127,6 +133,7 @@ export function useCareerState() {
     swapOffer:     (offerIndex, slotId) =>
                      dispatch({ type: 'SWAP_OFFER', payload: { offerIndex, slotId } }),
     skipOffer:     i => dispatch({ type: 'SKIP_OFFER', payload: i }),
+    removePlayer:  slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
     reset:         () => dispatch({ type: 'RESET' }),
   };
 }

@@ -14,6 +14,14 @@ function attachSeason(player) {
   return { ...player, seasonRating: s.rating, spunClub: s.club, spunSeason: s.season, displayRating: s.rating };
 }
 
+// Pick the season with rating closest to targetRating.
+function attachSeasonNear(player, targetRating) {
+  const s = player.seasons.reduce((best, cur) =>
+    Math.abs(cur.rating - targetRating) < Math.abs(best.rating - targetRating) ? cur : best
+  );
+  return { ...player, seasonRating: s.rating, spunClub: s.club, spunSeason: s.season, displayRating: s.rating };
+}
+
 // Generate a pool of `count` players for the initial career draft.
 // Guarantees at least 2 eligible players per slot type in the formation.
 export function generateCareerDraftPool(players, formation, count = 25) {
@@ -46,14 +54,47 @@ export function generateCareerDraftPool(players, formation, count = 25) {
   return shuffle(chosen).slice(0, count);
 }
 
-// Generate transfer offers: random players from `players` excluding current squad,
-// filtered so each offer is compatible with at least one slot in the formation.
-export function generateTransferOffers(players, excludeIds, formation, count = 5) {
+// Generate transfer offers biased toward the team's current avg rating (+2 improvement).
+// 20% chance for a standout player (+5 to +8 above avg). teamAvg is optional.
+export function generateTransferOffers(players, excludeIds, formation, count = 5, teamAvg = null) {
   const slotTypes = formation.slots.map(s => s.type);
-  return shuffle(
-    players
-      .filter(p => !excludeIds.has(p.id) && p.seasons?.length)
-      .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
-      .map(attachSeason)
-  ).slice(0, count);
+  const eligible = players
+    .filter(p => !excludeIds.has(p.id) && p.seasons?.length)
+    .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)));
+
+  if (!teamAvg || !eligible.length) {
+    return shuffle(eligible.map(attachSeason)).slice(0, count);
+  }
+
+  const shuffled = shuffle(eligible);
+  const includeStandout = Math.random() < 0.2;
+
+  const standoutPool = shuffled
+    .map(p => attachSeasonNear(p, teamAvg + 7))
+    .filter(p => p.seasonRating >= teamAvg + 5);
+
+  const normalPool = shuffled
+    .map(p => attachSeasonNear(p, teamAvg + 2))
+    .filter(p => p.seasonRating >= teamAvg - 3);
+
+  const result = [];
+  const usedIds = new Set();
+
+  if (includeStandout) {
+    for (const p of standoutPool) {
+      if (!usedIds.has(p.id)) { result.push(p); usedIds.add(p.id); break; }
+    }
+  }
+
+  for (const p of normalPool) {
+    if (result.length >= count) break;
+    if (!usedIds.has(p.id)) { result.push(p); usedIds.add(p.id); }
+  }
+
+  for (const p of shuffled.map(attachSeason)) {
+    if (result.length >= count) break;
+    if (!usedIds.has(p.id)) { result.push(p); usedIds.add(p.id); }
+  }
+
+  return shuffle(result).slice(0, count);
 }

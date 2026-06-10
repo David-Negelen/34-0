@@ -221,6 +221,12 @@
   max-width: 120px;
 }
 
+.career-card-season {
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
 .career-card-check {
   font-size: 14px;
   color: var(--green);
@@ -469,6 +475,7 @@
   cursor: pointer;
   transition: var(--transition);
   text-align: left;
+  color: var(--text);
 }
 
 .career-swap-row:hover {
@@ -486,7 +493,8 @@
 .career-swap-name {
   flex: 1;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
