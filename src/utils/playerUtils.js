@@ -52,50 +52,84 @@ export function getCompatibleSlots(player, openSlots) {
   return openSlots.filter(slot => canPlayerFillSlot(player, slot.type));
 }
 
-// Tier targets: bad=10%, mid=55%, good=35%
-// bad  — no player in squad > 75
-// mid  — 1–3 players > 77 eligible for open slots
-// good — 4+ players > 77 eligible for open slots
-const TIER_TARGETS = { bad: 0.10, mid: 0.55, good: 0.35 };
+// Per-league tier config.
+// bad    — maxRating <= badMaxRating
+// mid    — maxRating > badMaxRating, but 0 eligible players above decentThreshold
+// decent — 1–3 eligible players above decentThreshold
+// good   — 4+ eligible players above decentThreshold
+const TIER_CONFIG = {
+  bl: {
+    badMaxRating:     75,
+    decentThreshold:  81,
+    targets: { bad: 0.05, mid: 0.20, decent: 0.40, good: 0.35 },
+  },
+  '2bl': {
+    badMaxRating:     65,
+    decentThreshold:  74,
+    targets: { bad: 0.05, mid: 0.20, decent: 0.40, good: 0.35 },
+  },
+};
 
-function spinTier(pool, openSlots) {
+function spinTier(pool, openSlots, league = 'bl') {
+  const cfg = TIER_CONFIG[league] ?? TIER_CONFIG.bl;
   const maxRating = Math.max(...pool.map(p => p.seasonRating ?? p.primeRating));
-  if (maxRating <= 75) return 'bad';
-  const eligible77 = pool.filter(p =>
-    (p.seasonRating ?? p.primeRating) > 77 &&
+  if (maxRating <= cfg.badMaxRating) return 'bad';
+  const eligibleDecent = pool.filter(p =>
+    (p.seasonRating ?? p.primeRating) > cfg.decentThreshold &&
     openSlots.some(s => canPlayerFillSlot(p, s.type))
   );
-  return eligible77.length >= 1 && eligible77.length <= 3 ? 'mid' : 'good';
+  if (eligibleDecent.length === 0) return 'mid';
+  if (eligibleDecent.length <= 3)  return 'decent';
+  return 'good';
 }
 
-// Pick a random club and season that has eligible candidates for the open slots.
-// Tiers: bad 10% / mid 55% / good 35% — each pair within a tier has equal probability.
-// excludeIds: Set of player IDs already placed in the squad — excluded from pool and eligibility check.
-// Returns { club, season, candidates } or null if no eligible pair exists.
-export function randomSpin(players, openSlots, excludeIds = new Set()) {
+// Build a weighted-random picker for a set of pairs using a given league config.
+// Returns a weight function: pair → number.
+function makeTierWeightFn(pairs, league) {
+  const cfg = TIER_CONFIG[league] ?? TIER_CONFIG.bl;
+  const counts = { bad: 0, mid: 0, decent: 0, good: 0 };
+  for (const p of pairs) counts[p.tier]++;
+  const activeSum = Object.keys(cfg.targets).reduce(
+    (s, t) => s + (counts[t] > 0 ? cfg.targets[t] : 0), 0
+  );
+  return p => counts[p.tier] > 0 ? (cfg.targets[p.tier] / activeSum) / counts[p.tier] : 0;
+}
+
+// Pick a random club/season that has eligible candidates for the open slots.
+// league controls tier thresholds and targets.
+// Pokal: players tagged with _league='bl'|'2bl' are split 75% BL / 25% 2BL.
+// excludeIds: Set of player IDs already placed — excluded from pool and eligibility.
+// Returns { club, season, candidates } or null.
+export function randomSpin(players, openSlots, excludeIds = new Set(), league = 'bl') {
+  const isPokal = league === 'pokal';
   const pairs = [];
   for (const club of getClubsInDb(players)) {
     for (const season of getSeasonsForClub(players, club)) {
       const pool = getPlayersForClubSeason(players, club, season)
         .filter(p => !excludeIds.has(p.id));
       if (!getEligiblePlayers(pool, openSlots).length) continue;
-      pairs.push({ club, season, pool, tier: spinTier(pool, openSlots) });
+      const pairLeague = isPokal ? (pool[0]?._league ?? 'bl') : league;
+      pairs.push({ club, season, pool, tier: spinTier(pool, openSlots, pairLeague), _league: pairLeague });
     }
   }
   if (!pairs.length) return null;
 
-  const counts = { bad: 0, mid: 0, good: 0 };
-  for (const p of pairs) counts[p.tier]++;
+  let weightFn;
+  if (isPokal) {
+    const blPairs  = pairs.filter(p => p._league === 'bl');
+    const bl2Pairs = pairs.filter(p => p._league === '2bl');
+    const blW  = makeTierWeightFn(blPairs,  'bl');
+    const bl2W = makeTierWeightFn(bl2Pairs, '2bl');
+    weightFn = p => p._league === 'bl' ? 0.75 * blW(p) : 0.25 * bl2W(p);
+  } else {
+    weightFn = makeTierWeightFn(pairs, league);
+  }
 
-  // Normalize targets across non-empty tiers, then divide evenly within each tier.
-  const activeSum = Object.keys(TIER_TARGETS).reduce((s, t) => s + (counts[t] > 0 ? TIER_TARGETS[t] : 0), 0);
-  const pairWeight = t => counts[t] > 0 ? (TIER_TARGETS[t] / activeSum) / counts[t] : 0;
-
-  const totalWeight = pairs.reduce((s, p) => s + pairWeight(p.tier), 0);
+  const totalWeight = pairs.reduce((s, p) => s + weightFn(p), 0);
   let r = Math.random() * totalWeight;
   let picked = pairs[pairs.length - 1];
   for (const p of pairs) {
-    r -= pairWeight(p.tier);
+    r -= weightFn(p);
     if (r <= 0) { picked = p; break; }
   }
   return { club: picked.club, season: picked.season, candidates: picked.pool };

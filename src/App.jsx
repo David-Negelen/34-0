@@ -78,8 +78,10 @@ function PokalGame() {
   const { state, updateSetup, startDraft, fillSlot, useReroll, setPendingSpin, setResult, reset } =
     useGameState('pokal');
 
-  const players = [...BL_PLAYERS, ...BL2_PLAYERS];
-  const clubs   = { ...BL_CLUBS, ...BL2_CLUBS };
+  const blTagged  = BL_PLAYERS.map(p => ({ ...p, _league: 'bl' }));
+  const bl2Tagged = BL2_PLAYERS.map(p => ({ ...p, _league: '2bl' }));
+  const players   = [...blTagged, ...bl2Tagged];
+  const clubs     = { ...BL_CLUBS, ...BL2_CLUBS };
 
   // pk drives the round-by-round tournament: draw → match → round-results, repeated per round.
   // null while in setup/draft phase.

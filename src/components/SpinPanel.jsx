@@ -64,7 +64,7 @@ export default function SpinPanel({
     if (!spinSlots.length) return;
 
     const placedIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
-    const result = randomSpin(players, spinSlots, placedIds);
+    const result = randomSpin(players, spinSlots, placedIds, league);
 
     setPhase('animating');
     const clubFrames = Array.from({ length: SPIN_FRAMES }, (_, i) =>
