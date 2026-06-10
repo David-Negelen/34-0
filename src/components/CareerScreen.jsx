@@ -795,8 +795,9 @@ function CareerTable({ table, league }) {
 
 function tableZone(pos, league) {
   if (league === '2bl') {
-    if (pos <= 2)  return 'ucl';
-    if (pos >= 17) return 'relegated';
+    if (pos <= 2)   return 'ucl';
+    if (pos === 3)  return 'playoff';
+    if (pos >= 17)  return 'relegated';
     if (pos === 16) return 'playoff';
     return 'mid';
   }
