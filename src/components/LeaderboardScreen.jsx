@@ -60,7 +60,7 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
           <button
             className={`filter-btn${view === 'worst' ? ' filter-btn-active' : ''}`}
             onClick={() => setView('worst')}
-          >Schlimmste Runs</button>
+          >Schlechteste Runs</button>
         </div>
 
         {view === 'best' && (
@@ -98,9 +98,7 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
             <div className="lb-row lb-row-head">
               <span className="lb-col-rank">#</span>
               <span className="lb-col-name">Name</span>
-              {view === 'worst'
-                ? <span className="lb-col-mode">Modus</span>
-                : <span className="lb-col-ovr">OVR</span>}
+              <span className="lb-col-ovr">OVR</span>
               <span className="lb-col-form">S-U-N</span>
               <span className="lb-col-pts">Pkt</span>
             </div>
@@ -111,9 +109,7 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
               >
                 <span className="lb-col-rank">{view === 'worst' ? i + 1 : rankEmoji(i + 1)}</span>
                 <span className="lb-col-name">{row.name?.toUpperCase()}</span>
-                {view === 'worst'
-                  ? <span className="lb-col-mode">{modeLabel(row.mode)}</span>
-                  : <span className="lb-col-ovr">{row.ovr}</span>}
+                <span className="lb-col-ovr">{row.ovr}</span>
                 <span className="lb-col-form">{row.w}-{row.d}-{row.l}</span>
                 <span className="lb-col-pts">{row.pts}</span>
               </div>
