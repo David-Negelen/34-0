@@ -776,11 +776,13 @@ function CareerTable({ table, league }) {
         Tabelle
         {playerRow && <span className="lt-player-pos">{playerRow.pos}. Platz</span>}
       </div>
-      {table.map(row => {
+      {table.map((row, i) => {
         const gd = row.GF - row.GA;
         const zone = tableZone(row.pos, league);
+        const prevZone = i > 0 ? tableZone(table[i - 1].pos, league) : zone;
+        const zoneStart = i > 0 && zone !== prevZone;
         return (
-          <div key={row.name} className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''}`}>
+          <div key={row.name} className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''}${zoneStart ? ` lt-zone-start-${zone}` : ''}`}>
             <span className="lt-pos">{row.pos}</span>
             <span className="lt-name">{row.name}</span>
             <span className="lt-wdl">{row.W}-{row.D}-{row.L}</span>
