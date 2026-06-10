@@ -180,9 +180,9 @@
 }
 
 .career-card--picked {
-  background: rgba(76, 175, 80, 0.08);
-  border-color: rgba(76, 175, 80, 0.3);
-  opacity: 0.6;
+  background: rgba(76, 175, 80, 0.22);
+  border-color: rgba(76, 175, 80, 0.7);
+  opacity: 0.7;
   cursor: pointer;
 }
 
