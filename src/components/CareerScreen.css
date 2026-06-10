@@ -668,6 +668,98 @@
   .career-draft-sticky-btn   { width: 100%; }
 }
 
+/* ── Playoff card ── */
+.career-playoff-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.career-playoff--won  { border-color: var(--green); }
+.career-playoff--lost { border-color: var(--red); }
+
+.career-playoff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.career-playoff-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.career-playoff-opponent {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.career-playoff-legs {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 12px;
+}
+
+.career-playoff-leg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.career-playoff-leg-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.career-playoff-leg-score {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.career-playoff-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.career-playoff-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.career-playoff-agg {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.career-playoff-outcome {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.career-playoff-outcome--won  { color: var(--green); }
+.career-playoff-outcome--lost { color: var(--red); }
+
 /* ── End screen ── */
 .career-end-body {
   max-width: 560px;

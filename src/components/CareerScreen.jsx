@@ -12,6 +12,36 @@ import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
 
+const PLAYOFF_OPPONENTS = {
+  bl:  ['Hamburger SV', 'FC Schalke 04', 'Hannover 96', '1. FC Köln', 'Hertha BSC',
+        'VfB Stuttgart', 'Werder Bremen', 'FC Augsburg', 'Fortuna Düsseldorf', 'Eintracht Braunschweig'],
+  '2bl': ['Greuther Fürth', 'FC Heidenheim', 'SV Darmstadt 98', '1. FC Nürnberg',
+          'Karlsruher SC', 'FC Hansa Rostock', '1. FC Kaiserslautern', 'SV Sandhausen', 'FC Erzgebirge Aue'],
+};
+
+function randGoals() {
+  const r = Math.random();
+  if (r < 0.15) return 0;
+  if (r < 0.42) return 1;
+  if (r < 0.67) return 2;
+  if (r < 0.84) return 3;
+  if (r < 0.94) return 4;
+  return 5;
+}
+
+function generatePlayoff(myDivision) {
+  const oppDivision = myDivision === '2bl' ? 'bl' : '2bl';
+  const pool = PLAYOFF_OPPONENTS[oppDivision];
+  const opponent = pool[Math.floor(Math.random() * pool.length)];
+  const leg1 = { own: randGoals(), opp: randGoals() };
+  const leg2 = { own: randGoals(), opp: randGoals() };
+  const totalOwn = leg1.own + leg2.own;
+  const totalOpp = leg1.opp + leg2.opp;
+  const penalties = totalOwn === totalOpp;
+  const won = penalties ? Math.random() < 0.5 : totalOwn > totalOpp;
+  return { opponent, leg1, leg2, totalOwn, totalOpp, penalties, won };
+}
+
 function shortSeason(s) {
   if (!s) return '';
   const parts = s.split('-');
@@ -70,10 +100,11 @@ export default function CareerScreen() {
         onResult={(slots) => {
           const { result, table, playerMatches, playerStats, tableHistory } =
             simulateFullLeague(slots, '2bl', getPlayers('2bl'));
+          const playoff = result.pos === 3 ? generatePlayoff('2bl') : null;
           career.setResult({
             ...result,
             achievements: getAchievements(result, slots, '2bl'),
-            table, playerMatches, playerStats, tableHistory,
+            table, playerMatches, playerStats, tableHistory, playoff,
           });
         }}
         onReset={() => career.reset()}
@@ -83,9 +114,14 @@ export default function CareerScreen() {
   }
 
   if (state.phase === 'result') {
-    const pos = state.result?.pos ?? 18;
-    const promoted  = state.division === '2bl' && pos <= 2;
-    const relegated = state.division === 'bl'  && pos >= 17;
+    const pos      = state.result?.pos ?? 18;
+    const playoff  = state.result?.playoff ?? null;
+    const directPromoted  = state.division === '2bl' && pos <= 2;
+    const directRelegated = state.division === 'bl'  && pos >= 17;
+    const playoffPromoted  = state.division === '2bl' && pos === 3  && playoff?.won === true;
+    const playoffRelegated = state.division === 'bl'  && pos === 16 && playoff?.won === false;
+    const promoted  = directPromoted  || playoffPromoted;
+    const relegated = directRelegated || playoffRelegated;
     const newDivision = promoted ? 'bl' : relegated ? '2bl' : state.division;
 
     return (
@@ -119,10 +155,13 @@ export default function CareerScreen() {
           const players = getPlayers(state.division);
           const { result, table, playerMatches, playerStats, tableHistory } =
             simulateFullLeague(state.slots, state.division, players);
+          const needsPlayoff = (result.pos === 3 && state.division === '2bl') ||
+                               (result.pos === 16 && state.division === 'bl');
+          const playoff = needsPlayoff ? generatePlayoff(state.division) : null;
           career.setResult({
             ...result,
             achievements: getAchievements(result, state.slots, state.division),
-            table, playerMatches, playerStats, tableHistory,
+            table, playerMatches, playerStats, tableHistory, playoff,
           });
         }}
         onEnd={handleEndCareer}
@@ -353,6 +392,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
 
 function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome }) {
   const { result, division, seasonNumber, seasonHistory, slots } = state;
+  const playoff = result?.playoff ?? null;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
 
   const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches } = result ?? {};
@@ -398,7 +438,9 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
           {logDone && (
             <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {(promoted || relegated) && (
+              {playoff ? (
+                <CareerPlayoffCard playoff={playoff} division={division} />
+              ) : (promoted || relegated) && (
                 <div className={`career-banner ${promoted ? 'career-banner--up' : 'career-banner--down'}`}>
                   {promoted
                     ? `⬆️  Aufstieg! Nächste Saison spielst du in der Bundesliga.`
@@ -796,6 +838,48 @@ function PitchMini({ slots }) {
           {labelDE(s.label)}
         </span>
       ))}
+    </div>
+  );
+}
+
+// ── Playoff card ─────────────────────────────────────────────────────────────
+
+function CareerPlayoffCard({ playoff, division }) {
+  const { opponent, leg1, leg2, totalOwn, totalOpp, penalties, won } = playoff;
+  const isPromotion = division === '2bl';
+
+  let outcomeText, outcomeClass;
+  if (isPromotion) {
+    outcomeText = won ? 'Aufstieg!' : 'Kein Aufstieg';
+    outcomeClass = won ? 'career-playoff-outcome--won' : 'career-playoff-outcome--lost';
+  } else {
+    outcomeText = won ? 'Klassenerhalt!' : 'Abstieg';
+    outcomeClass = won ? 'career-playoff-outcome--won' : 'career-playoff-outcome--lost';
+  }
+
+  return (
+    <div className={`career-playoff-card ${won ? 'career-playoff--won' : 'career-playoff--lost'}`}>
+      <div className="career-playoff-header">
+        <span className="career-playoff-label">Relegationsrunde</span>
+        <span className="career-playoff-opponent">{opponent}</span>
+      </div>
+      <div className="career-playoff-legs">
+        <div className="career-playoff-leg">
+          <span className="career-playoff-leg-name">Hinspiel</span>
+          <span className="career-playoff-leg-score">{leg1.own} – {leg1.opp}</span>
+        </div>
+        <div className="career-playoff-divider" />
+        <div className="career-playoff-leg">
+          <span className="career-playoff-leg-name">Rückspiel</span>
+          <span className="career-playoff-leg-score">{leg2.own} – {leg2.opp}</span>
+        </div>
+      </div>
+      <div className="career-playoff-footer">
+        <span className="career-playoff-agg">
+          Gesamt {totalOwn} – {totalOpp}{penalties ? ' (n.E.)' : ''}
+        </span>
+        <span className={`career-playoff-outcome ${outcomeClass}`}>{outcomeText}</span>
+      </div>
     </div>
   );
 }
