@@ -109,7 +109,7 @@ export default function PokalStatsScreen({ onBack }) {
                     </div>
                     {hasWins && (
                       <div style={{ height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
-                        <div style={{ height: '100%', width: `${(r.wins / top) * 100}%`, background: barColor, borderRadius: 2 }} />
+                        <div style={{ height: '100%', width: `${(r.wins / top) * 100}%`, background: barColor, borderRadius: 2, opacity: 0.65 }} />
                       </div>
                     )}
                   </div>
