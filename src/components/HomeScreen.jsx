@@ -37,6 +37,9 @@ export default function HomeScreen() {
             <span className="league-card-name">DFB-Pokal</span>
             <span className="league-card-sub">Pokal · 6 Runden · K.o.-System</span>
           </button>
+          <button className="league-lb-link" onClick={() => navigate('/pokal-stats')}>
+            Statistiken ansehen →
+          </button>
         </div>
       </div>
     </div>

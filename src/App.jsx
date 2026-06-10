@@ -269,6 +269,11 @@ function LeaderboardPage() {
   return <LeaderboardScreen league={league} onBack={() => navigate(-1)} />;
 }
 
+function PokalStatsPage() {
+  const navigate = useNavigate();
+  return <PokalStatsScreen onBack={() => navigate(-1)} />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -276,7 +281,7 @@ export default function App() {
       <Route path="/pokal" element={<PokalGame />} />
       <Route path="/:league" element={<LeagueGame />} />
       <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
-      <Route path="/pokal-stats" element={<PokalStatsScreen />} />
+      <Route path="/pokal-stats" element={<PokalStatsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

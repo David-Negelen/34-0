@@ -47,15 +47,21 @@ export async function submitPokalWin(winner) {
 }
 
 export async function fetchPokalStats() {
-  // Fetch all records (up to 500) and aggregate client-side by winner.
-  const res = await fetch(`${PB_URL}/api/collections/pokal_stats/records?perPage=500`);
-  if (!res.ok) throw new Error('Fetch failed');
-  const data = await res.json();
+  const items = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${PB_URL}/api/collections/pokal_stats/records?perPage=500&page=${page}`);
+    if (!res.ok) throw new Error('Fetch failed');
+    const data = await res.json();
+    items.push(...data.items);
+    if (page >= data.totalPages) break;
+    page++;
+  }
   const counts = {};
-  for (const r of data.items) {
+  for (const r of items) {
     counts[r.winner] = (counts[r.winner] ?? 0) + 1;
   }
-  const total = data.items.length;
+  const total = items.length;
   return Object.entries(counts)
     .map(([winner, wins]) => ({ winner, wins, pct: total ? (wins / total) * 100 : 0 }))
     .sort((a, b) => b.wins - a.wins);
