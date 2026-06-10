@@ -25,13 +25,19 @@ function attachSeasonNear(player, targetRating) {
 // Generate a pool of `count` players for the initial career draft.
 // Guarantees at least (slotCount + 1) eligible players per slot type so the
 // user can never be stranded with no compatible player for an open slot.
+// Players are biased toward a rating of ~65 (2. Bundesliga starting level).
 export function generateCareerDraftPool(players, formation, count = 25) {
+  const DRAFT_TARGET = 65;
   const slotTypeCounts = {};
   formation.slots.forEach(s => {
     slotTypeCounts[s.type] = (slotTypeCounts[s.type] || 0) + 1;
   });
 
-  const shuffled = shuffle(players.filter(p => p.seasons?.length).map(attachSeason));
+  // Shuffle first for randomness among equally-close players, then sort by
+  // proximity to the target rating so the pool clusters around 65.
+  const shuffled = shuffle(players.filter(p => p.seasons?.length).map(p => attachSeasonNear(p, DRAFT_TARGET)))
+    .sort((a, b) => Math.abs(a.seasonRating - DRAFT_TARGET) - Math.abs(b.seasonRating - DRAFT_TARGET));
+
   const chosen = [];
   const usedIds = new Set();
 
