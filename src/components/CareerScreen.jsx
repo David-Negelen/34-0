@@ -305,7 +305,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
           )}
           {stuckSlots.length > 0 && (
             <div className="career-stuck-banner">
-              Keine Spieler mehr für {stuckSlots.map(s => s.label).join(', ')} — wähle einen Ersatz (−5)
+              Keine Spieler mehr für {stuckSlots.map(s => labelDE(s.label)).join(', ')} — wähle einen Ersatz (−5)
             </div>
           )}
           <div className="career-pool-grid">
