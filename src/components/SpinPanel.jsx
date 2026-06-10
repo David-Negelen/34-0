@@ -50,6 +50,8 @@ export default function SpinPanel({
   const [candidates, setCandidates] = useState([]);
   const [pendingPlayer, setPendingPlayer] = useState(null);
   const [deadSpin, setDeadSpin] = useState(false);
+  // Slot locked at spin-start so changing selection mid-spin can't redirect placement.
+  const [lockedSlotId, setLockedSlotId] = useState(null);
 
   const animRef = useRef(null);
 
@@ -57,8 +59,11 @@ export default function SpinPanel({
     if (isReroll) onReroll();
     setDeadSpin(false);
 
-    const spinSlots = draftMode === 'position-first' && selectedSlotId !== null
-      ? openSlots.filter(s => s.id === selectedSlotId)
+    const activeSlot = draftMode === 'position-first' ? selectedSlotId : null;
+    setLockedSlotId(activeSlot);
+
+    const spinSlots = activeSlot !== null
+      ? openSlots.filter(s => s.id === activeSlot)
       : openSlots;
 
     if (!spinSlots.length) return;
@@ -96,7 +101,7 @@ export default function SpinPanel({
         const { club, season, candidates: pool } = result;
         setCurrentSpin({ club, season });
 
-        const eligible = draftMode === 'position-first' && selectedSlotId !== null
+        const eligible = draftMode === 'position-first' && activeSlot !== null
           ? pool.filter(p => getCompatibleSlots(p, spinSlots).length > 0)
           : getEligiblePlayers(pool, openSlots);
 
@@ -115,10 +120,13 @@ export default function SpinPanel({
   function handlePlayerClick(player) {
     const rating = getDisplayRating(player, ratingMode);
 
-    if (draftMode === 'position-first' && selectedSlotId !== null) {
-      onPlayerPlaced(selectedSlotId, player, rating);
-      resetToIdle();
-      return;
+    if (draftMode === 'position-first') {
+      const targetSlot = lockedSlotId ?? selectedSlotId;
+      if (targetSlot !== null) {
+        onPlayerPlaced(targetSlot, player, rating);
+        resetToIdle();
+        return;
+      }
     }
 
     const compat = getCompatibleSlots(player, openSlots);
@@ -144,6 +152,7 @@ export default function SpinPanel({
     setCandidates([]);
     setDeadSpin(false);
     setPendingPlayer(null);
+    setLockedSlotId(null);
     onSetPendingSpin(null);
   }
 

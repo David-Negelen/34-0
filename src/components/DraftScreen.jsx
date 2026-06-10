@@ -85,7 +85,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             slots={slots}
             showRatings={showRatings}
             selectedSlotId={selectedSlotId}
-            onSlotClick={draftMode === 'position-first' ? handleSlotClick : undefined}
+            onSlotClick={draftMode === 'position-first' && !pendingSpin ? handleSlotClick : undefined}
             draftMode={draftMode}
             league={league}
           />
