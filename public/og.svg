@@ -2,10 +2,10 @@
   <rect width="800" height="420" fill="#0a0a0a"/>
   <!-- red accent bar -->
   <rect x="300" y="310" width="200" height="4" rx="2" fill="#e3000b"/>
-  <!-- main title — single element so text-anchor centers all tspans together -->
-  <text x="400" y="295" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="150" letter-spacing="-6">
+  <!-- main title -->
+  <text x="400" y="295" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="150" letter-spacing="0">
     <tspan fill="#f0f0f0">34</tspan><tspan fill="#e3000b">-</tspan><tspan fill="#f0f0f0">0</tspan>
   </text>
   <!-- German subtitle -->
-  <text x="400" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-weight="400" font-size="20" fill="#555" letter-spacing="2">DEIN BUNDESLIGA DREAM XI · 4.000 SPIELER</text>
+  <text x="400" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-weight="400" font-size="20" fill="#555" letter-spacing="2">DEIN BUNDESLIGA DREAM TEAM</text>
 </svg>
