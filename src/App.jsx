@@ -13,6 +13,7 @@ import { buildPokalField, drawPokalRound } from './utils/simulation';
 import { submitPokalWin } from './utils/leaderboard';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import PokalStatsScreen from './components/PokalStatsScreen';
+import CareerScreen from './components/CareerScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
 import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
 
@@ -280,6 +281,7 @@ export default function App() {
       <Route path="/" element={<HomeScreen />} />
       <Route path="/pokal" element={<PokalGame />} />
       <Route path="/:league" element={<LeagueGame />} />
+      <Route path="/karriere" element={<CareerScreen />} />
       <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
       <Route path="/pokal-stats" element={<PokalStatsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -41,6 +41,12 @@ export default function HomeScreen() {
             Statistiken ansehen →
           </button>
         </div>
+        <div className="league-group">
+          <button className="league-card league-card--karriere" onClick={() => navigate('/karriere')}>
+            <span className="league-card-name">Karriere</span>
+            <span className="league-card-sub">Start in der 2. Liga · Aufstieg möglich</span>
+          </button>
+        </div>
       </div>
     </div>
   );
