@@ -36,6 +36,18 @@ export async function fetchLeaderboard({ mode = 'easy_prime' } = {}) {
   return data.items;
 }
 
+export async function fetchWorstRuns(league) {
+  const filter = league === '2bl'
+    ? `(mode='2bl_easy_prime'||mode='2bl_easy_career'||mode='2bl_normal_prime'||mode='2bl_normal_career'||mode='2bl_hard_prime'||mode='2bl_hard_career')`
+    : `(mode=''||mode='easy_prime'||mode='easy_career'||mode='normal_prime'||mode='normal_career'||mode='hard_prime'||mode='hard_career')`;
+  const res = await fetch(
+    `${PB_URL}/api/collections/scores/records?sort=pts&perPage=50&filter=${filter}`
+  );
+  if (!res.ok) throw new Error('Fetch failed');
+  const data = await res.json();
+  return data.items;
+}
+
 export async function submitPokalWin(winner) {
   const res = await fetch(`${PB_URL}/api/collections/pokal_stats/records`, {
     method: 'POST',

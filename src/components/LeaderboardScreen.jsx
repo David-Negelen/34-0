@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchLeaderboard, getSavedName, saveName } from '../utils/leaderboard';
+import { fetchLeaderboard, fetchWorstRuns, getSavedName, saveName } from '../utils/leaderboard';
 import './LeaderboardScreen.css';
 
 const DIFFICULTIES = [
@@ -8,13 +8,22 @@ const DIFFICULTIES = [
   { key: 'hard',   label: 'Schwer' },
 ];
 
+function modeLabel(mode) {
+  if (!mode) return 'L · Prime';
+  const clean = mode.replace(/^2bl_/, '');
+  const [diff, rating] = clean.split('_');
+  const d = { easy: 'Leicht', normal: 'Normal', hard: 'Schwer' }[diff] ?? diff;
+  const r = rating === 'career' ? 'Saison' : 'Prime';
+  return `${d} · ${r}`;
+}
+
 export default function LeaderboardScreen({ league = 'bl', onBack }) {
-  const [tab, setTab] = useState('alltime');
+  const [view, setView]           = useState('best');
   const [difficulty, setDifficulty] = useState('easy');
   const [ratingMode, setRatingMode] = useState('prime');
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [rows, setRows]           = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(getSavedName() ?? '');
   const myName = getSavedName();
@@ -23,11 +32,14 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetchLeaderboard({ mode })
+    const fetch = view === 'worst'
+      ? fetchWorstRuns(league)
+      : fetchLeaderboard({ mode });
+    fetch
       .then(setRows)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [mode]);
+  }, [view, mode, league]);
 
   return (
     <div className="lb-screen slide-up">
@@ -41,20 +53,38 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
 
       <div className="lb-filters">
         <div className="lb-filter-row">
-          {DIFFICULTIES.map(d => (
-            <button
-              key={d.key}
-              className={`filter-btn${difficulty === d.key ? ' filter-btn-active' : ''}`}
-              onClick={() => setDifficulty(d.key)}
-            >
-              {d.label}
-            </button>
-          ))}
+          <button
+            className={`filter-btn${view === 'best' ? ' filter-btn-active' : ''}`}
+            onClick={() => setView('best')}
+          >Beste Runs</button>
+          <button
+            className={`filter-btn${view === 'worst' ? ' filter-btn-active' : ''}`}
+            onClick={() => setView('worst')}
+          >Schlimmste Runs</button>
         </div>
-        <div className="lb-filter-row">
-          <button className={`filter-btn${ratingMode === 'prime' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('prime')}>Prime</button>
-          <button className={`filter-btn${ratingMode === 'career' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('career')}>Saisonstärke</button>
-        </div>
+
+        {view === 'best' && (
+          <>
+            <div className="lb-filter-row">
+              {DIFFICULTIES.map(d => (
+                <button
+                  key={d.key}
+                  className={`filter-btn${difficulty === d.key ? ' filter-btn-active' : ''}`}
+                  onClick={() => setDifficulty(d.key)}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            <div className="lb-filter-row">
+              <button className={`filter-btn${ratingMode === 'prime' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('prime')}>Prime</button>
+              <button className={`filter-btn${ratingMode === 'career' ? ' filter-btn-active' : ''}`} onClick={() => setRatingMode('career')}>Saisonstärke</button>
+            </div>
+          </>
+        )}
+        {view === 'worst' && (
+          <p className="lb-worst-desc">Alle Modi kombiniert · wenigste Punkte zuerst</p>
+        )}
       </div>
 
       <div className="lb-body">
@@ -68,7 +98,9 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
             <div className="lb-row lb-row-head">
               <span className="lb-col-rank">#</span>
               <span className="lb-col-name">Name</span>
-              <span className="lb-col-ovr">OVR</span>
+              {view === 'worst'
+                ? <span className="lb-col-mode">Modus</span>
+                : <span className="lb-col-ovr">OVR</span>}
               <span className="lb-col-form">S-U-N</span>
               <span className="lb-col-pts">Pkt</span>
             </div>
@@ -77,9 +109,11 @@ export default function LeaderboardScreen({ league = 'bl', onBack }) {
                 key={row.id}
                 className={`lb-row${row.name?.toUpperCase() === myName?.toUpperCase() ? ' lb-row-mine' : ''}`}
               >
-                <span className="lb-col-rank">{rankEmoji(i + 1)}</span>
+                <span className="lb-col-rank">{view === 'worst' ? i + 1 : rankEmoji(i + 1)}</span>
                 <span className="lb-col-name">{row.name?.toUpperCase()}</span>
-                <span className="lb-col-ovr">{row.ovr}</span>
+                {view === 'worst'
+                  ? <span className="lb-col-mode">{modeLabel(row.mode)}</span>
+                  : <span className="lb-col-ovr">{row.ovr}</span>}
                 <span className="lb-col-form">{row.w}-{row.d}-{row.l}</span>
                 <span className="lb-col-pts">{row.pts}</span>
               </div>
