@@ -53,6 +53,7 @@ export default function SpinPanel({
   const [deadSpin, setDeadSpin] = useState(false);
   // Slot locked at spin-start so changing selection mid-spin can't redirect placement.
   const [lockedSlotId, setLockedSlotId] = useState(null);
+  const [missedCandidates, setMissedCandidates] = useState([]);
 
   const animRef = useRef(null);
 
@@ -62,6 +63,7 @@ export default function SpinPanel({
 
     const activeSlot = draftMode === 'position-first' ? selectedSlotId : null;
     setLockedSlotId(activeSlot);
+    setMissedCandidates([]);
     onSpinActiveChange?.(true);
 
     const spinSlots = activeSlot !== null
@@ -125,6 +127,7 @@ export default function SpinPanel({
     if (draftMode === 'position-first') {
       const targetSlot = lockedSlotId ?? selectedSlotId;
       if (targetSlot !== null) {
+        setMissedCandidates(candidates.filter(p => p.id !== player.id));
         onPlayerPlaced(targetSlot, player, rating);
         resetToIdle();
         return;
@@ -133,6 +136,7 @@ export default function SpinPanel({
 
     const compat = getCompatibleSlots(player, openSlots);
     if (compat.length === 1) {
+      setMissedCandidates(candidates.filter(p => p.id !== player.id));
       onPlayerPlaced(compat[0].id, player, rating);
       resetToIdle();
     } else {
@@ -143,6 +147,7 @@ export default function SpinPanel({
 
   function handleSlotChoice(slotId) {
     if (!pendingPlayer) return;
+    setMissedCandidates(candidates.filter(p => p.id !== pendingPlayer.player.id));
     onPlayerPlaced(slotId, pendingPlayer.player, pendingPlayer.rating);
     setPendingPlayer(null);
     resetToIdle();
@@ -320,6 +325,25 @@ export default function SpinPanel({
               />
             ))
           )}
+        </div>
+      )}
+
+      {/* ── Missed candidates (shown after pick, cleared on next spin) ── */}
+      {phase === 'idle' && missedCandidates.length > 0 && (
+        <div className="candidates-list">
+          <div className="candidates-header">
+            <h4 style={{ color: 'var(--text-dim)', fontSize: 12, fontWeight: 600 }}>Verpasst</h4>
+          </div>
+          {missedCandidates.map(player => (
+            <PlayerCard
+              key={player.id}
+              player={player}
+              showRatings={showRatings}
+              ratingMode={ratingMode}
+              dim
+              league={league}
+            />
+          ))}
         </div>
       )}
 

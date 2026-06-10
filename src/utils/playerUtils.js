@@ -61,7 +61,7 @@ const TIER_CONFIG = {
   bl: {
     badMaxRating:    75,
     decentThreshold: 81,
-    goodThreshold:   85,
+    goodThreshold:   84,
     targets: { bad: 0.05, mid: 0.20, decent: 0.40, good: 0.35 },
   },
   '2bl': {
