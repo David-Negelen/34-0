@@ -782,12 +782,15 @@ function CareerTable({ table, league }) {
         const prevZone = i > 0 ? tableZone(table[i - 1].pos, league) : zone;
         const zoneStart = i > 0 && zone !== prevZone;
         return (
-          <div key={row.name} className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''}${zoneStart ? ` lt-zone-start-${zone}` : ''}`}>
+          <div key={row.name}>
+          {zoneStart && <div className={`lt-separator lt-separator-${zone}`} />}
+          <div className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''}`}>
             <span className="lt-pos">{row.pos}</span>
             <span className="lt-name">{row.name}</span>
             <span className="lt-wdl">{row.W}-{row.D}-{row.L}</span>
             <span className="lt-gd">{gd > 0 ? '+' : ''}{gd}</span>
             <span className="lt-pts">{row.pts}</span>
+          </div>
           </div>
         );
       })}

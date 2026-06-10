@@ -614,8 +614,13 @@
 
 /* ── Draft start button (desktop, top of pool) ── */
 .career-draft-start-btn-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 /* ── Draft sticky start bar (mobile only) ── */
