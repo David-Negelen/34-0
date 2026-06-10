@@ -36,6 +36,7 @@ export default function SpinPanel({
   onReroll,
   onSetPendingSpin,
   onClearSlot,
+  onSpinActiveChange,
   league = 'bl',
 }) {
   const { draftMode, showRatings, ratingMode } = setup;
@@ -61,6 +62,7 @@ export default function SpinPanel({
 
     const activeSlot = draftMode === 'position-first' ? selectedSlotId : null;
     setLockedSlotId(activeSlot);
+    onSpinActiveChange?.(true);
 
     const spinSlots = activeSlot !== null
       ? openSlots.filter(s => s.id === activeSlot)
@@ -154,6 +156,7 @@ export default function SpinPanel({
     setPendingPlayer(null);
     setLockedSlotId(null);
     onSetPendingSpin(null);
+    onSpinActiveChange?.(false);
   }
 
   // Restore spin result after a page reload

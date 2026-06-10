@@ -12,6 +12,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
 
   // Position-first: which slot the user has selected on the pitch
   const [selectedSlotId, setSelectedSlotId] = useState(null);
+  const [spinActive, setSpinActive] = useState(false);
 
   function handleSlotClick(slotId) {
     setSelectedSlotId(prev => prev === slotId ? null : slotId);
@@ -85,7 +86,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             slots={slots}
             showRatings={showRatings}
             selectedSlotId={selectedSlotId}
-            onSlotClick={draftMode === 'position-first' && !pendingSpin ? handleSlotClick : undefined}
+            onSlotClick={draftMode === 'position-first' && !spinActive ? handleSlotClick : undefined}
             draftMode={draftMode}
             league={league}
           />
@@ -106,6 +107,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             onReroll={useReroll}
             onSetPendingSpin={setPendingSpin}
             onClearSlot={() => setSelectedSlotId(null)}
+            onSpinActiveChange={setSpinActive}
             league={league}
           />
         </div>
