@@ -23,22 +23,27 @@ function attachSeasonNear(player, targetRating) {
 }
 
 // Generate a pool of `count` players for the initial career draft.
-// Guarantees at least 2 eligible players per slot type in the formation.
+// Guarantees at least (slotCount + 1) eligible players per slot type so the
+// user can never be stranded with no compatible player for an open slot.
 export function generateCareerDraftPool(players, formation, count = 25) {
-  const neededTypes = [...new Set(formation.slots.map(s => s.type))];
-  const shuffled = shuffle(players.filter(p => p.seasons?.length).map(attachSeason));
+  const slotTypeCounts = {};
+  formation.slots.forEach(s => {
+    slotTypeCounts[s.type] = (slotTypeCounts[s.type] || 0) + 1;
+  });
 
+  const shuffled = shuffle(players.filter(p => p.seasons?.length).map(attachSeason));
   const chosen = [];
   const usedIds = new Set();
 
-  for (const slotType of neededTypes) {
+  for (const [slotType, needed] of Object.entries(slotTypeCounts)) {
+    const target = needed + 1; // one extra so the user always has a choice
     let added = 0;
     for (const e of shuffled) {
       if (usedIds.has(e.id)) continue;
       if (canPlayerFillSlot(e, slotType)) {
         chosen.push(e);
         usedIds.add(e.id);
-        if (++added >= 2) break;
+        if (++added >= target) break;
       }
     }
   }

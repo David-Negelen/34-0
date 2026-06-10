@@ -240,6 +240,49 @@
   flex-shrink: 0;
 }
 
+.career-card--offrole {
+  border-color: rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.06);
+  cursor: pointer;
+}
+
+.career-card--offrole:hover {
+  border-color: rgba(255, 193, 7, 0.75);
+  background: rgba(255, 193, 7, 0.12);
+}
+
+.career-card-offrole-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f59e0b;
+  flex-shrink: 0;
+  letter-spacing: -0.3px;
+}
+
+/* ── Stuck-slot warning banner ── */
+.career-stuck-banner {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f59e0b;
+  margin-bottom: 10px;
+}
+
+/* ── Off-role overlay warning ── */
+.career-offrole-warning {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  margin-bottom: 14px;
+}
+
 /* ── Result ── */
 .career-result-header {
   background: var(--bg-card);

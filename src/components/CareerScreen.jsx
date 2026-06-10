@@ -187,10 +187,14 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
 
-  const filledCount = slots.filter(s => s.player !== null).length;
-  const openSlots   = slots.filter(s => s.player === null);
-  const placedIds   = new Set(slots.filter(s => s.player).map(s => s.player.id));
+  const filledCount   = slots.filter(s => s.player !== null).length;
+  const openSlots     = slots.filter(s => s.player === null);
+  const placedIds     = new Set(slots.filter(s => s.player).map(s => s.player.id));
   const playerSlotMap = Object.fromEntries(slots.filter(s => s.player).map(s => [s.player.id, s.id]));
+  const unplacedPool  = draftPool.filter(p => !placedIds.has(p.id));
+  const stuckSlots    = openSlots.filter(slot =>
+    !unplacedPool.some(p => canPlayerFillSlot(p, slot.type))
+  );
 
   function handleCardClick(player) {
     if (placedIds.has(player.id)) {
@@ -198,16 +202,28 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
       return;
     }
     const compat = getCompatibleSlots(player, openSlots);
-    if (!compat.length) return;
-    if (compat.length === 1) {
-      commit(compat[0].id, player);
-    } else {
-      setSlotPickTarget({ player, compat });
+    if (compat.length) {
+      if (compat.length === 1) {
+        commit(compat[0].id, player, false);
+      } else {
+        setSlotPickTarget({ player, compat, offRole: false });
+      }
+      return;
+    }
+    // No normal slot — offer off-role placement for stuck slots
+    if (stuckSlots.length) {
+      if (stuckSlots.length === 1) {
+        commit(stuckSlots[0].id, player, true);
+      } else {
+        setSlotPickTarget({ player, compat: stuckSlots, offRole: true });
+      }
     }
   }
 
-  function commit(slotId, player) {
-    const displayRating = player.seasonRating;
+  function commit(slotId, player, offRole) {
+    const displayRating = offRole
+      ? Math.max(1, player.seasonRating - 5)
+      : player.seasonRating;
     onPlace(slotId, player, displayRating);
     setSlotPickTarget(null);
   }
@@ -248,17 +264,25 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
           ) : (
             <div className="career-pool-label">Wähle deine Startelf</div>
           )}
+          {stuckSlots.length > 0 && (
+            <div className="career-stuck-banner">
+              Keine Spieler mehr für {stuckSlots.map(s => s.label).join(', ')} — wähle einen Ersatz (−5)
+            </div>
+          )}
           <div className="career-pool-grid">
             {draftPool.map(player => {
               const picked = placedIds.has(player.id);
               const compat = getCompatibleSlots(player, openSlots);
+              const canOffRole = !picked && !compat.length && stuckSlots.length > 0;
+              const incompatible = !picked && !compat.length && !canOffRole;
               return (
                 <CareerCard
                   key={player.id}
                   player={player}
                   league="2bl"
                   picked={picked}
-                  incompatible={!picked && !compat.length}
+                  incompatible={incompatible}
+                  offRole={canOffRole}
                   onClick={() => handleCardClick(player)}
                 />
               );
@@ -270,16 +294,28 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
       {slotPickTarget && (
         <div className="overlay">
           <div className="overlay-card">
-            <h3 style={{ marginBottom: 6 }}>Position wählen</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
-              Wo soll <strong>{slotPickTarget.player.name}</strong> spielen?
-            </p>
+            {slotPickTarget.offRole ? (
+              <>
+                <h3 style={{ marginBottom: 6 }}>Außerhalb der Position</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 4 }}>
+                  <strong>{slotPickTarget.player.name}</strong> ist für diese Position nicht vorgesehen.
+                </p>
+                <p className="career-offrole-warning">Rating −5 für Einsatz außerhalb der Position</p>
+              </>
+            ) : (
+              <>
+                <h3 style={{ marginBottom: 6 }}>Position wählen</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
+                  Wo soll <strong>{slotPickTarget.player.name}</strong> spielen?
+                </p>
+              </>
+            )}
             <div className="slot-choice-list">
               {slotPickTarget.compat.map(slot => (
                 <button
                   key={slot.id}
                   className="btn btn-secondary slot-choice-btn"
-                  onClick={() => commit(slot.id, slotPickTarget.player)}
+                  onClick={() => commit(slot.id, slotPickTarget.player, slotPickTarget.offRole)}
                 >
                   {labelDE(slot.label)}
                 </button>
@@ -584,13 +620,17 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
 
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
-function CareerCard({ player, league, picked, incompatible, onClick }) {
+function CareerCard({ player, league, picked, incompatible, offRole, onClick }) {
   const rcls = ratingClass(player.seasonRating, league);
+  const cls = [
+    'career-card',
+    picked      ? 'career-card--picked'  : '',
+    incompatible ? 'career-card--dim'    : '',
+    offRole     ? 'career-card--offrole' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <button
-      className={`career-card ${picked ? 'career-card--picked' : ''} ${incompatible ? 'career-card--dim' : ''}`}
-      onClick={onClick}
-    >
+    <button className={cls} onClick={onClick}>
       <div className={`rating rating-sm ${rcls}`}>{player.seasonRating}</div>
       <div className="career-card-info">
         <div className="career-card-name">{player.name}</div>
@@ -606,7 +646,8 @@ function CareerCard({ player, league, picked, incompatible, onClick }) {
           </span>
         </div>
       </div>
-      {picked && <span className="career-card-check">✓</span>}
+      {picked   && <span className="career-card-check">✓</span>}
+      {offRole  && <span className="career-card-offrole-badge">−5</span>}
     </button>
   );
 }
