@@ -652,7 +652,7 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>
           <span>
-            {offer.positions.slice(0, 2).map(p => (
+            {offer.positions.map(p => (
               <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 4 }}>
                 {labelDE(p)}
               </span>
@@ -689,7 +689,7 @@ function CareerCard({ player, league, picked, incompatible, offRole, onClick }) 
           <span className="career-card-club">{player.spunClub}</span>
           <span className="career-card-season">{shortSeason(player.spunSeason)}</span>
           <span>
-            {player.positions.slice(0, 2).map(p => (
+            {player.positions.map(p => (
               <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 3 }}>
                 {labelDE(p)}
               </span>
