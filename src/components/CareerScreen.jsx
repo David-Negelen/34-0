@@ -904,7 +904,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   return (
     <div className="career-screen">
       <header className="career-header">
-        <div />
+        <button className="btn btn-ghost btn-sm" onClick={onHome}>← Menü</button>
         <div className="career-header-title">
           <span className="career-eyebrow">34-0</span>
           <h1 className="career-main-title">KARRIERE BEENDET</h1>
