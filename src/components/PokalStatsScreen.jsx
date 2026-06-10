@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { fetchPokalStats } from '../utils/leaderboard';
+import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
 import './LeaderboardScreen.css';
+
+const ALL_CLUBS = [...new Set(dfbPokalParticipants.map(e => e.club))].sort();
 
 function displayName(winner) {
   return winner === 'user' ? 'Deine 11' : winner;
@@ -15,8 +18,15 @@ export default function PokalStatsScreen({ onBack }) {
   useEffect(() => {
     fetchPokalStats()
       .then(data => {
-        setRows(data);
         setTotal(data.reduce((s, r) => s + r.wins, 0));
+        const winMap = new Map(data.map(r => [r.winner, r]));
+        const merged = [
+          ...data,
+          ...ALL_CLUBS
+            .filter(c => !winMap.has(c))
+            .map(c => ({ winner: c, wins: 0, pct: 0 })),
+        ].sort((a, b) => b.wins - a.wins || displayName(a.winner).localeCompare(displayName(b.winner)));
+        setRows(merged);
       })
       .catch(() => setError(true));
   }, []);
@@ -25,7 +35,9 @@ export default function PokalStatsScreen({ onBack }) {
     ? rows.filter(r => displayName(r.winner).toLowerCase().includes(search.toLowerCase()))
     : null;
 
-  const top = rows?.[0]?.wins ?? 1;
+  const top = rows?.find(r => r.wins > 0)?.wins ?? 1;
+  // Last rank that has wins (for showing rank numbers only on winners)
+  const lastWinRank = rows ? rows.filter(r => r.wins > 0).length : 0;
 
   return (
     <div className="lb-screen slide-up">
@@ -72,6 +84,7 @@ export default function PokalStatsScreen({ onBack }) {
             {filtered.map(r => {
               const rank = rows.indexOf(r) + 1;
               const isUser = r.winner === 'user';
+              const hasWins = r.wins > 0;
               const barColor = isUser ? 'var(--green)' : 'var(--accent)';
 
               return (
@@ -80,23 +93,27 @@ export default function PokalStatsScreen({ onBack }) {
                   className={`lb-row${isUser ? ' lb-row-mine' : ''}`}
                   style={{ gridTemplateColumns: '36px 1fr 56px 52px' }}
                 >
-                  <span className="lb-col-rank">{rank}</span>
+                  <span className="lb-col-rank" style={{ color: hasWins ? undefined : 'var(--border)' }}>
+                    {hasWins ? rank : '—'}
+                  </span>
                   <div style={{ overflow: 'hidden' }}>
                     <div
                       className="lb-col-name"
-                      style={{ color: isUser ? 'var(--green)' : undefined }}
+                      style={{ color: isUser ? 'var(--green)' : hasWins ? undefined : 'var(--text-dim)' }}
                     >
                       {displayName(r.winner)}
                     </div>
-                    <div style={{ height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
-                      <div style={{ height: '100%', width: `${(r.wins / top) * 100}%`, background: barColor, borderRadius: 2 }} />
-                    </div>
+                    {hasWins && (
+                      <div style={{ height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden', marginTop: 4 }}>
+                        <div style={{ height: '100%', width: `${(r.wins / top) * 100}%`, background: barColor, borderRadius: 2 }} />
+                      </div>
+                    )}
                   </div>
-                  <span style={{ textAlign: 'right', fontWeight: 800, color: isUser ? 'var(--green)' : 'var(--text)', alignSelf: 'center' }}>
-                    {r.wins}×
+                  <span style={{ textAlign: 'right', fontWeight: hasWins ? 800 : 400, color: hasWins ? (isUser ? 'var(--green)' : 'var(--text)') : 'var(--text-dim)', alignSelf: 'center' }}>
+                    {hasWins ? `${r.wins}×` : '—'}
                   </span>
                   <span style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: 12, alignSelf: 'center' }}>
-                    {r.pct.toFixed(1)}%
+                    {hasWins ? `${r.pct.toFixed(1)}%` : '—'}
                   </span>
                 </div>
               );
