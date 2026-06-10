@@ -438,9 +438,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
           {logDone && (
             <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {playoff ? (
-                <CareerPlayoffCard playoff={playoff} division={division} />
-              ) : (promoted || relegated) && (
+              {!playoff && (promoted || relegated) && (
                 <div className={`career-banner ${promoted ? 'career-banner--up' : 'career-banner--down'}`}>
                   {promoted
                     ? `⬆️  Aufstieg! Nächste Saison spielst du in der Bundesliga.`
@@ -484,6 +482,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
               </div>
 
               {table?.length > 0 && <CareerTable table={table} league={division} />}
+
+              {playoff && <CareerPlayoffCard playoff={playoff} division={division} />}
 
               {seasonHistory.length > 0 && (
                 <div className="career-history-card">
@@ -861,7 +861,7 @@ function CareerPlayoffCard({ playoff, division }) {
   return (
     <div className={`career-playoff-card ${won ? 'career-playoff--won' : 'career-playoff--lost'}`}>
       <div className="career-playoff-header">
-        <span className="career-playoff-label">Relegationsrunde</span>
+        <span className="career-playoff-label">Relegation</span>
         <span className="career-playoff-opponent">{opponent}</span>
       </div>
       <div className="career-playoff-legs">
