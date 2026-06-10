@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { fetchPokalStats } from '../utils/leaderboard';
 import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
+import { CLUBS as BL_CLUBS } from '../data/players';
+import { CLUBS as BL2_CLUBS } from '../data/players2bl';
 import './LeaderboardScreen.css';
+
+const ALL_CLUBS_MAP = { ...BL2_CLUBS, ...BL_CLUBS };
 
 const ALL_CLUBS = [...new Set(dfbPokalParticipants.map(e => e.club))].sort();
 
@@ -85,7 +89,7 @@ export default function PokalStatsScreen({ onBack }) {
               const rank = rows.indexOf(r) + 1;
               const isUser = r.winner === 'user';
               const hasWins = r.wins > 0;
-              const barColor = isUser ? 'var(--green)' : 'var(--red)';
+              const barColor = isUser ? 'var(--green)' : (ALL_CLUBS_MAP[r.winner]?.color ?? 'var(--red)');
 
               return (
                 <div
