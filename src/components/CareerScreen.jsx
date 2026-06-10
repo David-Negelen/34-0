@@ -254,7 +254,16 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
         </div>
 
         <div className="career-draft-right">
-          {filledCount < 11 && <div className="career-pool-label">Wähle deine Startelf</div>}
+          {filledCount === 11 ? (
+            <button
+              className="btn btn-primary btn-lg career-draft-start-btn-top"
+              onClick={() => onResult(slots)}
+            >
+              Saison starten →
+            </button>
+          ) : (
+            <div className="career-pool-label">Wähle deine Startelf</div>
+          )}
           {stuckSlots.length > 0 && (
             <div className="career-stuck-banner">
               Keine Spieler mehr für {stuckSlots.map(s => s.label).join(', ')} — wähle einen Ersatz (−5)

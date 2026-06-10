@@ -156,7 +156,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-bottom: 80px; /* space for sticky start bar */
 }
 
 /* ── Career card (draft pool) ── */
@@ -613,8 +612,15 @@
 .career-offer-status--used    { color: var(--green); }
 .career-offer-status--skipped { color: var(--text-dim); }
 
-/* ── Draft sticky start bar ── */
+/* ── Draft start button (desktop, top of pool) ── */
+.career-draft-start-btn-top {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* ── Draft sticky start bar (mobile only) ── */
 .career-draft-sticky-bar {
+  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -757,6 +763,11 @@
     border-left: none;
     border-top: 1px solid var(--border);
   }
+
+  /* On mobile: hide the top button, show the sticky bar instead */
+  .career-draft-start-btn-top { display: none; }
+  .career-draft-sticky-bar    { display: block; }
+  .career-pool-grid           { padding-bottom: 80px; }
 
   .career-result-body,
   .career-transfer-layout {
