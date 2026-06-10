@@ -351,6 +351,7 @@
 .lt-zone-uel        { border-left-color: #00bcd4; }
 .lt-zone-conference { border-left-color: #66bb6a; }
 .lt-zone-playoff    { border-left-color: #ff9800; }
+.lt-zone-playoff-up { border-left-color: #1565c0; }
 .lt-zone-relegated  { border-left-color: var(--red); }
 .lt-zone-mid        { border-left-color: transparent; }
 
