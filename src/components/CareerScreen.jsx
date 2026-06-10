@@ -443,14 +443,9 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={onContinue}>
-                  Transferfenster →
-                </button>
-                <button className="btn btn-ghost btn-sm" onClick={onEnd}>
-                  Karriere beenden
-                </button>
-              </div>
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={onContinue}>
+                Transferfenster →
+              </button>
 
             </div>
           )}
