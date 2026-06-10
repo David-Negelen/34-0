@@ -869,6 +869,7 @@
   .career-result-body,
   .career-transfer-layout {
     flex-direction: column;
+    align-items: stretch;
     padding: 12px 10px;
   }
 
@@ -876,6 +877,7 @@
   .career-history-card { padding: 12px; }
 
   .career-result-left,
+  .career-result-right,
   .career-transfer-left {
     width: 100%;
     min-width: 0;
