@@ -138,7 +138,7 @@ export default function CareerScreen() {
 
 function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
   return (
-    <div className="career-screen slide-up">
+    <div className="career-screen">
       <header className="career-header">
         <button className="btn btn-ghost btn-sm" onClick={onBack}>← Zurück</button>
         <div className="career-header-title">
@@ -359,7 +359,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
   const GD = (GF ?? 0) - (GA ?? 0);
 
   return (
-    <div className="career-screen slide-up">
+    <div className="career-screen">
       <header className="career-result-header">
         <div className="career-result-header-inner">
           <div>
@@ -496,7 +496,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
   const usedCount = transferOffers.filter(o => o.used).length;
 
   return (
-    <div className="career-screen slide-up">
+    <div className="career-screen">
       <header className="career-transfer-header">
         <div className="career-transfer-header-left">
           <span className="career-eyebrow">KARRIERE · TRANSFERFENSTER</span>
@@ -816,7 +816,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   const pastPlayers = allPlayers.filter(p => !finalIds.has(p.id));
 
   return (
-    <div className="career-screen slide-up">
+    <div className="career-screen">
       <header className="career-header">
         <div />
         <div className="career-header-title">
