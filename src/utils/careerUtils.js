@@ -22,6 +22,22 @@ function attachSeasonNear(player, targetRating) {
   return { ...player, seasonRating: s.rating, spunClub: s.club, spunSeason: s.season, displayRating: s.rating };
 }
 
+// Pick a season using weighted random selection biased toward targetRating.
+// Seasons near the target are more likely but any season can win, giving natural spread.
+function attachSeasonWeighted(player, targetRating) {
+  const { seasons } = player;
+  const sigma = 10;
+  const weights = seasons.map(s => Math.exp(-0.5 * ((s.rating - targetRating) / sigma) ** 2));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  let chosen = seasons[seasons.length - 1];
+  for (let i = 0; i < seasons.length; i++) {
+    r -= weights[i];
+    if (r <= 0) { chosen = seasons[i]; break; }
+  }
+  return { ...player, seasonRating: chosen.rating, spunClub: chosen.club, spunSeason: chosen.season, displayRating: chosen.rating };
+}
+
 // Generate a pool of `count` players for the initial career draft.
 // Guarantees at least (slotCount + 1) eligible players per slot type so the
 // user can never be stranded with no compatible player for an open slot.
@@ -33,10 +49,9 @@ export function generateCareerDraftPool(players, formation, count = 25) {
     slotTypeCounts[s.type] = (slotTypeCounts[s.type] || 0) + 1;
   });
 
-  // Shuffle first for randomness among equally-close players, then sort by
-  // proximity to the target rating so the pool clusters around 65.
-  const shuffled = shuffle(players.filter(p => p.seasons?.length).map(p => attachSeasonNear(p, DRAFT_TARGET)))
-    .sort((a, b) => Math.abs(a.seasonRating - DRAFT_TARGET) - Math.abs(b.seasonRating - DRAFT_TARGET));
+  // Weighted random season selection biased toward 65 — gives natural spread rather than
+  // everyone landing at exactly 65.
+  const shuffled = shuffle(players.filter(p => p.seasons?.length).map(p => attachSeasonWeighted(p, DRAFT_TARGET)));
 
   const chosen = [];
   const usedIds = new Set();
