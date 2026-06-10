@@ -85,7 +85,7 @@ export default function PokalStatsScreen({ onBack }) {
               const rank = rows.indexOf(r) + 1;
               const isUser = r.winner === 'user';
               const hasWins = r.wins > 0;
-              const barColor = isUser ? 'var(--green)' : 'var(--accent)';
+              const barColor = isUser ? 'var(--green)' : 'var(--red)';
 
               return (
                 <div
