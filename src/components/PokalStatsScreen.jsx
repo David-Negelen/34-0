@@ -9,20 +9,26 @@ const ALL_CLUBS_MAP = { ...BL2_CLUBS, ...BL_CLUBS };
 
 const ALL_CLUBS = [...new Set(dfbPokalParticipants.map(e => e.club))].sort();
 
+const CACHE_KEY = 'pokal_stats_v1';
+
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null'); } catch { return null; }
+}
+
 function displayName(winner) {
   return winner === 'user' ? 'Deine 11' : winner;
 }
 
 export default function PokalStatsScreen({ onBack }) {
-  const [rows, setRows] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [rows, setRows] = useState(() => readCache()?.rows ?? null);
+  const [total, setTotal] = useState(() => readCache()?.total ?? 0);
   const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchPokalStats()
       .then(data => {
-        setTotal(data.reduce((s, r) => s + r.wins, 0));
+        const t = data.reduce((s, r) => s + r.wins, 0);
         const winMap = new Map(data.map(r => [r.winner, r]));
         const merged = [
           ...data,
@@ -30,9 +36,11 @@ export default function PokalStatsScreen({ onBack }) {
             .filter(c => !winMap.has(c))
             .map(c => ({ winner: c, wins: 0, pct: 0 })),
         ].sort((a, b) => b.wins - a.wins || displayName(a.winner).localeCompare(displayName(b.winner)));
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ rows: merged, total: t })); } catch {}
+        setTotal(t);
         setRows(merged);
       })
-      .catch(() => setError(true));
+      .catch(() => { if (!readCache()) setError(true); });
   }, []);
 
   const filtered = rows
