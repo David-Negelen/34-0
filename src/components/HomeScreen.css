@@ -38,6 +38,18 @@
 }
 
 
+.home-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+.home-footer-link {
+  font-size: 11px;
+  color: #333;
+  text-decoration: none;
+  letter-spacing: 0.4px;
+}
+.home-footer-link:hover { color: var(--text-muted); }
+
 .home-leagues {
   display: flex;
   flex-direction: column;

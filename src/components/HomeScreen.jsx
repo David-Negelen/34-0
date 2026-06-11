@@ -48,6 +48,10 @@ export default function HomeScreen() {
           </button>
         </div>
       </div>
+
+      <footer className="home-footer">
+        <a href="/datenschutz.html" className="home-footer-link">Datenschutz</a>
+      </footer>
     </div>
   );
 }
