@@ -58,23 +58,31 @@ export async function submitPokalWin(winner) {
   return res.json();
 }
 
+let _pokalCache = null;
+let _pokalCacheTs = 0;
+const POKAL_CACHE_TTL = 5 * 60 * 1000;
+
 export async function fetchPokalStats() {
-  const items = [];
-  let page = 1;
-  while (true) {
-    const res = await fetch(`${PB_URL}/api/collections/pokal_stats/records?perPage=500&page=${page}`);
-    if (!res.ok) throw new Error('Fetch failed');
-    const data = await res.json();
-    items.push(...data.items);
-    if (page >= data.totalPages) break;
-    page++;
-  }
+  if (_pokalCache && Date.now() - _pokalCacheTs < POKAL_CACHE_TTL) return _pokalCache;
+
+  const fetchPage = p =>
+    fetch(`${PB_URL}/api/collections/pokal_stats/records?perPage=500&page=${p}`)
+      .then(r => { if (!r.ok) throw new Error('Fetch failed'); return r.json(); });
+
+  const first = await fetchPage(1);
+  const rest = first.totalPages > 1
+    ? await Promise.all(Array.from({ length: first.totalPages - 1 }, (_, i) => fetchPage(i + 2)))
+    : [];
+
+  const items = [first, ...rest].flatMap(d => d.items);
   const counts = {};
-  for (const r of items) {
-    counts[r.winner] = (counts[r.winner] ?? 0) + 1;
-  }
+  for (const r of items) counts[r.winner] = (counts[r.winner] ?? 0) + 1;
   const total = items.length;
-  return Object.entries(counts)
+
+  _pokalCache = Object.entries(counts)
     .map(([winner, wins]) => ({ winner, wins, pct: total ? (wins / total) * 100 : 0 }))
     .sort((a, b) => b.wins - a.wins);
+  _pokalCacheTs = Date.now();
+
+  return _pokalCache;
 }
