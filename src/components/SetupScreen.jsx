@@ -140,6 +140,8 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
 
         <footer className="setup-footer">
           <span>Inspiriert von 38-0.app/game</span>
+          <span className="setup-footer-sep"> · </span>
+          <a href="/datenschutz.html" className="setup-footer-link">Datenschutz</a>
         </footer>
       </div>
     </div>

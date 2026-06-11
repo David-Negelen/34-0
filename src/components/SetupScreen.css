@@ -363,6 +363,12 @@
   padding-top: 4px;
   letter-spacing: 0.4px;
 }
+.setup-footer-sep { color: #222; }
+.setup-footer-link {
+  color: #333;
+  text-decoration: none;
+}
+.setup-footer-link:hover { color: var(--text-muted); }
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
