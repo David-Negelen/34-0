@@ -5,6 +5,7 @@ export default function HomeScreen() {
   const navigate = useNavigate();
   return (
     <div className="home-screen">
+      <div className="home-body">
       <header className="home-header">
         <div className="home-title">
           <span className="title-num">34</span>
@@ -47,6 +48,7 @@ export default function HomeScreen() {
             <span className="league-card-sub">Start in der 2. Liga · Aufstieg möglich</span>
           </button>
         </div>
+      </div>
       </div>
 
       <footer className="home-footer">
