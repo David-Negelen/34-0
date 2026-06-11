@@ -58,6 +58,12 @@ export async function submitPokalWin(winner) {
   return res.json();
 }
 
+const POKAL_CACHE_KEY = 'pokal_raw_v1';
+
+export function getCachedPokalStats() {
+  try { return JSON.parse(localStorage.getItem(POKAL_CACHE_KEY) ?? 'null'); } catch { return null; }
+}
+
 export async function fetchPokalStats() {
   const fetchPage = p =>
     fetch(`${PB_URL}/api/collections/pokal_stats/records?perPage=500&page=${p}`)
@@ -73,7 +79,10 @@ export async function fetchPokalStats() {
   for (const r of items) counts[r.winner] = (counts[r.winner] ?? 0) + 1;
   const total = items.length;
 
-  return Object.entries(counts)
+  const result = Object.entries(counts)
     .map(([winner, wins]) => ({ winner, wins, pct: total ? (wins / total) * 100 : 0 }))
     .sort((a, b) => b.wins - a.wins);
+
+  try { localStorage.setItem(POKAL_CACHE_KEY, JSON.stringify(result)); } catch {}
+  return result;
 }

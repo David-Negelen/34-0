@@ -10,7 +10,7 @@ import PokalDrawScreen from './components/PokalDrawScreen';
 import PokalMatchScreen from './components/PokalMatchScreen';
 import PokalRoundResultsScreen from './components/PokalRoundResultsScreen';
 import { buildPokalField, drawPokalRound } from './utils/simulation';
-import { submitPokalWin } from './utils/leaderboard';
+import { submitPokalWin, fetchPokalStats } from './utils/leaderboard';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import PokalStatsScreen from './components/PokalStatsScreen';
 import CareerScreen from './components/CareerScreen';
@@ -276,6 +276,7 @@ function PokalStatsPage() {
 }
 
 export default function App() {
+  useEffect(() => { fetchPokalStats().catch(() => {}); }, []);
   return (
     <Routes>
       <Route path="/" element={<HomeScreen />} />

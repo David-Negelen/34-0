@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchPokalStats } from '../utils/leaderboard';
+import { fetchPokalStats, getCachedPokalStats } from '../utils/leaderboard';
 import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
 import { CLUBS as BL_CLUBS } from '../data/players';
 import { CLUBS as BL2_CLUBS } from '../data/players2bl';
@@ -9,38 +9,31 @@ const ALL_CLUBS_MAP = { ...BL2_CLUBS, ...BL_CLUBS };
 
 const ALL_CLUBS = [...new Set(dfbPokalParticipants.map(e => e.club))].sort();
 
-const CACHE_KEY = 'pokal_stats_v1';
-
-function readCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null'); } catch { return null; }
-}
-
 function displayName(winner) {
   return winner === 'user' ? 'Deine 11' : winner;
 }
 
+function buildRows(data) {
+  const winMap = new Map(data.map(r => [r.winner, r]));
+  return [
+    ...data,
+    ...ALL_CLUBS.filter(c => !winMap.has(c)).map(c => ({ winner: c, wins: 0, pct: 0 })),
+  ].sort((a, b) => b.wins - a.wins || displayName(a.winner).localeCompare(displayName(b.winner)));
+}
+
 export default function PokalStatsScreen({ onBack }) {
-  const [rows, setRows] = useState(() => readCache()?.rows ?? null);
-  const [total, setTotal] = useState(() => readCache()?.total ?? 0);
+  const [rows, setRows] = useState(() => { const c = getCachedPokalStats(); return c ? buildRows(c) : null; });
+  const [total, setTotal] = useState(() => getCachedPokalStats()?.reduce((s, r) => s + r.wins, 0) ?? 0);
   const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchPokalStats()
       .then(data => {
-        const t = data.reduce((s, r) => s + r.wins, 0);
-        const winMap = new Map(data.map(r => [r.winner, r]));
-        const merged = [
-          ...data,
-          ...ALL_CLUBS
-            .filter(c => !winMap.has(c))
-            .map(c => ({ winner: c, wins: 0, pct: 0 })),
-        ].sort((a, b) => b.wins - a.wins || displayName(a.winner).localeCompare(displayName(b.winner)));
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ rows: merged, total: t })); } catch {}
-        setTotal(t);
-        setRows(merged);
+        setTotal(data.reduce((s, r) => s + r.wins, 0));
+        setRows(buildRows(data));
       })
-      .catch(() => { if (!readCache()) setError(true); });
+      .catch(() => { if (!getCachedPokalStats()) setError(true); });
   }, []);
 
   const filtered = rows
