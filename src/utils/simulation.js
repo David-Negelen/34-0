@@ -197,7 +197,7 @@ function buildHistoricOpponents(league, allPlayers = []) {
   // Fill any remaining slots (edge case: not enough unique clubs per tier)
   let pool = all.filter(e => !usedClubs.has(e.club));
   while (selected.length < 17 && pool.length > 0) {
-    const e = pickWeighted(pool, primW);
+    const e = pickWeighted(pool, w);
     selected.push(e);
     usedClubs.add(e.club);
     pool = pool.filter(p => !usedClubs.has(p.club));

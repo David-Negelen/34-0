@@ -116,7 +116,7 @@ function reducer(state, action) {
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return { ...defaultState, ...JSON.parse(raw) };
   } catch {}
   return defaultState;
 }
