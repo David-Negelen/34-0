@@ -132,7 +132,7 @@ export default function CareerScreen() {
         onContinue={() => {
           const divPlayers = getPlayers(newDivision);
           const filled = state.slots.filter(s => s.player);
-          const excludeIds = new Set(state.allPlayers.map(p => p.id));
+          const excludeIds = new Set(filled.map(s => s.player.id));
           const teamAvg = filled.length
             ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? s.player.seasonRating ?? 0), 0) / filled.length)
             : null;
