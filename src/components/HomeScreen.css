@@ -44,7 +44,7 @@
 }
 .home-footer-link {
   font-size: 11px;
-  color: #333;
+  color: var(--text-dim);
   text-decoration: none;
   letter-spacing: 0.4px;
 }
