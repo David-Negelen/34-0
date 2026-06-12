@@ -143,7 +143,6 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
             {clubChallenge ? (
               <div className="club-challenge-active">
                 <span className="club-challenge-name">{clubChallenge}</span>
-                <span className="club-challenge-unofficial">Inoffiziell</span>
                 <button className="club-challenge-clear" onClick={() => { onUpdate({ clubChallenge: null }); setShowPicker(false); }}>✕</button>
               </div>
             ) : (
@@ -152,7 +151,7 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
                 onClick={() => setShowPicker(v => !v)}
               >
                 <span className="opt-name">Verein wählen</span>
-                <span className="opt-sub">Nur Spieler eines Vereins – nicht in der Rangliste gewertet</span>
+                <span className="opt-sub">Nur Spieler eines Vereins</span>
               </button>
             )}
             {showPicker && !clubChallenge && (
