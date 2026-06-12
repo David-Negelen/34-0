@@ -9,6 +9,7 @@ import PokalResultScreen from './components/PokalResultScreen';
 import PokalDrawScreen from './components/PokalDrawScreen';
 import PokalMatchScreen from './components/PokalMatchScreen';
 import PokalRoundResultsScreen from './components/PokalRoundResultsScreen';
+import PokalPreviewScreen from './components/PokalPreviewScreen';
 import { buildPokalField, drawPokalRound } from './utils/simulation';
 import { submitPokalWin, fetchPokalStats } from './utils/leaderboard';
 import LeaderboardScreen from './components/LeaderboardScreen';
@@ -226,7 +227,17 @@ function PokalGame() {
         <PokalDrawScreen
           matchups={pk.matchups}
           round={pk.round}
-          onContinue={() => setPk(p => ({ ...p, phase: 'match' }))}
+          onContinue={() => setPk(p => ({ ...p, phase: 'preview' }))}
+        />
+      );
+    }
+    if (pk.phase === 'preview') {
+      const matchup = pk.matchups.find(m => m.isPlayerMatch);
+      return (
+        <PokalPreviewScreen
+          matchup={matchup}
+          round={pk.round}
+          onStart={() => setPk(p => ({ ...p, phase: 'match' }))}
         />
       );
     }
