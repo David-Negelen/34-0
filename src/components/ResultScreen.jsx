@@ -205,18 +205,12 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                     const vals = Array.from({ length: 18 }, (_, i) => g(i + 1));
                     const total = vals.reduce((a, b) => a + b, 0);
                     const diff = predictedPos - pos; // positive = better than predicted
-                    const label = diff > 1 ? 'Überperformt' : diff < -1 ? 'Unterperformt' : 'Prognose getroffen';
-                    const mod = diff > 1 ? 'lp-chance-over' : diff < -1 ? 'lp-chance-under' : 'lp-chance-exact';
-                    // Cumulative tail: P(this result or better/worse), so the complement makes sense
-                    let pct;
-                    if (diff > 1) {
-                      pct = Math.max(1, Math.round(vals.slice(0, pos).reduce((a, b) => a + b, 0) / total * 100));
-                    } else if (diff < -1) {
-                      pct = Math.max(1, Math.round(vals.slice(pos - 1).reduce((a, b) => a + b, 0) / total * 100));
-                    } else {
-                      const from = Math.max(0, pos - 2), to = Math.min(18, pos + 1);
-                      pct = Math.max(1, Math.round(vals.slice(from, to).reduce((a, b) => a + b, 0) / total * 100));
-                    }
+                    const label = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '±0';
+                    const mod = diff > 0 ? 'lp-chance-over' : diff < 0 ? 'lp-chance-under' : 'lp-chance-exact';
+                    // Cumulative tail probability: P(this delta or more extreme)
+                    const pct = diff >= 0
+                      ? Math.max(1, Math.round(vals.slice(0, pos).reduce((a, b) => a + b, 0) / total * 100))
+                      : Math.max(1, Math.round(vals.slice(pos - 1).reduce((a, b) => a + b, 0) / total * 100));
                     return <div className={`lp-chance ${mod}`}>{label} · {pct}% Chance</div>;
                   })()}
                 </div>
