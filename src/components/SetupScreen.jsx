@@ -151,7 +151,7 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
                 onClick={() => setShowPicker(v => !v)}
               >
                 <span className="opt-name">Verein wählen</span>
-                <span className="opt-sub">Nur Spieler eines Vereins</span>
+                <span className="opt-sub">Nur Spieler eines Vereins – ohne Ranglistenwertung</span>
               </button>
             )}
             {showPicker && !clubChallenge && (
