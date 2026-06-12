@@ -46,9 +46,9 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
       <SeasonPrognoseScreen
         slots={prognoseSlots}
         league={league}
-        onStart={() => {
+        onStart={(predictedPos) => {
           const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(prognoseSlots, league, players);
-          setResult({ ...result, achievements: getAchievements(result, prognoseSlots, league), table, playerMatches, playerStats, tableHistory });
+          setResult({ ...result, achievements: getAchievements(result, prognoseSlots, league), table, playerMatches, playerStats, tableHistory, predictedPos });
         }}
       />
     );

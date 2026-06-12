@@ -75,7 +75,7 @@ export default function CareerScreen() {
         slots={pendingPrognose.slots}
         league={pendingPrognose.division}
         seasonLabel={`Saison ${pendingPrognose.seasonNumber}`}
-        onStart={() => {
+        onStart={(predictedPos) => {
           const players = getPlayers(pendingPrognose.division);
           const { result, table, playerMatches, playerStats, tableHistory } =
             simulateFullLeague(pendingPrognose.slots, pendingPrognose.division, players);
@@ -85,7 +85,7 @@ export default function CareerScreen() {
           career.setResult({
             ...result,
             achievements: getAchievements(result, pendingPrognose.slots, pendingPrognose.division),
-            table, playerMatches, playerStats, tableHistory, playoff,
+            table, playerMatches, playerStats, tableHistory, playoff, predictedPos,
           });
           setPendingPrognose(null);
         }}

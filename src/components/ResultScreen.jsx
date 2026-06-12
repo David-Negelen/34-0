@@ -29,7 +29,7 @@ const ACHIEVEMENT_ICONS = {
 export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
-  const { W, D, L, GF, GA, pts, pos = 18, achievements, table, playerMatches, playerStats, tableHistory } = result;
+  const { W, D, L, GF, GA, pts, pos = 18, predictedPos, achievements, table, playerMatches, playerStats, tableHistory } = result;
   const [sharing, setSharing] = useState(false);
   const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
   const [tableTab, setTableTab] = useState('table');
@@ -179,7 +179,10 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                 </div>
 
                 <div className="league-position-bar">
-                  <div className="lp-label">Geschätzter Tabellenplatz</div>
+                  <div className="lp-label">
+                    Geschätzter Tabellenplatz
+                    {predictedPos != null && <span className="lp-predicted">Prognose: Platz {predictedPos}</span>}
+                  </div>
                   <div className="lp-bar">
                     <div
                       className="lp-marker"
@@ -196,6 +199,13 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                     <span className="lp-key-item europe">{league === '2bl' ? 'Aufstieg' : 'Europa'}</span>
                     <span className="lp-key-item title">Meister</span>
                   </div>
+                  {predictedPos != null && (() => {
+                    const sigma = 3.5;
+                    const g = x => Math.exp(-0.5 * ((x - predictedPos) / sigma) ** 2);
+                    const total = Array.from({ length: 18 }, (_, i) => g(i + 1)).reduce((a, b) => a + b, 0);
+                    const pct = Math.max(1, Math.round((g(pos) / total) * 100));
+                    return <div className="lp-chance">{pct}% Chance</div>;
+                  })()}
                 </div>
               </div>
 

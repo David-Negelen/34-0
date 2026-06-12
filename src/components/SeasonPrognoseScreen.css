@@ -145,6 +145,14 @@
   z-index: 2;
 }
 
+.sprg-pos-est {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+
 .sprg-pos-key {
   display: flex;
   justify-content: space-between;
@@ -162,13 +170,6 @@
 .sprg-key-eur { color: rgba(80, 140, 220, 0.9); }
 .sprg-key-top { color: #c8a84b; }
 
-.sprg-pos-est {
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--text);
-  letter-spacing: -0.5px;
-  text-align: center;
-}
 
 /* ── Footer ── */
 .sprg-footer {

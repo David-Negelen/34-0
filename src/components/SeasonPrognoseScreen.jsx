@@ -20,7 +20,7 @@ function RatingBar({ label, value }) {
   );
 }
 
-export default function SeasonPrognoseScreen({ slots, league, seasonLabel, onStart }) {
+export default function SeasonPrognoseScreen({ slots, league, seasonLabel, onStart, onStartWithPos }) {
   const { overall, gk, def, mid, att } = calcSquadRatings(slots);
   const pos = overall != null ? estimatePos(overall, league) : null;
   const markerPct = pos != null ? Math.max(2, Math.min(96, 2 + ((18 - pos) / 17) * 94)) : 50;
@@ -63,12 +63,12 @@ export default function SeasonPrognoseScreen({ slots, league, seasonLabel, onSta
             <span className="sprg-key-item sprg-key-eur">{is2bl ? 'Aufstieg' : 'Europa'}</span>
             <span className="sprg-key-item sprg-key-top">Meister</span>
           </div>
-          <div className="sprg-pos-est">~Platz {pos}</div>
+          <div className="sprg-pos-est">Platz {pos}</div>
         </div>
       )}
 
       <div className="sprg-footer">
-        <button className="btn btn-primary sprg-start-btn" onClick={onStart}>
+        <button className="btn btn-primary sprg-start-btn" onClick={() => onStart(pos)}>
           Saison starten →
         </button>
       </div>
