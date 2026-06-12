@@ -9,8 +9,8 @@ export const SLOT_COMPAT = {
   AM: ['AM', 'CM'],
   RW: ['RW'],
   LW: ['LW'],
-  RM: ['RM', 'RW', 'CM'],
-  LM: ['LM', 'LW', 'CM'],
+  RM: ['RM', 'RW'],
+  LM: ['LM', 'LW'],
   ST: ['ST'],
 };
 
