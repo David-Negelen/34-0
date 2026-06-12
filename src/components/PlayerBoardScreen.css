@@ -1,0 +1,35 @@
+.pb-row {
+  grid-template-columns: 36px 1fr 72px 44px;
+}
+
+.pb-col-pos {
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pb-club {
+  font-size: 11px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.pb-pos-row {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pb-load-more {
+  width: 100%;
+  margin-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .pb-row {
+    grid-template-columns: 30px 1fr 56px 38px;
+  }
+}

@@ -52,6 +52,7 @@ export default function HomeScreen() {
       </div>
 
       <footer className="home-footer">
+        <button className="home-footer-link" onClick={() => navigate('/spieler')}>Spielerdatenbank</button>
         <a href="/datenschutz.html" className="home-footer-link">Datenschutz</a>
       </footer>
     </div>

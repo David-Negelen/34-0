@@ -14,6 +14,7 @@ import { submitPokalWin, fetchPokalStats } from './utils/leaderboard';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import PokalStatsScreen from './components/PokalStatsScreen';
 import CareerScreen from './components/CareerScreen';
+import PlayerBoardScreen from './components/PlayerBoardScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
 import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from './data/players2bl';
 
@@ -275,6 +276,11 @@ function PokalStatsPage() {
   return <PokalStatsScreen onBack={() => navigate(-1)} />;
 }
 
+function PlayerBoardPage() {
+  const navigate = useNavigate();
+  return <PlayerBoardScreen onBack={() => navigate(-1)} />;
+}
+
 export default function App() {
   useEffect(() => { fetchPokalStats().catch(() => {}); }, []);
   return (
@@ -285,6 +291,7 @@ export default function App() {
       <Route path="/karriere" element={<CareerScreen />} />
       <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
       <Route path="/pokal-stats" element={<PokalStatsPage />} />
+      <Route path="/spieler" element={<PlayerBoardPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
