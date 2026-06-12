@@ -2,6 +2,7 @@ import { useState } from 'react';
 import FormationBoard from './FormationBoard';
 import SpinPanel from './SpinPanel';
 import RatingsPanel from './RatingsPanel';
+import SeasonPrognoseScreen from './SeasonPrognoseScreen';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import './DraftScreen.css';
 
@@ -13,6 +14,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
   // Position-first: which slot the user has selected on the pitch
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [spinActive, setSpinActive] = useState(false);
+  const [prognoseSlots, setPrognoseSlots] = useState(null);
 
   function handleSlotClick(slotId) {
     setSelectedSlotId(prev => prev === slotId ? null : slotId);
@@ -31,14 +33,26 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
       if (league === 'pokal') {
         setResult({ mode: 'pokal', slots: updatedSlots });
       } else {
-        const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(updatedSlots, league, players);
-        setResult({ ...result, achievements: getAchievements(result, updatedSlots, league), table, playerMatches, playerStats, tableHistory });
+        setPrognoseSlots(updatedSlots);
       }
     }
   }
 
   const total = slots.length;
   const pct = Math.round((filledCount / total) * 100);
+
+  if (prognoseSlots) {
+    return (
+      <SeasonPrognoseScreen
+        slots={prognoseSlots}
+        league={league}
+        onStart={() => {
+          const { result, table, playerMatches, playerStats, tableHistory } = simulateFullLeague(prognoseSlots, league, players);
+          setResult({ ...result, achievements: getAchievements(result, prognoseSlots, league), table, playerMatches, playerStats, tableHistory });
+        }}
+      />
+    );
+  }
 
   return (
     <div className="draft-screen">
