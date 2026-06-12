@@ -611,7 +611,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
           ))}
 
           <button
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-lg career-transfer-inline-btn"
             style={{ width: '100%', marginTop: 20 }}
             onClick={onStartSeason}
           >
@@ -619,6 +619,12 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
           </button>
         </div>
 
+      </div>
+
+      <div className="career-transfer-sticky-bar">
+        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={onStartSeason}>
+          Saison {seasonNumber} starten →
+        </button>
       </div>
     </div>
   );

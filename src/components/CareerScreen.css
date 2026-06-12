@@ -840,6 +840,19 @@
 }
 
 
+/* ── Transfer sticky start bar (mobile only) ── */
+.career-transfer-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px env(safe-area-inset-bottom, 0px);
+}
+
 /* ── Responsive ── */
 @media (max-width: 800px) {
   .career-draft-layout {
@@ -895,4 +908,8 @@
     align-items: flex-start;
     gap: 12px;
   }
+
+  .career-transfer-sticky-bar { display: block; }
+  .career-transfer-inline-btn { display: none; }
+  .career-transfer-right { padding-bottom: 80px; }
 }
