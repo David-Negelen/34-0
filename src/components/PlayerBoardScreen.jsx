@@ -11,6 +11,16 @@ const ALL_SEASONS = [
 
 const POSITIONS = ['GK', 'CB', 'LB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
 
+function normalize(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss');
+}
+
+function matchesSearch(name, query) {
+  const n = normalize(name);
+  const q = normalize(query);
+  return n.startsWith(q) || n.split(/\s+/).some(w => w.startsWith(q));
+}
+
 const POS_DE = { GK: 'TW', CB: 'IV', LB: 'LV', RB: 'RV', DM: 'DM', CM: 'ZM', AM: 'OM', LW: 'LA', RW: 'RA', ST: 'ST' };
 const PAGE_SIZE = 100;
 
@@ -30,8 +40,8 @@ export default function PlayerBoardScreen({ onBack }) {
     if (league !== 'all') list = list.filter(s => s._league === league);
     if (pos) list = list.filter(s => s.player.positions.includes(pos));
     if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter(s => s.player.name.toLowerCase().includes(q));
+      const q = search.trim();
+      list = list.filter(s => matchesSearch(s.player.name, q));
     }
     return [...list].sort((a, b) => b.rating - a.rating);
   }, [league, pos, search]);
