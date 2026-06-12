@@ -10,6 +10,8 @@ const ALL_SEASONS = [
 ].flatMap(p => p.seasons.map(s => ({ player: p, club: s.club, season: s.season, rating: s.rating, _league: p._league })));
 
 const POSITIONS = ['GK', 'CB', 'LB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
+
+const POS_DE = { GK: 'TW', CB: 'IV', LB: 'LV', RB: 'RV', DM: 'DM', CM: 'ZM', AM: 'OM', LW: 'LA', RW: 'RA', ST: 'ST' };
 const PAGE_SIZE = 100;
 
 export default function PlayerBoardScreen({ onBack }) {
@@ -79,7 +81,7 @@ export default function PlayerBoardScreen({ onBack }) {
               className={`filter-btn${pos === p ? ' filter-btn-active' : ''}`}
               onClick={() => setFilter(() => setPos(pos === p ? '' : p))}
             >
-              {p}
+              {POS_DE[p]}
             </button>
           ))}
         </div>
@@ -108,10 +110,10 @@ export default function PlayerBoardScreen({ onBack }) {
                     <div className="pb-club">{s.club} · {s.season}</div>
                   </div>
                   <span className="pb-col-pos" style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: 11 }}>
-                    {primaryPos}
+                    {POS_DE[primaryPos] ?? primaryPos}
                   </span>
                   <span className="pb-col-pos" style={{ alignSelf: 'center', color: 'var(--text-dim)', fontSize: 11 }}>
-                    {secondaryPos.join(' · ')}
+                    {secondaryPos.map(p => POS_DE[p] ?? p).join(' · ')}
                   </span>
                   <span className="lb-col-ovr" style={{ textAlign: 'right', alignSelf: 'center' }}>
                     {s.rating}
