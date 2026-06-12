@@ -23,7 +23,6 @@ export default function PokalDrawScreen({ matchups, round, onContinue }) {
           <div
             key={i}
             className={`draw-pair${m.isPlayerMatch ? ' draw-pair--you' : ''}`}
-            style={{ animationDelay: `${Math.min(i, 20) * 60}ms` }}
           >
             <span className="draw-team">{m.home}</span>
             <span className="draw-vs">vs</span>

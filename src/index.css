@@ -212,16 +212,6 @@ h1, h2, h3, h4 {
 }
 
 /* ── Animations ── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -231,8 +221,8 @@ h1, h2, h3, h4 {
   to { transform: rotate(360deg); }
 }
 
-.fade-in { animation: fadeIn 0.25s ease both; }
-.slide-up { animation: slideUp 0.35s ease both; }
+.fade-in { }
+.slide-up { }
 .pulsing { animation: pulse 1.4s ease infinite; }
 
 /* ── Overlay ── */
@@ -262,7 +252,6 @@ h1, h2, h3, h4 {
   padding: 28px;
   width: 100%;
   max-width: 420px;
-  animation: slideUp 0.25s ease both;
   box-shadow: var(--shadow-lg);
 }
 

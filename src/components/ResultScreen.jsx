@@ -29,7 +29,7 @@ const ACHIEVEMENT_ICONS = {
 export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome }) {
   const { setup, draft, result } = state;
   const { slots } = draft;
-  const { W, D, L, GF, GA, pts, pos = 18, achievements, table, playerMatches, playerStats, tableHistory } = result;
+  const { W, D, L, GF, GA, pts, pos = 18, predictedPos, achievements, table, playerMatches, playerStats, tableHistory } = result;
   const [sharing, setSharing] = useState(false);
   const [matchLogDone, setMatchLogDone] = useState(!playerMatches?.length);
   const [tableTab, setTableTab] = useState('table');
@@ -179,7 +179,10 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                 </div>
 
                 <div className="league-position-bar">
-                  <div className="lp-label">Geschätzter Tabellenplatz</div>
+                  <div className="lp-label">
+                    Geschätzter Tabellenplatz
+                    {predictedPos != null && <span className="lp-predicted">Prognose: Platz {predictedPos}</span>}
+                  </div>
                   <div className="lp-bar">
                     <div
                       className="lp-marker"

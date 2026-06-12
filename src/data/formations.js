@@ -4,13 +4,13 @@ export const SLOT_COMPAT = {
   RB: ['RB'],
   CB: ['CB'],
   LB: ['LB'],
-  DM: ['DM', 'CM'],
-  CM: ['CM', 'DM', 'AM'],
-  AM: ['AM', 'CM'],
+  DM: ['DM'],
+  CM: ['CM'],
+  AM: ['AM'],
   RW: ['RW'],
   LW: ['LW'],
-  RM: ['RM', 'RW', 'CM'],
-  LM: ['LM', 'LW', 'CM'],
+  RM: ['RM', 'RW'],
+  LM: ['LM', 'LW'],
   ST: ['ST'],
 };
 

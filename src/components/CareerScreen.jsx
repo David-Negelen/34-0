@@ -6,6 +6,7 @@ import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE, ratingClass } from '../utils/playerUtils';
+import SeasonPrognoseScreen from './SeasonPrognoseScreen';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import './CareerScreen.css';
@@ -58,6 +59,7 @@ export default function CareerScreen() {
   const career = useCareerState();
   const { state } = career;
   const [endData, setEndData] = useState(null);
+  const [pendingPrognose, setPendingPrognose] = useState(null);
 
   function handleEndCareer() {
     const currentRecord = state.result
@@ -65,6 +67,30 @@ export default function CareerScreen() {
       : null;
     const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
     setEndData({ history, slots: state.slots, allPlayers: state.allPlayers });
+  }
+
+  if (pendingPrognose) {
+    return (
+      <SeasonPrognoseScreen
+        slots={pendingPrognose.slots}
+        league={pendingPrognose.division}
+        seasonLabel={`Saison ${pendingPrognose.seasonNumber}`}
+        onStart={(predictedPos) => {
+          const players = getPlayers(pendingPrognose.division);
+          const { result, table, playerMatches, playerStats, tableHistory } =
+            simulateFullLeague(pendingPrognose.slots, pendingPrognose.division, players);
+          const needsPlayoff = (result.pos === 3 && pendingPrognose.division === '2bl') ||
+                               (result.pos === 16 && pendingPrognose.division === 'bl');
+          const playoff = needsPlayoff ? generatePlayoff(pendingPrognose.division) : null;
+          career.setResult({
+            ...result,
+            achievements: getAchievements(result, pendingPrognose.slots, pendingPrognose.division),
+            table, playerMatches, playerStats, tableHistory, playoff, predictedPos,
+          });
+          setPendingPrognose(null);
+        }}
+      />
+    );
   }
 
   if (endData) {
@@ -98,14 +124,7 @@ export default function CareerScreen() {
         onPlace={career.placePlayer}
         onRemove={career.removePlayer}
         onResult={(slots) => {
-          const { result, table, playerMatches, playerStats, tableHistory } =
-            simulateFullLeague(slots, '2bl', getPlayers('2bl'));
-          const playoff = result.pos === 3 ? generatePlayoff('2bl') : null;
-          career.setResult({
-            ...result,
-            achievements: getAchievements(result, slots, '2bl'),
-            table, playerMatches, playerStats, tableHistory, playoff,
-          });
+          setPendingPrognose({ slots, division: '2bl', seasonNumber: state.seasonNumber });
         }}
         onReset={() => career.reset()}
         onHome={() => { career.reset(); navigate('/'); }}
@@ -152,17 +171,7 @@ export default function CareerScreen() {
         onSwap={career.swapOffer}
         onSkip={career.skipOffer}
         onStartSeason={() => {
-          const players = getPlayers(state.division);
-          const { result, table, playerMatches, playerStats, tableHistory } =
-            simulateFullLeague(state.slots, state.division, players);
-          const needsPlayoff = (result.pos === 3 && state.division === '2bl') ||
-                               (result.pos === 16 && state.division === 'bl');
-          const playoff = needsPlayoff ? generatePlayoff(state.division) : null;
-          career.setResult({
-            ...result,
-            achievements: getAchievements(result, state.slots, state.division),
-            table, playerMatches, playerStats, tableHistory, playoff,
-          });
+          setPendingPrognose({ slots: state.slots, division: state.division, seasonNumber: state.seasonNumber });
         }}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
