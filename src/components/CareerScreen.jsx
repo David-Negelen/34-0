@@ -207,7 +207,7 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
         </section>
 
         <div className="career-setup-info">
-          <div className="career-info-row">Wähle deine Startelf aus 25 zufälligen 2.-Liga-Spielern</div>
+          <div className="career-info-row">Wähle deine Startelf aus 30 zufälligen 2.-Liga-Spielern</div>
           <div className="career-info-row">Platz 1 oder 2: Aufstieg in die Bundesliga</div>
           <div className="career-info-row">Nach jeder Saison: 5 neue Spielerangebote</div>
         </div>
@@ -222,9 +222,12 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
 
 // ── Draft ─────────────────────────────────────────────────────────────────────
 
+const POS_ORDER = ['GK','CB','LB','RB','DM','CM','AM','LW','RW','ST'];
+
 function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
+  const [posFilter, setPosFilter] = useState('');
 
   const filledCount   = slots.filter(s => s.player !== null).length;
   const openSlots     = slots.filter(s => s.player === null);
@@ -308,8 +311,14 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
               Keine Spieler mehr für {stuckSlots.map(s => labelDE(s.label)).join(', ')} — wähle einen Ersatz (−5)
             </div>
           )}
+          <div className="career-pos-filters">
+            <button className={`career-filter-btn${posFilter === '' ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
+            {POS_ORDER.filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
+              <button key={p} className={`career-filter-btn${posFilter === p ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
+            ))}
+          </div>
           <div className="career-pool-grid">
-            {draftPool.map(player => {
+            {draftPool.filter(player => !posFilter || player.positions.includes(posFilter)).map(player => {
               const picked = placedIds.has(player.id);
               const compat = getCompatibleSlots(player, openSlots);
               const canOffRole = !picked && !compat.length && stuckSlots.length > 0;
