@@ -24,10 +24,6 @@
 .pk-team {
   width: 100%;
   max-width: 560px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
 }
 
 .pk-team-title {
@@ -36,51 +32,7 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-dim);
-  padding: 10px 14px 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.pk-team-row {
-  display: grid;
-  grid-template-columns: 36px 1fr auto 40px;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-.pk-team-row:last-child { border-bottom: none; }
-
-.pk-team-pos {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-dim);
-  text-transform: uppercase;
-}
-
-.pk-team-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pk-team-sub {
-  font-size: 11px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: right;
-}
-
-.pk-team-rating {
-  font-size: 13px;
-  font-weight: 800;
-  text-align: right;
-  justify-self: end;
+  margin-bottom: 8px;
 }
 
 /* ── Campaign list ── */
