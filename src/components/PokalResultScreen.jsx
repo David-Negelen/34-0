@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { labelDE, ratingClass } from '../utils/playerUtils';
 import './PokalResultScreen.css';
 
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
@@ -96,6 +97,28 @@ function TournamentBracket({ roundMatchups }) {
   );
 }
 
+function TeamSection({ slots }) {
+  const filled = (slots ?? []).filter(s => s.player);
+  if (!filled.length) return null;
+  return (
+    <div className="pk-team">
+      <div className="pk-team-title">Dein Team</div>
+      {filled.map(s => {
+        const p = s.player;
+        const rcls = ratingClass(p.displayRating ?? p.seasonRating, 'pokal');
+        return (
+          <div key={s.id} className="pk-team-row">
+            <span className="pk-team-pos">{labelDE(s.label)}</span>
+            <span className="pk-team-name">{p.name}</span>
+            <span className="pk-team-sub">{p.spunClub ?? ''}{p.spunSeason ? ` · ${p.spunSeason}` : ''}</span>
+            <span className={`pk-team-rating rating ${rcls}`}>{p.displayRating ?? p.seasonRating}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function achievement(result) {
   const { won, roundReached } = result;
   if (won)               return { label: 'Pokalsieger!',       desc: 'Den DFB-Pokal gewonnen. Eine Legende.' };
@@ -123,6 +146,8 @@ export default function PokalResultScreen({ state, onPlayAgain, onPlaySameTeam, 
           <MatchRow key={i} match={m} roundIndex={i} />
         ))}
       </div>
+
+      <TeamSection slots={result.slots} />
 
       <div className={`pk-achievement ${result.won ? 'pk-achievement--winner' : ''}`}>
         <div className="pk-ach-label">{result.won ? '🏆 ' : ''}{ach.label}</div>
