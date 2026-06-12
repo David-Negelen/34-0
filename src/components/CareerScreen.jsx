@@ -76,7 +76,7 @@ export default function CareerScreen() {
 
   function handleEndCareer() {
     const currentRecord = state.result
-      ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts }
+      ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts, GF: state.result.GF ?? 0, GA: state.result.GA ?? 0 }
       : null;
     const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
     // Merge last season's stats (BEGIN_TRANSFER not yet called when ending from result screen)
@@ -935,9 +935,9 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   const { history, slots = [], careerStats = {} } = data;
   const totalSeasons = history.length;
   const bestPos = history.length ? Math.min(...history.map(s => s.pos)) : null;
-  const promotions = history.filter((s, i) =>
-    i > 0 && history[i - 1].division === '2bl' && s.division === 'bl'
-  ).length;
+  const totalPts = history.reduce((sum, s) => sum + (s.pts ?? 0), 0);
+  const totalGF  = history.reduce((sum, s) => sum + (s.GF  ?? 0), 0);
+  const totalGA  = history.reduce((sum, s) => sum + (s.GA  ?? 0), 0);
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
   const [sortCol, setSortCol] = useState('games');
@@ -979,10 +979,16 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
               <div className="career-end-stat-label">Bestes Ergebnis</div>
             </div>
           )}
-          {promotions > 0 && (
+          {totalPts > 0 && (
             <div className="career-end-stat">
-              <div className="career-end-stat-val">{promotions}×</div>
-              <div className="career-end-stat-label">{promotions === 1 ? 'Aufstieg' : 'Aufstiege'}</div>
+              <div className="career-end-stat-val">{totalPts}</div>
+              <div className="career-end-stat-label">Punkte</div>
+            </div>
+          )}
+          {(totalGF > 0 || totalGA > 0) && (
+            <div className="career-end-stat">
+              <div className="career-end-stat-val">{totalGF}:{totalGA}</div>
+              <div className="career-end-stat-label">Tore</div>
             </div>
           )}
         </div>

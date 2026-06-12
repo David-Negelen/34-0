@@ -79,6 +79,8 @@ function reducer(state, action) {
             division: state.division,
             pos: state.result.pos,
             pts: state.result.pts,
+            GF: state.result.GF ?? 0,
+            GA: state.result.GA ?? 0,
           }]
         : state.seasonHistory;
       return {
