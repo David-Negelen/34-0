@@ -74,7 +74,7 @@ export default function SpinPanel({
     if (!spinSlots.length) return;
 
     const placedIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
-    const result = randomSpin(players, spinSlots, placedIds, league);
+    const result = randomSpin(players, spinSlots, placedIds, league, setup.clubChallenge ?? null);
 
     setPhase('animating');
     const clubFrames = Array.from({ length: SPIN_FRAMES }, (_, i) =>
@@ -106,9 +106,23 @@ export default function SpinPanel({
         const { club, season, candidates: pool } = result;
         setCurrentSpin({ club, season });
 
-        const eligible = draftMode === 'position-first' && activeSlot !== null
-          ? pool.filter(p => getCompatibleSlots(p, spinSlots).length > 0)
-          : getEligiblePlayers(pool, openSlots);
+        let eligible;
+        if (setup.clubChallenge) {
+          const allForClub = players
+            .filter(p => !placedIds.has(p.id) && p.seasons.some(s => s.club === setup.clubChallenge))
+            .map(p => {
+              const clubSeasons = p.seasons.filter(s => s.club === setup.clubChallenge);
+              const s = clubSeasons[Math.floor(Math.random() * clubSeasons.length)];
+              return { ...p, seasonRating: s.rating, spunClub: s.club, spunSeason: s.season, displayRating: s.rating };
+            });
+          eligible = draftMode === 'position-first' && activeSlot !== null
+            ? allForClub.filter(p => getCompatibleSlots(p, spinSlots).length > 0)
+            : getEligiblePlayers(allForClub, openSlots);
+        } else {
+          eligible = draftMode === 'position-first' && activeSlot !== null
+            ? pool.filter(p => getCompatibleSlots(p, spinSlots).length > 0)
+            : getEligiblePlayers(pool, openSlots);
+        }
 
         const sorted = showRatings
           ? [...eligible].sort((a, b) => getDisplayRating(b, ratingMode) - getDisplayRating(a, ratingMode))

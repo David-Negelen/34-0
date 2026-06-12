@@ -105,10 +105,11 @@ function makeTierWeightFn(pairs, league) {
 // Pokal: players tagged with _league='bl'|'2bl' are split 75% BL / 25% 2BL.
 // excludeIds: Set of player IDs already placed — excluded from pool and eligibility.
 // Returns { club, season, candidates } or null.
-export function randomSpin(players, openSlots, excludeIds = new Set(), league = 'bl') {
+export function randomSpin(players, openSlots, excludeIds = new Set(), league = 'bl', clubFilter = null) {
   const isPokal = league === 'pokal';
   const pairs = [];
-  for (const club of getClubsInDb(players)) {
+  const clubs = clubFilter ? [clubFilter] : getClubsInDb(players);
+  for (const club of clubs) {
     for (const season of getSeasonsForClub(players, club)) {
       const pool = getPlayersForClubSeason(players, club, season)
         .filter(p => !excludeIds.has(p.id));

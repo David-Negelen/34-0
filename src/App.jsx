@@ -34,6 +34,7 @@ function LeagueGame() {
       <SetupScreen
         setup={state.setup}
         onUpdate={updateSetup}
+        players={players}
         onStart={() => {
           window.umami?.track('game-started', { formation: state.setup.formation, difficulty: state.setup.difficulty, league });
           startDraft();
@@ -156,7 +157,7 @@ function PokalGame() {
         tournamentWinner = teams[0]?.club ?? teams[0]?.name ?? null;
       }
 
-      if (tournamentWinner) submitPokalWin(tournamentWinner).catch(() => {});
+      if (tournamentWinner && !state.setup.clubChallenge) submitPokalWin(tournamentWinner).catch(() => {});
 
       setResult({
         mode: 'pokal',
@@ -192,6 +193,7 @@ function PokalGame() {
       <SetupScreen
         setup={state.setup}
         onUpdate={updateSetup}
+        players={players}
         onStart={startDraft}
         onBack={() => { handleReset(); navigate('/'); }}
         titleLeft="6"

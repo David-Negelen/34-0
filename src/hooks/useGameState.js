@@ -15,6 +15,7 @@ const defaultSetup = {
   showRatings: true,
   draftMode: 'squad-first',
   ratingMode: 'career',
+  clubChallenge: null,
 };
 
 const defaultState = {
