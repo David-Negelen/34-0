@@ -477,7 +477,7 @@ function LeagueTable({ table, league = 'bl' }) {
   );
 }
 
-function FeverCurve({ tableHistory, league = 'bl' }) {
+export function FeverCurve({ tableHistory, league = 'bl' }) {
   if (!tableHistory?.length) return null;
 
   const W = 460, H = 220;

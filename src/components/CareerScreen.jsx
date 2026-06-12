@@ -5,6 +5,7 @@ import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
+import { FeverCurve } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE, ratingClass } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
@@ -415,8 +416,9 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
   const { result, division, seasonNumber, seasonHistory, slots } = state;
   const playoff = result?.playoff ?? null;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
+  const [tableTab, setTableTab] = useState('table');
 
-  const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches } = result ?? {};
+  const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches, tableHistory } = result ?? {};
   const GD = (GF ?? 0) - (GA ?? 0);
 
   return (
@@ -502,7 +504,19 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
                 </div>
               </div>
 
-              {table?.length > 0 && <CareerTable table={table} league={division} />}
+              {table?.length > 0 && (
+                <div>
+                  <div className="table-tabs">
+                    <button className={`tab-btn${tableTab === 'table' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('table')}>Tabelle</button>
+                    {tableHistory?.length > 0 && (
+                      <button className={`tab-btn${tableTab === 'curve' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('curve')}>Fieberkurve</button>
+                    )}
+                  </div>
+                  {tableTab === 'table'
+                    ? <CareerTable table={table} league={division} />
+                    : <FeverCurve tableHistory={tableHistory} league={division} />}
+                </div>
+              )}
 
               {playoff && <CareerPlayoffCard playoff={playoff} division={division} />}
 
