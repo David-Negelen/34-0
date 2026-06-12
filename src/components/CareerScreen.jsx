@@ -940,7 +940,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   ).length;
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
-  const [sortCol, setSortCol] = useState('goals');
+  const [sortCol, setSortCol] = useState('games');
   const [sortDir, setSortDir] = useState(-1); // -1 = desc, 1 = asc
 
   function handleSort(col) {
