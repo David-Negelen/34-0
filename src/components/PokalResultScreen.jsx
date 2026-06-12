@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import FormationBoard from './FormationBoard';
 import './PokalResultScreen.css';
 
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
@@ -96,6 +97,16 @@ function TournamentBracket({ roundMatchups }) {
   );
 }
 
+function TeamSection({ slots }) {
+  if (!slots?.some(s => s.player)) return null;
+  return (
+    <div className="pk-team">
+      <div className="pk-team-title">Dein Team</div>
+      <FormationBoard slots={slots} showRatings league="pokal" />
+    </div>
+  );
+}
+
 function achievement(result) {
   const { won, roundReached } = result;
   if (won)               return { label: 'Pokalsieger!',       desc: 'Den DFB-Pokal gewonnen. Eine Legende.' };
@@ -123,6 +134,8 @@ export default function PokalResultScreen({ state, onPlayAgain, onPlaySameTeam, 
           <MatchRow key={i} match={m} roundIndex={i} />
         ))}
       </div>
+
+      <TeamSection slots={result.slots} />
 
       <div className={`pk-achievement ${result.won ? 'pk-achievement--winner' : ''}`}>
         <div className="pk-ach-label">{result.won ? '🏆 ' : ''}{ach.label}</div>

@@ -20,6 +20,21 @@
   text-transform: uppercase;
 }
 
+/* ── Team ── */
+.pk-team {
+  width: 100%;
+  max-width: 560px;
+}
+
+.pk-team-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
 /* ── Campaign list ── */
 .pk-campaign {
   width: 100%;
