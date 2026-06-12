@@ -325,11 +325,15 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
     .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
 
   const statsMap = {};
-  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0 }; });
+  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0, cleanSheets: 0 }; });
 
   playerMatches.forEach(m => {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
     const goalsAgainst = m.home === 'Deine 11' ? m.ag : m.hg;
+    if (goalsAgainst === 0) {
+      const gk = squad.find(p => p.slotType === 'GK');
+      if (gk) statsMap[gk.name].cleanSheets++;
+    }
     const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
     const oppTeamName = m.home === 'Deine 11' ? m.away : m.home;
@@ -351,7 +355,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
     });
   });
 
-  const playerStats = squad.map(p => statsMap[p.name]);
+  const playerStats = squad.map(p => ({ ...statsMap[p.name], games: 34 }));
 
   // Build sorted table
   const table = teams.map((t, i) => ({

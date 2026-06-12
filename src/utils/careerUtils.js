@@ -69,9 +69,11 @@ export function generateCareerDraftPool(players, formation, count = 30) {
     }
   }
 
+  const GK_MAX = 3;
   for (const e of shuffled) {
     if (chosen.length >= count) break;
     if (!usedIds.has(e.id)) {
+      if (canPlayerFillSlot(e, 'GK') && chosen.filter(p => canPlayerFillSlot(p, 'GK')).length >= GK_MAX) continue;
       chosen.push(e);
       usedIds.add(e.id);
     }

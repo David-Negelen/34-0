@@ -837,27 +837,88 @@
   margin-top: 6px;
 }
 
-.career-end-player-row {
+/* ── Career end stats table ── */
+.ces-card { padding: 16px 0 6px; overflow: hidden; }
+.ces-card .result-section-label { padding: 0 16px; }
+
+.ces-header,
+.ces-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 5px 16px;
+  gap: 4px;
 }
-.career-end-player-row:last-child { border-bottom: none; }
 
-.career-end-player-name {
-  font-size: 14px;
+.ces-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.ces-row {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+}
+.ces-row:last-child { border-bottom: none; }
+.ces-row-scorer { background: rgba(255,255,255,0.015); }
+
+.ces-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ces-pname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.ces-pos {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.ces-col {
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
-  flex: 1;
 }
 
-.career-end-player-meta {
-  font-size: 12px;
+.ces-col-label {
+  font-size: 11px;
+  font-weight: 700;
   color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.ces-ww { color: var(--text-dim); }
+
+.ces-sort-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  text-transform: uppercase;
   white-space: nowrap;
 }
+
+.ces-sort-active { color: var(--text); }
 
 .career-end-actions {
   display: flex;

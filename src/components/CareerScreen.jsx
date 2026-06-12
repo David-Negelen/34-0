@@ -5,8 +5,8 @@ import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
+import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE, ratingClass } from '../utils/playerUtils';
-import SeasonPrognoseScreen from './SeasonPrognoseScreen';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import './CareerScreen.css';
@@ -59,38 +59,47 @@ export default function CareerScreen() {
   const career = useCareerState();
   const { state } = career;
   const [endData, setEndData] = useState(null);
-  const [pendingPrognose, setPendingPrognose] = useState(null);
+
+  function runSeason(slots, division, seasonNumber) {
+    const players = getPlayers(division);
+    const { result, table, playerMatches, playerStats, tableHistory } =
+      simulateFullLeague(slots, division, players);
+    const needsPlayoff = (result.pos === 3 && division === '2bl') ||
+                         (result.pos === 16 && division === 'bl');
+    const playoff = needsPlayoff ? generatePlayoff(division) : null;
+    career.setResult({
+      ...result,
+      achievements: getAchievements(result, slots, division),
+      table, playerMatches, playerStats, tableHistory, playoff,
+    });
+  }
 
   function handleEndCareer() {
     const currentRecord = state.result
-      ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts }
+      ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts, GF: state.result.GF ?? 0, GA: state.result.GA ?? 0 }
       : null;
     const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
-    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers });
+    // Merge last season's stats (BEGIN_TRANSFER not yet called when ending from result screen)
+    const careerStats = mergeStats(state.careerStats, state.result?.playerStats ?? []);
+    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers, careerStats });
   }
 
-  if (pendingPrognose) {
-    return (
-      <SeasonPrognoseScreen
-        slots={pendingPrognose.slots}
-        league={pendingPrognose.division}
-        seasonLabel={`Saison ${pendingPrognose.seasonNumber}`}
-        onStart={(predictedPos) => {
-          const players = getPlayers(pendingPrognose.division);
-          const { result, table, playerMatches, playerStats, tableHistory } =
-            simulateFullLeague(pendingPrognose.slots, pendingPrognose.division, players);
-          const needsPlayoff = (result.pos === 3 && pendingPrognose.division === '2bl') ||
-                               (result.pos === 16 && pendingPrognose.division === 'bl');
-          const playoff = needsPlayoff ? generatePlayoff(pendingPrognose.division) : null;
-          career.setResult({
-            ...result,
-            achievements: getAchievements(result, pendingPrognose.slots, pendingPrognose.division),
-            table, playerMatches, playerStats, tableHistory, playoff, predictedPos,
-          });
-          setPendingPrognose(null);
-        }}
-      />
-    );
+  function mergeStats(base, playerStats) {
+    const next = { ...base };
+    for (const p of (playerStats ?? [])) {
+      const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
+      next[p.name] = {
+        ...prev,
+        name:        p.name,
+        games:       prev.games       + (p.games       ?? 34),
+        goals:       prev.goals       + (p.goals        ?? 0),
+        assists:     prev.assists     + (p.assists      ?? 0),
+        cleanSheets: prev.cleanSheets + (p.cleanSheets  ?? 0),
+        slotLabel: p.slotLabel,
+        slotType:  p.slotType,
+      };
+    }
+    return next;
   }
 
   if (endData) {
@@ -123,9 +132,7 @@ export default function CareerScreen() {
         state={state}
         onPlace={career.placePlayer}
         onRemove={career.removePlayer}
-        onResult={(slots) => {
-          setPendingPrognose({ slots, division: '2bl', seasonNumber: state.seasonNumber });
-        }}
+        onResult={(slots) => runSeason(slots, '2bl', state.seasonNumber)}
         onReset={() => career.reset()}
         onHome={() => { career.reset(); navigate('/'); }}
       />
@@ -170,9 +177,7 @@ export default function CareerScreen() {
         state={state}
         onSwap={career.swapOffer}
         onSkip={career.skipOffer}
-        onStartSeason={() => {
-          setPendingPrognose({ slots: state.slots, division: state.division, seasonNumber: state.seasonNumber });
-        }}
+        onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
       />
@@ -412,8 +417,9 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
   const { result, division, seasonNumber, seasonHistory, slots } = state;
   const playoff = result?.playoff ?? null;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
+  const [tableTab, setTableTab] = useState('table');
 
-  const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches } = result ?? {};
+  const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches, tableHistory, playerStats } = result ?? {};
   const GD = (GF ?? 0) - (GA ?? 0);
 
   return (
@@ -499,7 +505,21 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
                 </div>
               </div>
 
-              {table?.length > 0 && <CareerTable table={table} league={division} />}
+              {table?.length > 0 && (
+                <div>
+                  <div className="table-tabs">
+                    <button className={`tab-btn${tableTab === 'table' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('table')}>Tabelle</button>
+                    {tableHistory?.length > 0 && (
+                      <button className={`tab-btn${tableTab === 'curve' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('curve')}>Fieberkurve</button>
+                    )}
+                  </div>
+                  {tableTab === 'table'
+                    ? <CareerTable table={table} league={division} />
+                    : <FeverCurve tableHistory={tableHistory} league={division} />}
+                </div>
+              )}
+
+              <PlayerStats stats={playerStats} />
 
               {playoff && <CareerPlayoffCard playoff={playoff} division={division} />}
 
@@ -912,17 +932,28 @@ function CareerPlayoffCard({ playoff, division }) {
 // ── End Screen ────────────────────────────────────────────────────────────────
 
 function CareerEndScreen({ data, onNewCareer, onHome }) {
-  const { history, slots = [], allPlayers = [] } = data;
+  const { history, slots = [], careerStats = {} } = data;
   const totalSeasons = history.length;
-  const bestPos = history.length ? Math.min(...history.map(s => s.pos)) : null;
-  const promotions = history.filter((s, i) =>
-    i > 0 && history[i - 1].division === '2bl' && s.division === 'bl'
-  ).length;
+  const totalPts = history.reduce((sum, s) => sum + (s.pts ?? 0), 0);
+  const totalGF  = history.reduce((sum, s) => sum + (s.GF  ?? 0), 0);
+  const totalGA  = history.reduce((sum, s) => sum + (s.GA  ?? 0), 0);
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
-  // Players who passed through but are no longer in the final squad
-  const finalIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
-  const pastPlayers = allPlayers.filter(p => !finalIds.has(p.id));
+  const [sortCol, setSortCol] = useState('games');
+  const [sortDir, setSortDir] = useState(-1); // -1 = desc, 1 = asc
+
+  function handleSort(col) {
+    if (col === sortCol) setSortDir(d => d * -1);
+    else { setSortCol(col); setSortDir(-1); }
+  }
+
+  const base = Object.entries(careerStats).map(([name, stats]) => ({ name, ...stats }));
+  const statsList = [...base].sort((a, b) => {
+    const diff = (a[sortCol] ?? 0) - (b[sortCol] ?? 0);
+    return diff !== 0 ? diff * sortDir : 0;
+  });
+
+  const hasGK = statsList.some(p => p.slotType === 'GK');
 
   return (
     <div className="career-screen">
@@ -941,16 +972,16 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
             <div className="career-end-stat-val">{totalSeasons}</div>
             <div className="career-end-stat-label">Saisons</div>
           </div>
-          {bestPos !== null && (
+{totalPts > 0 && (
             <div className="career-end-stat">
-              <div className="career-end-stat-val">{bestPos}.</div>
-              <div className="career-end-stat-label">Bestes Ergebnis</div>
+              <div className="career-end-stat-val">{totalPts}</div>
+              <div className="career-end-stat-label">Punkte</div>
             </div>
           )}
-          {promotions > 0 && (
+          {(totalGF > 0 || totalGA > 0) && (
             <div className="career-end-stat">
-              <div className="career-end-stat-val">{promotions}×</div>
-              <div className="career-end-stat-label">{promotions === 1 ? 'Aufstieg' : 'Aufstiege'}</div>
+              <div className="career-end-stat-val">{totalGF}:{totalGA}</div>
+              <div className="career-end-stat-label">Tore</div>
             </div>
           )}
         </div>
@@ -976,18 +1007,36 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
           </div>
         )}
 
-        {pastPlayers.length > 0 && (
-          <div className="career-history-card">
-            <div className="result-section-label">Ehemalige Spieler</div>
-            {pastPlayers.map((p, i) => (
-              <div key={`${p.id}-${i}`} className="career-end-player-row">
-                <span className={`rating rating-sm ${ratingClass(p.displayRating, lastDivision)}`}>
-                  {p.displayRating}
+        {statsList.length > 0 && (
+          <div className="career-history-card ces-card">
+            <div className="result-section-label">Spieler-Statistiken</div>
+            <div className="ces-header">
+              <span className="ces-name" />
+              {[['games','Sp'],['goals','T'],['assists','V']].map(([col, label]) => (
+                <button key={col} className={`ces-col ces-col-label ces-sort-btn${sortCol === col ? ' ces-sort-active' : ''}`} onClick={() => handleSort(col)}>
+                  {label}{sortCol === col ? (sortDir === -1 ? ' ↓' : ' ↑') : ''}
+                </button>
+              ))}
+              {hasGK && (
+                <button className={`ces-col ces-col-label ces-ww ces-sort-btn${sortCol === 'cleanSheets' ? ' ces-sort-active' : ''}`} onClick={() => handleSort('cleanSheets')}>
+                  WW{sortCol === 'cleanSheets' ? (sortDir === -1 ? ' ↓' : ' ↑') : ''}
+                </button>
+              )}
+            </div>
+            {statsList.map((p, i) => (
+              <div key={`${p.name}-${i}`} className={`ces-row ${p.goals > 0 ? 'ces-row-scorer' : ''}`}>
+                <span className="ces-name">
+                  <span className="ces-pos">{labelDE(p.slotLabel)}</span>
+                  <span className="ces-pname">{p.name}</span>
                 </span>
-                <span className="career-end-player-name">{p.name}</span>
-                <span className="career-end-player-meta">
-                  {p.spunClub} · {shortSeason(p.spunSeason)}
-                </span>
+                <span className="ces-col">{p.games}</span>
+                <span className="ces-col">{p.goals || '—'}</span>
+                <span className="ces-col">{p.assists || '—'}</span>
+                {hasGK && (
+                  <span className="ces-col ces-ww">
+                    {p.slotType === 'GK' ? (p.cleanSheets || '—') : ''}
+                  </span>
+                )}
               </div>
             ))}
           </div>

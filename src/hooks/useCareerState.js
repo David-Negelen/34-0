@@ -14,7 +14,26 @@ const defaultState = {
   transferOffers: [],
   seasonHistory: [],
   allPlayers: [],
+  careerStats: {},
 };
+
+function mergeStats(careerStats, playerStats) {
+  const next = { ...careerStats };
+  for (const p of (playerStats ?? [])) {
+    const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
+    next[p.name] = {
+      ...prev,
+      name:        p.name,
+      games:       prev.games       + (p.games       ?? 34),
+      goals:       prev.goals       + (p.goals        ?? 0),
+      assists:     prev.assists     + (p.assists      ?? 0),
+      cleanSheets: prev.cleanSheets + (p.cleanSheets  ?? 0),
+      slotLabel: p.slotLabel,
+      slotType:  p.slotType,
+    };
+  }
+  return next;
+}
 
 function buildSlots(formationKey) {
   return FORMATIONS[formationKey].slots.map(s => ({ ...s, player: null }));
@@ -60,6 +79,8 @@ function reducer(state, action) {
             division: state.division,
             pos: state.result.pos,
             pts: state.result.pts,
+            GF: state.result.GF ?? 0,
+            GA: state.result.GA ?? 0,
           }]
         : state.seasonHistory;
       return {
@@ -69,6 +90,7 @@ function reducer(state, action) {
         seasonNumber: state.seasonNumber + 1,
         transferOffers,
         seasonHistory: history,
+        careerStats: mergeStats(state.careerStats, state.result?.playerStats),
         result: null,
       };
     }

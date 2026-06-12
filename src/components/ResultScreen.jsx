@@ -381,7 +381,7 @@ function MatchLog({ matches, onDone }) {
   );
 }
 
-function PlayerStats({ stats }) {
+export function PlayerStats({ stats }) {
   if (!stats?.length) return null;
   const sorted = [...stats].sort((a, b) => b.goals - a.goals || b.assists - a.assists);
   return (
@@ -477,7 +477,7 @@ function LeagueTable({ table, league = 'bl' }) {
   );
 }
 
-function FeverCurve({ tableHistory, league = 'bl' }) {
+export function FeverCurve({ tableHistory, league = 'bl' }) {
   if (!tableHistory?.length) return null;
 
   const W = 460, H = 220;
