@@ -23,6 +23,7 @@ function mergeStats(careerStats, playerStats) {
     const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
     next[p.name] = {
       ...prev,
+      name:        p.name,
       games:       prev.games       + (p.games       ?? 34),
       goals:       prev.goals       + (p.goals        ?? 0),
       assists:     prev.assists     + (p.assists      ?? 0),

@@ -90,6 +90,7 @@ export default function CareerScreen() {
       const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
       next[p.name] = {
         ...prev,
+        name:        p.name,
         games:       prev.games       + (p.games       ?? 34),
         goals:       prev.goals       + (p.goals        ?? 0),
         assists:     prev.assists     + (p.assists      ?? 0),
@@ -937,8 +938,19 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   ).length;
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
-  const statsList = Object.values(careerStats)
-    .sort((a, b) => b.goals - a.goals || b.assists - a.assists || b.games - a.games);
+  const [sortCol, setSortCol] = useState('goals');
+  const [sortDir, setSortDir] = useState(-1); // -1 = desc, 1 = asc
+
+  function handleSort(col) {
+    if (col === sortCol) setSortDir(d => d * -1);
+    else { setSortCol(col); setSortDir(-1); }
+  }
+
+  const base = Object.values(careerStats);
+  const statsList = [...base].sort((a, b) => {
+    const diff = (b[sortCol] ?? 0) - (a[sortCol] ?? 0);
+    return diff !== 0 ? diff * sortDir : 0;
+  });
 
   const hasGK = statsList.some(p => p.slotType === 'GK');
 
@@ -999,10 +1011,16 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
             <div className="result-section-label">Spieler-Statistiken</div>
             <div className="ces-header">
               <span className="ces-name" />
-              <span className="ces-col ces-col-label">Sp</span>
-              <span className="ces-col ces-col-label">T</span>
-              <span className="ces-col ces-col-label">V</span>
-              {hasGK && <span className="ces-col ces-col-label ces-ww">WW</span>}
+              {[['games','Sp'],['goals','T'],['assists','V']].map(([col, label]) => (
+                <button key={col} className={`ces-col ces-col-label ces-sort-btn${sortCol === col ? ' ces-sort-active' : ''}`} onClick={() => handleSort(col)}>
+                  {label}{sortCol === col ? (sortDir === -1 ? ' ↓' : ' ↑') : ''}
+                </button>
+              ))}
+              {hasGK && (
+                <button className={`ces-col ces-col-label ces-ww ces-sort-btn${sortCol === 'cleanSheets' ? ' ces-sort-active' : ''}`} onClick={() => handleSort('cleanSheets')}>
+                  WW{sortCol === 'cleanSheets' ? (sortDir === -1 ? ' ↓' : ' ↑') : ''}
+                </button>
+              )}
             </div>
             {statsList.map((p, i) => (
               <div key={`${p.name}-${i}`} className={`ces-row ${p.goals > 0 ? 'ces-row-scorer' : ''}`}>
