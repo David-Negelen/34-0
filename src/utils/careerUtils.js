@@ -42,7 +42,7 @@ function attachSeasonWeighted(player, targetRating) {
 // Guarantees at least (slotCount + 1) eligible players per slot type so the
 // user can never be stranded with no compatible player for an open slot.
 // Players are biased toward a rating of ~65 (2. Bundesliga starting level).
-export function generateCareerDraftPool(players, formation, count = 25) {
+export function generateCareerDraftPool(players, formation, count = 30) {
   const DRAFT_TARGET = 65;
   const slotTypeCounts = {};
   formation.slots.forEach(s => {
