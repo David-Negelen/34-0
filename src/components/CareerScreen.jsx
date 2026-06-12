@@ -934,7 +934,6 @@ function CareerPlayoffCard({ playoff, division }) {
 function CareerEndScreen({ data, onNewCareer, onHome }) {
   const { history, slots = [], careerStats = {} } = data;
   const totalSeasons = history.length;
-  const bestPos = history.length ? Math.min(...history.map(s => s.pos)) : null;
   const totalPts = history.reduce((sum, s) => sum + (s.pts ?? 0), 0);
   const totalGF  = history.reduce((sum, s) => sum + (s.GF  ?? 0), 0);
   const totalGA  = history.reduce((sum, s) => sum + (s.GA  ?? 0), 0);
@@ -973,13 +972,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
             <div className="career-end-stat-val">{totalSeasons}</div>
             <div className="career-end-stat-label">Saisons</div>
           </div>
-          {bestPos !== null && (
-            <div className="career-end-stat">
-              <div className="career-end-stat-val">{bestPos}.</div>
-              <div className="career-end-stat-label">Bestes Ergebnis</div>
-            </div>
-          )}
-          {totalPts > 0 && (
+{totalPts > 0 && (
             <div className="career-end-stat">
               <div className="career-end-stat-val">{totalPts}</div>
               <div className="career-end-stat-label">Punkte</div>
