@@ -199,20 +199,6 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                     <span className="lp-key-item europe">{league === '2bl' ? 'Aufstieg' : 'Europa'}</span>
                     <span className="lp-key-item title">Meister</span>
                   </div>
-                  {predictedPos != null && (() => {
-                    const sigma = 3.5;
-                    const g = x => Math.exp(-0.5 * ((x - predictedPos) / sigma) ** 2);
-                    const vals = Array.from({ length: 18 }, (_, i) => g(i + 1));
-                    const total = vals.reduce((a, b) => a + b, 0);
-                    const diff = predictedPos - pos; // positive = better than predicted
-                    const label = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '±0';
-                    const mod = diff > 0 ? 'lp-chance-over' : diff < 0 ? 'lp-chance-under' : 'lp-chance-exact';
-                    // Cumulative tail probability: P(this delta or more extreme)
-                    const pct = diff >= 0
-                      ? Math.max(1, Math.round(vals.slice(0, pos).reduce((a, b) => a + b, 0) / total * 100))
-                      : Math.max(1, Math.round(vals.slice(pos - 1).reduce((a, b) => a + b, 0) / total * 100));
-                    return <div className={`lp-chance ${mod}`}>{label} · {pct}% Chance</div>;
-                  })()}
                 </div>
               </div>
 

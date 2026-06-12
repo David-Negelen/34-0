@@ -212,19 +212,6 @@
   color: var(--text-dim);
 }
 
-.lp-chance {
-  margin-top: 8px;
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  border-radius: 20px;
-  padding: 4px 12px;
-}
-
-.lp-chance-over  { color: var(--green); background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.25); }
-.lp-chance-under { color: var(--red);   background: rgba(227,0,11,0.08); border: 1px solid rgba(227,0,11,0.2); }
-.lp-chance-exact { color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); }
 
 .lp-bar {
   position: relative;
