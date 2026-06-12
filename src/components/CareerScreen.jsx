@@ -950,7 +950,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
 
   const base = Object.entries(careerStats).map(([name, stats]) => ({ name, ...stats }));
   const statsList = [...base].sort((a, b) => {
-    const diff = (b[sortCol] ?? 0) - (a[sortCol] ?? 0);
+    const diff = (a[sortCol] ?? 0) - (b[sortCol] ?? 0);
     return diff !== 0 ? diff * sortDir : 0;
   });
 
