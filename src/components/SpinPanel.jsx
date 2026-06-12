@@ -11,6 +11,8 @@ import {
 import PlayerCard from './PlayerCard';
 import './SpinPanel.css';
 
+const POS_ORDER = ['GK','CB','LB','RB','DM','CM','AM','LW','RW','ST'];
+
 const SPIN_FRAMES = 16;
 const SPIN_DELAYS = [60,60,70,80,90,110,130,155,175,200,240,270,310,350,390,440];
 const ANIM_SEASONS = ['2015-16','2016-17','2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25','2025-26'];
@@ -53,6 +55,7 @@ export default function SpinPanel({
   const [deadSpin, setDeadSpin] = useState(false);
   // Slot locked at spin-start so changing selection mid-spin can't redirect placement.
   const [lockedSlotId, setLockedSlotId] = useState(null);
+  const [posFilter, setPosFilter] = useState('');
 
   const animRef = useRef(null);
 
@@ -155,6 +158,7 @@ export default function SpinPanel({
     setDeadSpin(false);
     setPendingPlayer(null);
     setLockedSlotId(null);
+    setPosFilter('');
     onSetPendingSpin(null);
     onSpinActiveChange?.(false);
   }
@@ -303,23 +307,40 @@ export default function SpinPanel({
       {/* ── Candidate list ── */}
       {phase === 'picking' && (
         <div className="candidates-list fade-in">
-          <div className="candidates-header">
-            <h4>Spieler wählen</h4>
-          </div>
           {candidates.length === 0 ? (
             <p className="no-candidates">Keine Kandidaten für deine offenen Positionen.</p>
-          ) : (
-            candidates.map(player => (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                showRatings={showRatings}
-                ratingMode={ratingMode}
-                onClick={() => handlePlayerClick(player)}
-                league={league}
-              />
-            ))
-          )}
+          ) : (() => {
+            const availPos = POS_ORDER.filter(p => candidates.some(c => c.positions.includes(p)));
+            const visible = posFilter ? candidates.filter(c => c.positions.includes(posFilter)) : candidates;
+            return (
+              <>
+                <div className="candidates-header">
+                  <div className="candidates-header-top">
+                    <h4>Spieler wählen</h4>
+                    <span className="candidates-count">{visible.length}</span>
+                  </div>
+                  {availPos.length > 1 && (
+                    <div className="candidates-pos-filters">
+                      <button className={`cand-filter-btn${posFilter === '' ? ' cand-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
+                      {availPos.map(p => (
+                        <button key={p} className={`cand-filter-btn${posFilter === p ? ' cand-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {visible.map(player => (
+                  <PlayerCard
+                    key={player.id}
+                    player={player}
+                    showRatings={showRatings}
+                    ratingMode={ratingMode}
+                    onClick={() => handlePlayerClick(player)}
+                    league={league}
+                  />
+                ))}
+              </>
+            );
+          })()}
         </div>
       )}
 
