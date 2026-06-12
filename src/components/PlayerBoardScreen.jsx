@@ -111,7 +111,7 @@ export default function PlayerBoardScreen({ onBack }) {
             {visible.map((s, i) => {
               const [primaryPos, ...secondaryPos] = s.player.positions;
               return (
-                <div key={`${s._league}-${s.player.id}-${s.season}`} className="lb-row pb-row">
+                <div key={i} className="lb-row pb-row">
                   <span className="lb-col-rank">{i + 1}</span>
                   <div style={{ overflow: 'hidden' }}>
                     <div className="lb-col-name">{s.player.name}</div>
