@@ -1,22 +1,16 @@
 import { useState, useMemo } from 'react';
-import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from '../data/players';
-import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from '../data/players2bl';
+import { PLAYERS as BL_PLAYERS } from '../data/players';
+import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import './LeaderboardScreen.css';
 import './PlayerBoardScreen.css';
 
-const ALL_CLUBS = { ...BL_CLUBS, ...BL2_CLUBS };
-
-const ALL_PLAYERS = [
+const ALL_SEASONS = [
   ...BL_PLAYERS.map(p => ({ ...p, _league: 'bl' })),
   ...BL2_PLAYERS.map(p => ({ ...p, _league: '2bl' })),
-];
+].flatMap(p => p.seasons.map(s => ({ player: p, club: s.club, season: s.season, rating: s.rating, _league: p._league })));
 
 const POSITIONS = ['GK', 'CB', 'LB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
 const PAGE_SIZE = 100;
-
-function primeClub(player) {
-  return player.seasons.find(s => s.rating === player.primeRating)?.club ?? player.seasons.at(-1)?.club ?? '—';
-}
 
 export default function PlayerBoardScreen({ onBack }) {
   const [league, setLeague] = useState('all');
@@ -30,14 +24,14 @@ export default function PlayerBoardScreen({ onBack }) {
   }
 
   const filtered = useMemo(() => {
-    let list = ALL_PLAYERS;
-    if (league !== 'all') list = list.filter(p => p._league === league);
-    if (pos) list = list.filter(p => p.positions.includes(pos));
+    let list = ALL_SEASONS;
+    if (league !== 'all') list = list.filter(s => s._league === league);
+    if (pos) list = list.filter(s => s.player.positions.includes(pos));
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter(p => p.name.toLowerCase().includes(q));
+      list = list.filter(s => s.player.name.toLowerCase().includes(q));
     }
-    return [...list].sort((a, b) => b.primeRating - a.primeRating);
+    return [...list].sort((a, b) => b.rating - a.rating);
   }, [league, pos, search]);
 
   const visible = filtered.slice(0, showCount);
@@ -49,7 +43,7 @@ export default function PlayerBoardScreen({ onBack }) {
         <button className="btn btn-ghost btn-sm" onClick={onBack}>← Zurück</button>
         <h1 className="lb-title">Spielerdatenbank</h1>
         <span style={{ fontSize: 12, color: 'var(--text-dim)', minWidth: 80, textAlign: 'right' }}>
-          {filtered.length.toLocaleString('de')} Spieler
+          {filtered.length.toLocaleString('de')} Saisons
         </span>
       </header>
 
@@ -104,15 +98,14 @@ export default function PlayerBoardScreen({ onBack }) {
               <span style={{ textAlign: 'right' }}>OVR</span>
             </div>
 
-            {visible.map((p, i) => {
-              const club = primeClub(p);
-              const [primaryPos, ...secondaryPos] = p.positions;
+            {visible.map((s, i) => {
+              const [primaryPos, ...secondaryPos] = s.player.positions;
               return (
-                <div key={p.id} className="lb-row pb-row">
+                <div key={`${s.player.id}-${s.season}`} className="lb-row pb-row">
                   <span className="lb-col-rank">{i + 1}</span>
                   <div style={{ overflow: 'hidden' }}>
-                    <div className="lb-col-name">{p.name}</div>
-                    <div className="pb-club">{club}</div>
+                    <div className="lb-col-name">{s.player.name}</div>
+                    <div className="pb-club">{s.club} · {s.season}</div>
                   </div>
                   <span className="pb-col-pos" style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: 11 }}>
                     {primaryPos}
@@ -121,7 +114,7 @@ export default function PlayerBoardScreen({ onBack }) {
                     {secondaryPos.join(' · ')}
                   </span>
                   <span className="lb-col-ovr" style={{ textAlign: 'right', alignSelf: 'center' }}>
-                    {p.primeRating}
+                    {s.rating}
                   </span>
                 </div>
               );
