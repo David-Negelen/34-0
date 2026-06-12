@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
-import { labelDE } from '../utils/playerUtils';
+import { labelDE, getClubsInDb } from '../utils/playerUtils';
 import './SetupScreen.css';
 
 const DIFFICULTIES = [
@@ -8,8 +9,15 @@ const DIFFICULTIES = [
   { key: 'hard',   label: 'Schwer', sub: 'Kein Joker · Bewertungen verborgen' },
 ];
 
-export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, onBack, titleLeft = '34', titleRight = '0', subtitle = null }) {
-  const { formation, difficulty, showRatings, draftMode, ratingMode } = setup;
+export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, onBack, titleLeft = '34', titleRight = '0', subtitle = null, players = [] }) {
+  const { formation, difficulty, showRatings, draftMode, ratingMode, clubChallenge } = setup;
+  const [clubQuery, setClubQuery] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+
+  const allClubs = getClubsInDb(players);
+  const filteredClubs = clubQuery
+    ? allClubs.filter(c => c.toLowerCase().includes(clubQuery.toLowerCase()))
+    : allClubs;
 
   return (
     <div className="setup-screen">
@@ -127,6 +135,50 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
             </button>
           </div>
         </section>
+
+        {/* Club Challenge */}
+        {players.length > 0 && (
+          <section className="setup-section">
+            <h3 className="setup-label">Vereins-Challenge</h3>
+            {clubChallenge ? (
+              <div className="club-challenge-active">
+                <span className="club-challenge-name">{clubChallenge}</span>
+                <span className="club-challenge-unofficial">Inoffiziell</span>
+                <button className="club-challenge-clear" onClick={() => { onUpdate({ clubChallenge: null }); setShowPicker(false); }}>✕</button>
+              </div>
+            ) : (
+              <button
+                className={`opt-card club-challenge-toggle${showPicker ? ' selected' : ''}`}
+                onClick={() => setShowPicker(v => !v)}
+              >
+                <span className="opt-name">Verein wählen</span>
+                <span className="opt-sub">Nur Spieler eines Vereins – nicht in der Rangliste gewertet</span>
+              </button>
+            )}
+            {showPicker && !clubChallenge && (
+              <div className="club-picker">
+                <input
+                  className="club-picker-input"
+                  placeholder="Verein suchen…"
+                  value={clubQuery}
+                  onChange={e => setClubQuery(e.target.value)}
+                  autoFocus
+                />
+                <div className="club-picker-list">
+                  {filteredClubs.map(c => (
+                    <button
+                      key={c}
+                      className="club-picker-item"
+                      onClick={() => { onUpdate({ clubChallenge: c }); setShowPicker(false); setClubQuery(''); }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         <button className="start-btn" onClick={onStart}>
           Draft starten →

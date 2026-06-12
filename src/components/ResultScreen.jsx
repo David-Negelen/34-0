@@ -60,6 +60,7 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
     const ovr = calcOvr();
     scoreRef.current = { ovr };
     window.umami?.track('game-completed', { pts, pos, w: W, d: D, l: L, ovr });
+    if (setup.clubChallenge) return;
     const saved = getSavedName();
     if (saved) {
       doSubmit(saved);
