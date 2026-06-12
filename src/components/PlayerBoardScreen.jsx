@@ -12,13 +12,11 @@ const ALL_SEASONS = [
 const POSITIONS = ['GK', 'CB', 'LB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
 
 function normalize(s) {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss');
+  return s.toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss');
 }
 
 function matchesSearch(name, query) {
-  const n = normalize(name);
-  const q = normalize(query);
-  return n.startsWith(q) || n.split(/\s+/).some(w => w.startsWith(q));
+  return normalize(name).includes(normalize(query));
 }
 
 const POS_DE = { GK: 'TW', CB: 'IV', LB: 'LV', RB: 'RV', DM: 'DM', CM: 'ZM', AM: 'OM', LW: 'LA', RW: 'RA', ST: 'ST' };
@@ -113,7 +111,7 @@ export default function PlayerBoardScreen({ onBack }) {
             {visible.map((s, i) => {
               const [primaryPos, ...secondaryPos] = s.player.positions;
               return (
-                <div key={`${s.player.id}-${s.season}`} className="lb-row pb-row">
+                <div key={`${s._league}-${s.player.id}-${s.season}`} className="lb-row pb-row">
                   <span className="lb-col-rank">{i + 1}</span>
                   <div style={{ overflow: 'hidden' }}>
                     <div className="lb-col-name">{s.player.name}</div>
