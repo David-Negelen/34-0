@@ -66,7 +66,26 @@ export default function CareerScreen() {
       ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts }
       : null;
     const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
-    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers });
+    // Merge last season's stats (BEGIN_TRANSFER not yet called when ending from result screen)
+    const careerStats = mergeStats(state.careerStats, state.result?.playerStats ?? []);
+    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers, careerStats });
+  }
+
+  function mergeStats(base, playerStats) {
+    const next = { ...base };
+    for (const p of (playerStats ?? [])) {
+      const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
+      next[p.name] = {
+        ...prev,
+        games:       prev.games       + (p.games       ?? 34),
+        goals:       prev.goals       + (p.goals        ?? 0),
+        assists:     prev.assists     + (p.assists      ?? 0),
+        cleanSheets: prev.cleanSheets + (p.cleanSheets  ?? 0),
+        slotLabel: p.slotLabel,
+        slotType:  p.slotType,
+      };
+    }
+    return next;
   }
 
   if (pendingPrognose) {
@@ -912,7 +931,7 @@ function CareerPlayoffCard({ playoff, division }) {
 // ── End Screen ────────────────────────────────────────────────────────────────
 
 function CareerEndScreen({ data, onNewCareer, onHome }) {
-  const { history, slots = [], allPlayers = [] } = data;
+  const { history, slots = [], careerStats = {} } = data;
   const totalSeasons = history.length;
   const bestPos = history.length ? Math.min(...history.map(s => s.pos)) : null;
   const promotions = history.filter((s, i) =>
@@ -920,9 +939,10 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   ).length;
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
-  // Players who passed through but are no longer in the final squad
-  const finalIds = new Set(slots.filter(s => s.player).map(s => s.player.id));
-  const pastPlayers = allPlayers.filter(p => !finalIds.has(p.id));
+  const statsList = Object.values(careerStats)
+    .sort((a, b) => b.goals - a.goals || b.assists - a.assists || b.games - a.games);
+
+  const hasGK = statsList.some(p => p.slotType === 'GK');
 
   return (
     <div className="career-screen">
@@ -976,18 +996,30 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
           </div>
         )}
 
-        {pastPlayers.length > 0 && (
-          <div className="career-history-card">
-            <div className="result-section-label">Ehemalige Spieler</div>
-            {pastPlayers.map((p, i) => (
-              <div key={`${p.id}-${i}`} className="career-end-player-row">
-                <span className={`rating rating-sm ${ratingClass(p.displayRating, lastDivision)}`}>
-                  {p.displayRating}
+        {statsList.length > 0 && (
+          <div className="career-history-card ces-card">
+            <div className="result-section-label">Spieler-Statistiken</div>
+            <div className="ces-header">
+              <span className="ces-name" />
+              <span className="ces-col ces-col-label">Sp</span>
+              <span className="ces-col ces-col-label">T</span>
+              <span className="ces-col ces-col-label">V</span>
+              {hasGK && <span className="ces-col ces-col-label ces-ww">WW</span>}
+            </div>
+            {statsList.map((p, i) => (
+              <div key={`${p.name}-${i}`} className={`ces-row ${p.goals > 0 ? 'ces-row-scorer' : ''}`}>
+                <span className="ces-name">
+                  <span className="ces-pos">{labelDE(p.slotLabel)}</span>
+                  <span className="ces-pname">{p.name}</span>
                 </span>
-                <span className="career-end-player-name">{p.name}</span>
-                <span className="career-end-player-meta">
-                  {p.spunClub} · {shortSeason(p.spunSeason)}
-                </span>
+                <span className="ces-col">{p.games}</span>
+                <span className="ces-col">{p.goals || '—'}</span>
+                <span className="ces-col">{p.assists || '—'}</span>
+                {hasGK && (
+                  <span className="ces-col ces-ww">
+                    {p.slotType === 'GK' ? (p.cleanSheets || '—') : ''}
+                  </span>
+                )}
               </div>
             ))}
           </div>
