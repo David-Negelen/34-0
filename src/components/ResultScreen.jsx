@@ -381,7 +381,7 @@ function MatchLog({ matches, onDone }) {
   );
 }
 
-function PlayerStats({ stats }) {
+export function PlayerStats({ stats }) {
   if (!stats?.length) return null;
   const sorted = [...stats].sort((a, b) => b.goals - a.goals || b.assists - a.assists);
   return (

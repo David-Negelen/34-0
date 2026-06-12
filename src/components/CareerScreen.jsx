@@ -5,7 +5,7 @@ import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
-import { FeverCurve } from './ResultScreen';
+import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE, ratingClass } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
@@ -419,7 +419,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
   const [tableTab, setTableTab] = useState('table');
 
-  const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches, tableHistory } = result ?? {};
+  const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches, tableHistory, playerStats } = result ?? {};
   const GD = (GF ?? 0) - (GA ?? 0);
 
   return (
@@ -518,6 +518,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
                     : <FeverCurve tableHistory={tableHistory} league={division} />}
                 </div>
               )}
+
+              <PlayerStats stats={playerStats} />
 
               {playoff && <CareerPlayoffCard playoff={playoff} division={division} />}
 
