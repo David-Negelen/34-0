@@ -100,11 +100,13 @@ export default function PlayerBoardScreen({ onBack }) {
               <span className="lb-col-rank">#</span>
               <span>Spieler</span>
               <span className="pb-col-pos">Pos</span>
+              <span className="pb-col-pos">2. Pos</span>
               <span style={{ textAlign: 'right' }}>OVR</span>
             </div>
 
             {visible.map((p, i) => {
               const club = primeClub(p);
+              const [primaryPos, ...secondaryPos] = p.positions;
               return (
                 <div key={p.id} className="lb-row pb-row">
                   <span className="lb-col-rank">{i + 1}</span>
@@ -113,7 +115,10 @@ export default function PlayerBoardScreen({ onBack }) {
                     <div className="pb-club">{club}</div>
                   </div>
                   <span className="pb-col-pos" style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: 11 }}>
-                    {p.positions.join(' · ')}
+                    {primaryPos}
+                  </span>
+                  <span className="pb-col-pos" style={{ alignSelf: 'center', color: 'var(--text-dim)', fontSize: 11 }}>
+                    {secondaryPos.join(' · ')}
                   </span>
                   <span className="lb-col-ovr" style={{ textAlign: 'right', alignSelf: 'center' }}>
                     {p.primeRating}

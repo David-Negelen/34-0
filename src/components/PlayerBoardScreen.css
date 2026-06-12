@@ -1,5 +1,5 @@
 .pb-row {
-  grid-template-columns: 36px 1fr 72px 44px;
+  grid-template-columns: 36px 1fr 44px 60px 44px;
 }
 
 .pb-col-pos {
@@ -30,6 +30,6 @@
 
 @media (max-width: 480px) {
   .pb-row {
-    grid-template-columns: 30px 1fr 56px 38px;
+    grid-template-columns: 30px 1fr 38px 52px 38px;
   }
 }
