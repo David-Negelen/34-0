@@ -202,9 +202,22 @@ export default function ResultScreen({ state, league = 'bl', onPlayAgain, onHome
                   {predictedPos != null && (() => {
                     const sigma = 3.5;
                     const g = x => Math.exp(-0.5 * ((x - predictedPos) / sigma) ** 2);
-                    const total = Array.from({ length: 18 }, (_, i) => g(i + 1)).reduce((a, b) => a + b, 0);
-                    const pct = Math.max(1, Math.round((g(pos) / total) * 100));
-                    return <div className="lp-chance">{pct}% Chance</div>;
+                    const vals = Array.from({ length: 18 }, (_, i) => g(i + 1));
+                    const total = vals.reduce((a, b) => a + b, 0);
+                    const diff = predictedPos - pos; // positive = better than predicted
+                    const label = diff > 1 ? 'Überperformt' : diff < -1 ? 'Unterperformt' : 'Prognose getroffen';
+                    const mod = diff > 1 ? 'lp-chance-over' : diff < -1 ? 'lp-chance-under' : 'lp-chance-exact';
+                    // Cumulative tail: P(this result or better/worse), so the complement makes sense
+                    let pct;
+                    if (diff > 1) {
+                      pct = Math.max(1, Math.round(vals.slice(0, pos).reduce((a, b) => a + b, 0) / total * 100));
+                    } else if (diff < -1) {
+                      pct = Math.max(1, Math.round(vals.slice(pos - 1).reduce((a, b) => a + b, 0) / total * 100));
+                    } else {
+                      const from = Math.max(0, pos - 2), to = Math.min(18, pos + 1);
+                      pct = Math.max(1, Math.round(vals.slice(from, to).reduce((a, b) => a + b, 0) / total * 100));
+                    }
+                    return <div className={`lp-chance ${mod}`}>{label} · {pct}% Chance</div>;
                   })()}
                 </div>
               </div>
