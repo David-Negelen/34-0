@@ -484,7 +484,6 @@
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   border-left: 3px solid transparent;
-  animation: ml-appear 0.18s ease-out both;
 }
 
 .ml-card:last-child { border-bottom: none; }
@@ -764,7 +763,6 @@
   font-weight: 600;
   white-space: nowrap;
   z-index: 200;
-  animation: fadeIn 0.2s ease both;
 }
 .submit-toast-saved { background: var(--green);  color: #fff; }
 .submit-toast-error { background: var(--red);    color: #fff; }

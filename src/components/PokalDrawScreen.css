@@ -36,11 +36,6 @@
   gap: 3px;
 }
 
-@keyframes drawReveal {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 .draw-pair {
   display: flex;
   align-items: center;
@@ -49,8 +44,6 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  opacity: 0;
-  animation: drawReveal 0.25s ease forwards;
 }
 
 .draw-pair--you {
