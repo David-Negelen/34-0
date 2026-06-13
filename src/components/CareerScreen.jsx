@@ -611,9 +611,6 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {swapHistory.length > 0 && (
-            <button className="btn btn-ghost btn-sm" onClick={onUndo}>↩ Rückgängig</button>
-          )}
           <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
         </div>
       </header>
@@ -675,8 +672,13 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
 
         {/* Right: offer cards */}
         <div className="career-transfer-right">
-          <div className="result-section-label">
-            Angebote — {usedCount} von {transferOffers.length} eingesetzt
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div className="result-section-label" style={{ marginBottom: 0 }}>
+              Angebote — {usedCount} von {transferOffers.length} eingesetzt
+            </div>
+            {swapHistory.length > 0 && (
+              <button className="btn btn-ghost btn-sm" onClick={onUndo}>↩ Rückgängig</button>
+            )}
           </div>
 
           {transferOffers.map((offer, i) => (
