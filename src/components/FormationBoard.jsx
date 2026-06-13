@@ -84,7 +84,7 @@ export default function FormationBoard({
             </span>
           )}
           <span className="board-ovr-sep" />
-          {[['TW', ratings.gk], ['ABW', ratings.def], ['MIT', ratings.mid], ['STU', ratings.att]].map(([label, val]) =>
+          {[['TW', ratings.gk], ['ABW', ratings.def], ['MIT', ratings.mid], ['ANG', ratings.att]].map(([label, val]) =>
             val ? (
               <span key={label} className="board-ovr-group">
                 <span className="board-ovr-label">{label}</span>
