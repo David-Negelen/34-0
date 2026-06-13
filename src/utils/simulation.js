@@ -332,8 +332,9 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
     const goalsAgainst = m.home === 'Deine 11' ? m.ag : m.hg;
     if (goalsAgainst === 0) {
-      const gk = squad.find(p => p.slotType === 'GK');
-      if (gk) statsMap[gk.name].cleanSheets++;
+      squad
+        .filter(p => ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p.slotType))
+        .forEach(p => { statsMap[p.name].cleanSheets++; });
     }
     const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
