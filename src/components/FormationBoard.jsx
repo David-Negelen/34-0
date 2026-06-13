@@ -51,6 +51,7 @@ export default function FormationBoard({
                 isClickable ? 'slot-clickable' : '',
                 !isEmpty && slot.player.isIcon  ? 'slot-token--icon'  : '',
                 !isEmpty && slot.player.isPrime ? 'slot-token--prime' : '',
+                !isEmpty && slot.player.isGem   ? 'slot-token--gem'   : '',
               ].filter(Boolean).join(' ')}
               style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
               onClick={isClickable ? () => onSlotClick(slot.id) : undefined}

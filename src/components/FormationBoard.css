@@ -80,6 +80,15 @@
   animation: slot-prime-pulse 2.4s ease-in-out infinite;
 }
 
+@keyframes slot-gem-pulse {
+  0%, 100% { box-shadow: 0 3px 12px rgba(0,0,0,0.55), 0 0 6px rgba(16,185,129,0.3); }
+  50%       { box-shadow: 0 3px 12px rgba(0,0,0,0.55), 0 0 20px rgba(16,185,129,0.7); }
+}
+.slot-token--gem {
+  border-color: #10b981 !important;
+  animation: slot-gem-pulse 2.4s ease-in-out infinite;
+}
+
 @keyframes icon-token-glow {
   0%, 100% { box-shadow: 0 3px 12px rgba(0,0,0,0.55), 0 0 14px rgba(201,162,39,0.4); }
   50%       { box-shadow: 0 3px 12px rgba(0,0,0,0.55), 0 0 28px rgba(201,162,39,0.75); }
