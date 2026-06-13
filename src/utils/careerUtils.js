@@ -96,9 +96,9 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   const withPot = p => markPrime(assignPotential(p));
   const withGemPot = p => {
     const c = withPot(p);
-    // ~35% chance the gem gets an elite ceiling (97–99)
-    if (Math.random() < 0.35) {
-      return { ...c, potential: 97 + Math.floor(Math.random() * 3) };
+    // 20% chance the gem gets an elite ceiling (97–99) and is flagged
+    if (Math.random() < 0.2) {
+      return { ...c, isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
     }
     return c;
   };

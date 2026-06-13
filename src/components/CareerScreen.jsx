@@ -716,7 +716,7 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
 
   if (offer.used) {
     return (
-      <div className={`career-offer-card career-offer-card--done${offer.isPrime ? ' career-offer-card--prime' : ''}`}>
+      <div className={`career-offer-card career-offer-card--done${offer.isPrime ? ' career-offer-card--prime' : ''}${offer.isGem ? ' career-offer-card--gem' : ''}`}>
         <div className="career-card-rating-wrap">
           <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
           {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
@@ -725,6 +725,7 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
           <div className="career-offer-name">
             {offer.name}
             {offer.isPrime && <span className="career-prime-badge">✦ PRIME</span>}
+            {offer.isGem && <span className="career-gem-badge">◆ GEM</span>}
           </div>
           <div className="career-offer-meta">
             <span>{offer.spunClub}</span>
@@ -737,10 +738,11 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
   }
 
   const primeClass = offer.isPrime ? ' career-offer-card--prime' : '';
+  const gemClass   = offer.isGem   ? ' career-offer-card--gem'   : '';
   const activeClass = isActive ? ' career-offer-card--active' : '';
 
   return (
-    <div className={`career-offer-card${activeClass}${primeClass}`}>
+    <div className={`career-offer-card${activeClass}${primeClass}${gemClass}`}>
       <div className="career-card-rating-wrap">
         <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
         {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
@@ -749,6 +751,7 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
         <div className="career-offer-name">
           {offer.name}
           {offer.isPrime && <span className="career-prime-badge">✦ PRIME</span>}
+          {offer.isGem && <span className="career-gem-badge">◆ GEM</span>}
         </div>
         <div className="career-offer-meta">
           <span>{offer.spunClub}</span>

@@ -1210,6 +1210,38 @@
 }
 
 /* ── Prime badge ── */
+@keyframes gem-pulse {
+  0%   { box-shadow: 0 0 6px rgba(16, 185, 129, 0.25); }
+  50%  { box-shadow: 0 0 18px rgba(16, 185, 129, 0.5); }
+  100% { box-shadow: 0 0 6px rgba(16, 185, 129, 0.25); }
+}
+
+.career-offer-card--gem {
+  border-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.07) 0%, rgba(16, 185, 129, 0.02) 100%);
+  animation: gem-pulse 2.4s ease-in-out infinite;
+}
+
+.career-offer-card--gem.career-offer-card--done {
+  animation: none;
+  opacity: 0.5;
+}
+
+.career-gem-badge {
+  display: inline-block;
+  margin-left: 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
 .career-prime-badge {
   display: inline-block;
   margin-left: 7px;
