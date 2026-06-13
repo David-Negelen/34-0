@@ -93,7 +93,11 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
       .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
   );
 
-  const withPot = p => markPrime(assignPotential(p));
+  const potFloor = teamAvg ? Math.max(97, teamAvg + 2) : 0;
+  const withPot = p => {
+    const c = markPrime(assignPotential(p));
+    return potFloor && c.potential < potFloor ? { ...c, potential: potFloor } : c;
+  };
 
   if (!teamAvg || !eligible.length) {
     return eligible.map(p => withPot(attachSeason(p))).slice(0, count);
@@ -102,7 +106,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   const result = [];
   const usedIds = new Set();
   const gemSeasonTarget = Math.max(50, teamAvg - 8);
-  const potentialBar    = teamAvg + 4;
+  const potentialBar    = Math.min(teamAvg + 4, 97);
 
   // 1. Potential gem: current OVR below avg but ceiling well above avg
   for (const p of eligible) {
@@ -139,11 +143,11 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     }
   }
 
-  // 4. Fallback: any remaining player
+  // 4. Fallback: remaining players, still biased toward team avg
   for (const p of eligible) {
     if (result.length >= count) break;
     if (!usedIds.has(p.id)) {
-      result.push(withPot(attachSeason(p)));
+      result.push(withPot(attachSeasonNear(p, teamAvg)));
       usedIds.add(p.id);
     }
   }
