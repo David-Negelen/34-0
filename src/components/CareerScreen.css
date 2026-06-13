@@ -944,9 +944,12 @@
   white-space: nowrap;
 }
 
-.pot-high { color: #f59e0b; }
-.pot-mid  { color: #94a3b8; }
-.pot-low  { color: var(--text-dim); }
+.pot-red    { color: #ef4444; }
+.pot-orange { color: #f97316; }
+.pot-yellow { color: #eab308; }
+.pot-green  { color: #22c55e; }
+.pot-dkgreen { color: #16a34a; }
+.pot-blue   { color: #60a5fa; }
 
 /* ── Entwicklung screen ── */
 .entw-body {

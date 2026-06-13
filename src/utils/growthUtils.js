@@ -19,10 +19,17 @@ export function assignPotential(player) {
 export function potentialTier(player) {
   if (!player?.potential) return null;
   const gap = player.potential - (player.displayRating ?? player.seasonRating);
-  if (gap >= 6) return 'high';
-  if (gap >= 3) return 'mid';
-  if (gap >= 1) return 'low';
+  if (gap >= 1) return 'show';
   return null;
+}
+
+export function potentialColorClass(ovr) {
+  if (ovr >= 95) return 'pot-blue';
+  if (ovr >= 90) return 'pot-dkgreen';
+  if (ovr >= 80) return 'pot-green';
+  if (ovr >= 70) return 'pot-yellow';
+  if (ovr >= 60) return 'pot-orange';
+  return 'pot-red';
 }
 
 function posGroup(slotType) {
