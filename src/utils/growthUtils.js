@@ -24,8 +24,7 @@ export function potentialTier(player) {
 }
 
 export function ovrColorClass(ovr) {
-  if (ovr >= 95) return 'ovr-blue';
-  if (ovr >= 90) return 'ovr-gold';
+  if (ovr >= 90) return 'ovr-blue';
   if (ovr >= 80) return 'ovr-green';
   if (ovr >= 70) return 'ovr-yellow';
   if (ovr >= 60) return 'ovr-orange';

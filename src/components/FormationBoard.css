@@ -61,15 +61,14 @@
 
 .slot-filled {
   background: #e3000b;
-  border-color: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .slot-filled.ovr-red    { background: #ef4444; }
 .slot-filled.ovr-orange { background: #f97316; }
 .slot-filled.ovr-yellow { background: #eab308; }
 .slot-filled.ovr-green  { background: #22c55e; }
-.slot-filled.ovr-gold   { background: #f59e0b; }
 .slot-filled.ovr-blue   { background: #60a5fa; }
 
 @keyframes slot-prime-pulse {
@@ -185,5 +184,4 @@
 .board-ovr-num.ovr-orange { color: #f97316; }
 .board-ovr-num.ovr-yellow { color: #eab308; }
 .board-ovr-num.ovr-green  { color: #22c55e; }
-.board-ovr-num.ovr-gold   { color: #f59e0b; }
 .board-ovr-num.ovr-blue   { color: #60a5fa; }
