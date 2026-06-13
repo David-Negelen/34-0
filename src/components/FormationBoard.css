@@ -69,7 +69,7 @@
 .slot-filled.ovr-orange { background: #f97316; }
 .slot-filled.ovr-yellow { background: #eab308; }
 .slot-filled.ovr-green  { background: #22c55e; }
-.slot-filled.ovr-dkgreen { background: #16a34a; }
+.slot-filled.ovr-gold   { background: #f59e0b; }
 .slot-filled.ovr-blue   { background: #60a5fa; }
 
 @keyframes slot-prime-pulse {
@@ -185,5 +185,5 @@
 .board-ovr-num.ovr-orange { color: #f97316; }
 .board-ovr-num.ovr-yellow { color: #eab308; }
 .board-ovr-num.ovr-green  { color: #22c55e; }
-.board-ovr-num.ovr-dkgreen { color: #16a34a; }
+.board-ovr-num.ovr-gold   { color: #f59e0b; }
 .board-ovr-num.ovr-blue   { color: #60a5fa; }
