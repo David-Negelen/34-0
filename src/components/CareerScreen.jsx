@@ -6,10 +6,10 @@ import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
-import { canPlayerFillSlot, getCompatibleSlots, labelDE, ratingClass } from '../utils/playerUtils';
+import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
-import { applyGrowth, potentialTier, potentialColorClass } from '../utils/growthUtils';
+import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
@@ -629,22 +629,22 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
                     <span className="career-swap-pos">{labelDE(s.label)}</span>
                     <span className="career-swap-name">{s.player.name}</span>
                     <div className="career-card-rating-wrap">
-                      <span className={`career-swap-rating rating rating-sm ${ratingClass(s.player.displayRating, division)}`}>
+                      <span className={`career-swap-rating rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>
                         {s.player.displayRating}
                       </span>
                       {potentialTier(s.player) && (
-                        <span className={`career-card-potential ${potentialColorClass(s.player.potential)}`}>
+                        <span className={`career-card-potential ${ovrColorClass(s.player.potential)}`}>
                           →{s.player.potential}
                         </span>
                       )}
                     </div>
                     <span className="career-swap-arrow">→</span>
                     <div className="career-card-rating-wrap">
-                      <span className={`career-swap-rating rating rating-sm ${ratingClass(selectedOffer.seasonRating, division)}`}>
+                      <span className={`career-swap-rating rating rating-sm ${ovrColorClass(selectedOffer.seasonRating)}`}>
                         {selectedOffer.seasonRating}
                       </span>
                       {potentialTier(selectedOffer) && (
-                        <span className={`career-card-potential ${potentialColorClass(selectedOffer.potential)}`}>
+                        <span className={`career-card-potential ${ovrColorClass(selectedOffer.potential)}`}>
                           →{selectedOffer.potential}
                         </span>
                       )}
@@ -700,7 +700,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
 }
 
 function TransferOfferCard({ offer, division, isActive, onUse }) {
-  const rcls = ratingClass(offer.seasonRating, division);
+  const rcls = ovrColorClass(offer.seasonRating);
   const tier = potentialTier(offer);
 
   if (offer.used) {
@@ -708,7 +708,7 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
       <div className={`career-offer-card career-offer-card--done${offer.isPrime ? ' career-offer-card--prime' : ''}`}>
         <div className="career-card-rating-wrap">
           <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
-          {tier && <span className={`career-card-potential ${potentialColorClass(offer.potential)}`}>→{offer.potential}</span>}
+          {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
         </div>
         <div className="career-offer-info">
           <div className="career-offer-name">
@@ -732,7 +732,7 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
     <div className={`career-offer-card${activeClass}${primeClass}`}>
       <div className="career-card-rating-wrap">
         <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
-        {tier && <span className={`career-card-potential ${potentialColorClass(offer.potential)}`}>→{offer.potential}</span>}
+        {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
       </div>
       <div className="career-offer-info">
         <div className="career-offer-name">
@@ -808,7 +808,7 @@ function CareerEntwicklung({ growthLog, seasonNumber, onContinue }) {
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function CareerCard({ player, league, picked, incompatible, offRole, onClick }) {
-  const rcls = ratingClass(player.seasonRating, league);
+  const rcls = ovrColorClass(player.seasonRating);
   const tier = potentialTier(player);
   const cls = [
     'career-card',
@@ -822,7 +822,7 @@ function CareerCard({ player, league, picked, incompatible, offRole, onClick }) 
       <div className="career-card-rating-wrap">
         <div className={`rating rating-sm ${rcls}`}>{player.seasonRating}</div>
         {tier && (
-          <span className={`career-card-potential ${potentialColorClass(player.potential)}`}>
+          <span className={`career-card-potential ${ovrColorClass(player.potential)}`}>
             →{player.potential}
           </span>
         )}

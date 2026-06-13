@@ -944,12 +944,20 @@
   white-space: nowrap;
 }
 
-.pot-red    { color: #ef4444; }
-.pot-orange { color: #f97316; }
-.pot-yellow { color: #eab308; }
-.pot-green  { color: #22c55e; }
-.pot-dkgreen { color: #16a34a; }
-.pot-blue   { color: #60a5fa; }
+/* Unified OVR color scale — same value = same color for badges and potential text */
+.rating.ovr-red    { background: #ef4444; color: #fff; }
+.rating.ovr-orange { background: #f97316; color: #fff; }
+.rating.ovr-yellow { background: #eab308; color: #000; }
+.rating.ovr-green  { background: #22c55e; color: #000; }
+.rating.ovr-dkgreen { background: #16a34a; color: #fff; }
+.rating.ovr-blue   { background: #60a5fa; color: #000; }
+
+.career-card-potential.ovr-red    { color: #ef4444; }
+.career-card-potential.ovr-orange { color: #f97316; }
+.career-card-potential.ovr-yellow { color: #eab308; }
+.career-card-potential.ovr-green  { color: #22c55e; }
+.career-card-potential.ovr-dkgreen { color: #16a34a; }
+.career-card-potential.ovr-blue   { color: #60a5fa; }
 
 /* ── Entwicklung screen ── */
 .entw-body {

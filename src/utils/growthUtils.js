@@ -23,13 +23,13 @@ export function potentialTier(player) {
   return null;
 }
 
-export function potentialColorClass(ovr) {
-  if (ovr >= 95) return 'pot-blue';
-  if (ovr >= 90) return 'pot-dkgreen';
-  if (ovr >= 80) return 'pot-green';
-  if (ovr >= 70) return 'pot-yellow';
-  if (ovr >= 60) return 'pot-orange';
-  return 'pot-red';
+export function ovrColorClass(ovr) {
+  if (ovr >= 95) return 'ovr-blue';
+  if (ovr >= 90) return 'ovr-dkgreen';
+  if (ovr >= 80) return 'ovr-green';
+  if (ovr >= 70) return 'ovr-yellow';
+  if (ovr >= 60) return 'ovr-orange';
+  return 'ovr-red';
 }
 
 function posGroup(slotType) {
