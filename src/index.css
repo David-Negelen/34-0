@@ -192,7 +192,7 @@ h1, h2, h3, h4 {
 .rating.ovr-orange { background: #f97316; color: #fff; }
 .rating.ovr-yellow { background: #eab308; color: #000; }
 .rating.ovr-green  { background: #22c55e; color: #000; }
-.rating.ovr-blue   { background: #60a5fa; color: #000; }
+.rating.ovr-blue   { background: #2563eb; color: #fff; }
 
 .rating-sm {
   width: 28px;
