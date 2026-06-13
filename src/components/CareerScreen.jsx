@@ -1055,22 +1055,30 @@ function CareerPlayoffCard({ playoff, division }) {
 // ── End Screen ────────────────────────────────────────────────────────────────
 
 function CareerEndScreen({ data, onNewCareer, onHome }) {
-  const { history, slots = [], careerStats = {} } = data;
+  const { history, slots = [], careerStats = {}, allPlayers = [] } = data;
   const totalSeasons = history.length;
   const totalPts = history.reduce((sum, s) => sum + (s.pts ?? 0), 0);
   const totalGF  = history.reduce((sum, s) => sum + (s.GF  ?? 0), 0);
   const totalGA  = history.reduce((sum, s) => sum + (s.GA  ?? 0), 0);
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
+  const ratingByName = Object.fromEntries(
+    allPlayers.map(p => [p.name, { displayRating: p.displayRating, isIcon: p.isIcon }])
+  );
+
   const [sortCol, setSortCol] = useState('games');
-  const [sortDir, setSortDir] = useState(-1); // -1 = desc, 1 = asc
+  const [sortDir, setSortDir] = useState(-1);
 
   function handleSort(col) {
     if (col === sortCol) setSortDir(d => d * -1);
     else { setSortCol(col); setSortDir(-1); }
   }
 
-  const base = Object.entries(careerStats).map(([name, stats]) => ({ name, ...stats }));
+  const base = Object.entries(careerStats).map(([name, stats]) => ({
+    name, ...stats,
+    displayRating: ratingByName[name]?.displayRating,
+    isIcon: ratingByName[name]?.isIcon,
+  }));
   const statsList = [...base].sort((a, b) => {
     const diff = (a[sortCol] ?? 0) - (b[sortCol] ?? 0);
     return diff !== 0 ? diff * sortDir : 0;
@@ -1135,7 +1143,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
             <div className="result-section-label">Spieler-Statistiken</div>
             <div className="ces-header">
               <span className="ces-name" />
-              {[['games','Sp'],['goals','T'],['assists','V']].map(([col, label]) => (
+              {[['displayRating','OVR'],['games','Sp'],['goals','T'],['assists','V']].map(([col, label]) => (
                 <button key={col} className={`ces-col ces-col-label ces-sort-btn${sortCol === col ? ' ces-sort-active' : ''}`} onClick={() => handleSort(col)}>
                   {label}{sortCol === col ? (sortDir === -1 ? ' ↓' : ' ↑') : ''}
                 </button>
@@ -1146,22 +1154,32 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
                 </button>
               )}
             </div>
-            {statsList.map((p, i) => (
-              <div key={`${p.name}-${i}`} className={`ces-row ${p.goals > 0 ? 'ces-row-scorer' : ''}`}>
-                <span className="ces-name">
-                  <span className="ces-pos">{labelDE(p.slotLabel)}</span>
-                  <span className="ces-pname">{p.name}</span>
-                </span>
-                <span className="ces-col">{p.games}</span>
-                <span className="ces-col">{p.goals || '—'}</span>
-                <span className="ces-col">{p.assists || '—'}</span>
-                {hasGK && (
-                  <span className="ces-col ces-ww">
-                    {p.slotType === 'GK' ? (p.cleanSheets || '—') : ''}
+            {statsList.map((p, i) => {
+              const ovrClass = p.displayRating ? ovrColorClass(p.displayRating) : '';
+              return (
+                <div key={`${p.name}-${i}`} className={[
+                  'ces-row',
+                  p.isIcon ? 'ces-row--icon' : (ovrClass ? `ces-row--${ovrClass}` : ''),
+                  p.goals > 0 ? 'ces-row-scorer' : '',
+                ].filter(Boolean).join(' ')}>
+                  <span className="ces-name">
+                    <span className="ces-pos">{labelDE(p.slotLabel)}</span>
+                    <span className="ces-pname">{p.name}</span>
                   </span>
-                )}
-              </div>
-            ))}
+                  <span className={`ces-col ces-col-ovr${p.isIcon ? ' ces-col-ovr--icon' : (ovrClass ? ` ${ovrClass}` : '')}`}>
+                    {p.displayRating ?? '—'}
+                  </span>
+                  <span className="ces-col">{p.games}</span>
+                  <span className="ces-col">{p.goals || '—'}</span>
+                  <span className="ces-col">{p.assists || '—'}</span>
+                  {hasGK && (
+                    <span className="ces-col ces-ww">
+                      {p.slotType === 'GK' ? (p.cleanSheets || '—') : ''}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
