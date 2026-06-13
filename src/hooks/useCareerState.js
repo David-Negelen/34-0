@@ -132,6 +132,7 @@ function reducer(state, action) {
       const playerUpdates = Object.fromEntries(
         updatedSlots.filter(s => s.player).map(s => [s.player.id, {
           displayRating: s.player.displayRating,
+          potential: s.player.potential,
           seasonsInSquad: s.player.seasonsInSquad,
           isIcon: s.player.isIcon,
         }])

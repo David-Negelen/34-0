@@ -90,7 +90,7 @@ export function applyGrowth(slots, playerStats) {
     // Icon promotion: one-time +5 boost, skip normal growth this season
     if (!p.isIcon && newSeasons >= ICON_MIN_SEASONS && Math.random() < ICON_CHANCE) {
       const newRating = p.displayRating + 5;
-      p = { ...p, isIcon: true, displayRating: newRating };
+      p = { ...p, isIcon: true, displayRating: newRating, potential: Math.max(p.potential ?? 0, newRating) };
       iconLog.push({ name: p.name, slotType: slot.type, oldRating: newRating - 5, newRating, seasons: newSeasons });
       return { ...slot, player: p };
     }
