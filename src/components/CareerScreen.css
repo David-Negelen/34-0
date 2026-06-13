@@ -1076,7 +1076,8 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
   animation: entw-icon-border 4s linear infinite;
 }
 
@@ -1086,48 +1087,82 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #f59e0b;
+  align-self: flex-start;
 }
 
-.entw-icon-row {
+.entw-icon-cards {
   display: flex;
-  align-items: center;
   gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
-.entw-icon-aura {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: conic-gradient(#f59e0b, #2563eb, #a78bfa, #34d399, #f59e0b);
-  animation: spin 3s linear infinite;
+@keyframes icon-card-glow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 16px rgba(201,162,39,0.3); }
+  50%       { box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 32px rgba(201,162,39,0.65); }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.entw-icon-info {
-  flex: 1;
+.entw-icon-card {
+  width: 140px;
+  background: linear-gradient(160deg, #fdfaf0 0%, #ede8d2 35%, #faf5e4 65%, #fdfaf0 100%);
+  border: 2px solid #c9a227;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.entw-icon-name {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.entw-icon-sub {
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
-.entw-icon-boost {
-  display: flex;
   align-items: center;
-  gap: 6px;
+  padding: 14px 10px 12px;
+  gap: 3px;
+  animation: icon-card-glow 3s ease-in-out infinite;
+  color: #1a1005;
+}
+
+.entw-icon-card-stars {
+  font-size: 9px;
+  color: #c9a227;
+  letter-spacing: 4px;
+  margin-bottom: 2px;
+}
+
+.entw-icon-card-label {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #c9a227;
+  margin-bottom: 6px;
+}
+
+.entw-icon-card-ovr {
+  font-size: 48px;
+  font-weight: 900;
+  color: #1a1005;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.entw-icon-card-pos {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1005;
+  opacity: 0.65;
+  margin-bottom: 8px;
+}
+
+.entw-icon-card-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1a1005;
+  text-align: center;
+  border-top: 1px solid rgba(201,162,39,0.4);
+  padding-top: 8px;
+  width: 100%;
+}
+
+.entw-icon-card-seasons {
+  font-size: 10px;
+  color: #8b7340;
+  margin-top: 1px;
 }
 
 /* ── Prime badge ── */

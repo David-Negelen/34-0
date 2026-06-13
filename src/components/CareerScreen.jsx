@@ -786,21 +786,18 @@ function CareerEntwicklung({ growthLog, iconLog = [], seasonNumber, onContinue }
         {iconLog.length > 0 && (
           <div className="entw-icon-section">
             <div className="entw-icon-header">Upgrade zur Legende</div>
-            {iconLog.map((entry, i) => (
-              <div key={i} className="entw-icon-row">
-                <span className="entw-icon-aura" />
-                <div className="entw-icon-info">
-                  <span className="entw-icon-name">{entry.name}</span>
-                  <span className="entw-icon-sub">{entry.seasons} Saisons im Kader · {labelDE(entry.slotType)}</span>
+            <div className="entw-icon-cards">
+              {iconLog.map((entry, i) => (
+                <div key={i} className="entw-icon-card">
+                  <div className="entw-icon-card-stars">★ ★ ★</div>
+                  <div className="entw-icon-card-label">IKONE</div>
+                  <div className="entw-icon-card-ovr">{entry.newRating}</div>
+                  <div className="entw-icon-card-pos">{labelDE(entry.slotType)}</div>
+                  <div className="entw-icon-card-name">{entry.name}</div>
+                  <div className="entw-icon-card-seasons">{entry.seasons} Saisons im Kader</div>
                 </div>
-                <span className="entw-icon-boost">
-                  <span className="entw-old">{entry.oldRating}</span>
-                  <span className="entw-arrow">→</span>
-                  <span className="entw-new">{entry.newRating}</span>
-                  <span className="entw-gain-badge">+5</span>
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
