@@ -95,19 +95,8 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
 
   const withPot = p => markPrime(assignPotential(p));
 
-  // 5% gem chance for any player, 7% for higher-rated ones (≥85).
-  // Gems get their rating boosted to 97–99.
-  const tryGem = p => {
-    const chance = p.seasonRating >= 85 ? 0.07 : 0.05;
-    if (Math.random() < chance) {
-      const r = 97 + Math.floor(Math.random() * 3);
-      return { ...p, isGem: true, seasonRating: r, displayRating: r };
-    }
-    return p;
-  };
-
   if (!teamAvg || !eligible.length) {
-    return eligible.map(p => tryGem(withPot(attachSeason(p)))).slice(0, count);
+    return eligible.map(p => withPot(attachSeason(p))).slice(0, count);
   }
 
   const result = [];
@@ -117,8 +106,8 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   if (Math.random() < 0.2) {
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
-      const candidate = tryGem(withPot(attachSeasonNear(p, teamAvg + 7)));
-      if (candidate.seasonRating >= teamAvg + 5 || candidate.isGem) {
+      const candidate = withPot(attachSeasonNear(p, teamAvg + 7));
+      if (candidate.seasonRating >= teamAvg + 5) {
         result.push(candidate);
         usedIds.add(p.id);
         break;
@@ -130,8 +119,8 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   for (const p of eligible) {
     if (result.length >= count) break;
     if (usedIds.has(p.id)) continue;
-    const candidate = tryGem(withPot(attachSeasonNear(p, teamAvg + 1.75)));
-    if (candidate.seasonRating >= teamAvg - 3 || candidate.isGem) {
+    const candidate = withPot(attachSeasonNear(p, teamAvg + 1.75));
+    if (candidate.seasonRating >= teamAvg - 3) {
       result.push(candidate);
       usedIds.add(p.id);
     }
@@ -141,10 +130,24 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   for (const p of eligible) {
     if (result.length >= count) break;
     if (!usedIds.has(p.id)) {
-      result.push(tryGem(withPot(attachSeasonNear(p, teamAvg))));
+      result.push(withPot(attachSeasonNear(p, teamAvg)));
       usedIds.add(p.id);
     }
   }
 
-  return shuffle(result).slice(0, count);
+  const final = shuffle(result).slice(0, count);
+
+  // Late-game only (teamAvg ≥ 85): one random offer gets a gem chance.
+  // 5% normally, 7% if the player is already high-rated (≥ 85).
+  if (teamAvg >= 85 && final.length) {
+    const idx = Math.floor(Math.random() * final.length);
+    const p = final[idx];
+    const chance = p.seasonRating >= 85 ? 0.07 : 0.05;
+    if (Math.random() < chance) {
+      const r = 97 + Math.floor(Math.random() * 3);
+      final[idx] = { ...p, isGem: true, seasonRating: r, displayRating: r };
+    }
+  }
+
+  return final;
 }
