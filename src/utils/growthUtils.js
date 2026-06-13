@@ -102,7 +102,8 @@ export function applyGrowth(slots, playerStats) {
     const gap = p.potential - p.displayRating;
     const score = perfScore(statsMap[p.name], slot.type);
     const rawGain = score * gap * 0.35 + Math.random() * 0.4;
-    const gain = clamp(Math.round(rawGain), 0, Math.min(gap, 3));
+    const gainCap = gap >= 20 ? 5 : gap >= 12 ? 4 : 3;
+    const gain = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
 
     if (gain > 0) {
       growthLog.push({

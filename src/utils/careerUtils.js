@@ -93,10 +93,14 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
       .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
   );
 
-  const potFloor = teamAvg ? Math.max(97, teamAvg + 2) : 0;
-  const withPot = p => {
-    const c = markPrime(assignPotential(p));
-    return potFloor && c.potential < potFloor ? { ...c, potential: potFloor } : c;
+  const withPot = p => markPrime(assignPotential(p));
+  const withGemPot = p => {
+    const c = withPot(p);
+    // ~35% chance the gem gets an elite ceiling (97–99)
+    if (Math.random() < 0.35) {
+      return { ...c, potential: 97 + Math.floor(Math.random() * 3) };
+    }
+    return c;
   };
 
   if (!teamAvg || !eligible.length) {
@@ -111,7 +115,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   // 1. Potential gem: current OVR below avg but ceiling well above avg
   for (const p of eligible) {
     if (usedIds.has(p.id)) continue;
-    const candidate = withPot(attachSeasonNear(p, gemSeasonTarget));
+    const candidate = withGemPot(attachSeasonNear(p, gemSeasonTarget));
     if (candidate.seasonRating <= teamAvg - 2 && candidate.potential >= potentialBar) {
       result.push(candidate);
       usedIds.add(p.id);
