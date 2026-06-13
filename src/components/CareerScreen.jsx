@@ -628,13 +628,27 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
                   <button key={s.id} className="career-swap-row" onClick={() => handleSwap(s.id)}>
                     <span className="career-swap-pos">{labelDE(s.label)}</span>
                     <span className="career-swap-name">{s.player.name}</span>
-                    <span className={`career-swap-rating rating rating-sm ${ratingClass(s.player.displayRating, division)}`}>
-                      {s.player.displayRating}
-                    </span>
+                    <div className="career-card-rating-wrap">
+                      <span className={`career-swap-rating rating rating-sm ${ratingClass(s.player.displayRating, division)}`}>
+                        {s.player.displayRating}
+                      </span>
+                      {potentialTier(s.player) && (
+                        <span className={`career-card-potential pot-${potentialTier(s.player)}`}>
+                          →{s.player.potential}
+                        </span>
+                      )}
+                    </div>
                     <span className="career-swap-arrow">→</span>
-                    <span className={`career-swap-rating rating rating-sm ${ratingClass(selectedOffer.seasonRating, division)}`}>
-                      {selectedOffer.seasonRating}
-                    </span>
+                    <div className="career-card-rating-wrap">
+                      <span className={`career-swap-rating rating rating-sm ${ratingClass(selectedOffer.seasonRating, division)}`}>
+                        {selectedOffer.seasonRating}
+                      </span>
+                      {potentialTier(selectedOffer) && (
+                        <span className={`career-card-potential pot-${potentialTier(selectedOffer)}`}>
+                          →{selectedOffer.potential}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 ))
               )}

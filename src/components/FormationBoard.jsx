@@ -1,5 +1,4 @@
 import { tokenName, ratingClass, labelDE } from '../utils/playerUtils';
-import { potentialTier } from '../utils/growthUtils';
 import './FormationBoard.css';
 
 export default function FormationBoard({
@@ -63,12 +62,6 @@ export default function FormationBoard({
                       {slot.player.displayRating}
                     </span>
                   )}
-                  {(() => {
-                    const tier = potentialTier(slot.player);
-                    return tier === 'high' || tier === 'mid'
-                      ? <span className={`slot-pot-pip pot-${tier}`} />
-                      : null;
-                  })()}
                 </>
               )}
             </button>
