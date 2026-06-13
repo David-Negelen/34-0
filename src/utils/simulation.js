@@ -42,9 +42,10 @@ function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01,
   const gk = squad.find(p => p.slotType === 'GK');
   const regGoals = goalsForReg ?? goalsFor;
 
-  // GK last-minute heroics: only when losing by exactly 1 and team scored at least once.
-  // Triggers at 90+ (or 119+ in AET) — a desperate push from the keeper.
-  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < gkGoalChance;  // league: 1%, pokal: 4%
+  // GK last-minute equalizer: keeper pushes up when 1 goal down and scores.
+  // Check is against the pre-GK-goal score (goalsFor - 1 vs goalsAgainst), so
+  // the condition is goalsAgainst === goalsFor (the GK's goal brings it level).
+  const gkLateGoal = gk && goalsAgainst === goalsFor && Math.random() < gkGoalChance;  // league: 1%, pokal: 4%
 
   for (let i = 0; i < goalsFor; i++) {
     const isLast = i === goalsFor - 1;
