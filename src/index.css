@@ -187,6 +187,14 @@ h1, h2, h3, h4 {
 .rating-low  { background: #ff5722; color: #fff; }
 .rating-hidden { background: var(--border-accent); color: var(--text-muted); font-size: 16px; }
 
+/* Absolute OVR color scale — same value = same color everywhere */
+.rating.ovr-red    { background: #ef4444; color: #fff; }
+.rating.ovr-orange { background: #f97316; color: #fff; }
+.rating.ovr-yellow { background: #eab308; color: #000; }
+.rating.ovr-green  { background: #22c55e; color: #000; }
+.rating.ovr-dkgreen { background: #16a34a; color: #fff; }
+.rating.ovr-blue   { background: #60a5fa; color: #000; }
+
 .rating-sm {
   width: 28px;
   height: 28px;

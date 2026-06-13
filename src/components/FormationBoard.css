@@ -138,3 +138,52 @@
 
 .slot-pot-pip.pot-high { background: #f59e0b; }
 .slot-pot-pip.pot-mid  { background: #94a3b8; }
+
+/* ── OVR summary bar ── */
+.board-ovr-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 0 2px;
+  flex-wrap: wrap;
+}
+
+.board-ovr-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.board-ovr-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.board-ovr-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.board-ovr-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.board-ovr-num {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.board-ovr-num.ovr-red    { color: #ef4444; }
+.board-ovr-num.ovr-orange { color: #f97316; }
+.board-ovr-num.ovr-yellow { color: #eab308; }
+.board-ovr-num.ovr-green  { color: #22c55e; }
+.board-ovr-num.ovr-dkgreen { color: #16a34a; }
+.board-ovr-num.ovr-blue   { color: #60a5fa; }

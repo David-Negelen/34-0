@@ -1,5 +1,6 @@
 import { tokenName, labelDE } from '../utils/playerUtils';
 import { ovrColorClass } from '../utils/growthUtils';
+import { calcSquadRatings } from '../utils/ratingCalc';
 import './FormationBoard.css';
 
 export default function FormationBoard({
@@ -10,6 +11,9 @@ export default function FormationBoard({
   draftMode,
   league = 'bl',
 }) {
+  const ratings = showRatings ? calcSquadRatings(slots) : null;
+  const filledCount = slots.filter(s => s.player).length;
+
   return (
     <div className="board-wrap">
       <div className="pitch">
@@ -70,6 +74,25 @@ export default function FormationBoard({
           );
         })}
       </div>
+      {ratings && filledCount > 0 && (
+        <div className="board-ovr-bar">
+          {ratings.overall && (
+            <span className="board-ovr-main">
+              <span className="board-ovr-label">OVR</span>
+              <span className={`rating rating-sm ${ovrColorClass(ratings.overall)}`}>{ratings.overall}</span>
+            </span>
+          )}
+          <span className="board-ovr-sep" />
+          {[['TW', ratings.gk], ['ABW', ratings.def], ['MIT', ratings.mid], ['STU', ratings.att]].map(([label, val]) =>
+            val ? (
+              <span key={label} className="board-ovr-group">
+                <span className="board-ovr-label">{label}</span>
+                <span className={`board-ovr-num ${ovrColorClass(val)}`}>{val}</span>
+              </span>
+            ) : null
+          )}
+        </div>
+      )}
     </div>
   );
 }
