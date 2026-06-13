@@ -89,15 +89,6 @@
   border: 3px solid #c9a227 !important;
   animation: icon-token-glow 2.5s ease-in-out infinite;
 }
-.slot-token--icon::after {
-  content: '★';
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  font-size: 8px;
-  color: #c9a227;
-  line-height: 1;
-}
 .slot-token--icon .slot-player-name {
   color: #1a1005;
 }
