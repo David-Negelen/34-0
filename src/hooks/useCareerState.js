@@ -15,6 +15,7 @@ const defaultState = {
   seasonHistory: [],
   allPlayers: [],
   careerStats: {},
+  swapHistory: [],
 };
 
 function mergeStats(careerStats, playerStats) {
@@ -69,7 +70,7 @@ function reducer(state, action) {
     }
 
     case 'SET_RESULT':
-      return { ...state, phase: 'result', result: action.payload };
+      return { ...state, phase: 'result', result: action.payload, swapHistory: [] };
 
     case 'BEGIN_TRANSFER': {
       const { newDivision, transferOffers } = action.payload;
@@ -92,6 +93,7 @@ function reducer(state, action) {
         seasonHistory: history,
         careerStats: mergeStats(state.careerStats, state.result?.playerStats),
         result: null,
+        swapHistory: [],
       };
     }
 
@@ -100,6 +102,7 @@ function reducer(state, action) {
       const offer = state.transferOffers[offerIndex];
       if (!offer || offer.used || offer.skipped) return state;
       const swappedIn = { ...offer, displayRating: offer.seasonRating };
+      const oldPlayer = state.slots.find(s => s.id === slotId)?.player ?? null;
       const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
       return {
         ...state,
@@ -110,6 +113,22 @@ function reducer(state, action) {
           i === offerIndex ? { ...o, used: true } : o
         ),
         allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, swappedIn],
+        swapHistory: [...state.swapHistory, { slotId, oldPlayer, offerIndex }],
+      };
+    }
+
+    case 'UNDO_SWAP': {
+      if (!state.swapHistory.length) return state;
+      const { slotId, oldPlayer, offerIndex } = state.swapHistory[state.swapHistory.length - 1];
+      return {
+        ...state,
+        slots: state.slots.map(s =>
+          s.id === slotId ? { ...s, player: oldPlayer } : s
+        ),
+        transferOffers: state.transferOffers.map((o, i) =>
+          i === offerIndex ? { ...o, used: false } : o
+        ),
+        swapHistory: state.swapHistory.slice(0, -1),
       };
     }
 
@@ -180,6 +199,7 @@ export function useCareerState() {
                      dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers } }),
     swapOffer:     (offerIndex, slotId) =>
                      dispatch({ type: 'SWAP_OFFER', payload: { offerIndex, slotId } }),
+    undoSwap:      () => dispatch({ type: 'UNDO_SWAP' }),
     skipOffer:     i => dispatch({ type: 'SKIP_OFFER', payload: i }),
     removePlayer:  slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
     applyGrowth:   updatedSlots => dispatch({ type: 'APPLY_GROWTH', payload: { updatedSlots } }),

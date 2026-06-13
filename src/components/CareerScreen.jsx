@@ -194,6 +194,7 @@ export default function CareerScreen() {
       <CareerTransfer
         state={state}
         onSwap={career.swapOffer}
+        onUndo={career.undoSwap}
         onSkip={career.skipOffer}
         onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
         onEnd={handleEndCareer}
@@ -569,8 +570,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome }) {
-  const { slots, transferOffers, division, seasonNumber, seasonHistory } = state;
+function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, onHome }) {
+  const { slots, transferOffers, division, seasonNumber, seasonHistory, swapHistory } = state;
   const [activeOffer, setActiveOffer] = useState(null);
 
   const prevDivision = seasonHistory[seasonHistory.length - 1]?.division;
@@ -609,7 +610,12 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
             </div>
           )}
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {swapHistory.length > 0 && (
+            <button className="btn btn-ghost btn-sm" onClick={onUndo}>↩ Rückgängig</button>
+          )}
+          <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
+        </div>
       </header>
 
       <div className="career-transfer-layout">
