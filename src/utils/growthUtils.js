@@ -63,9 +63,9 @@ export function markPrime(player) {
   return {
     ...player,
     isPrime:      true,
-    seasonRating: player.seasonRating + 2,
-    displayRating: (player.displayRating ?? player.seasonRating) + 2,
-    potential:    (player.potential    ?? player.seasonRating) + 2,
+    seasonRating: player.seasonRating + 3,
+    displayRating: (player.displayRating ?? player.seasonRating) + 3,
+    potential:    (player.potential    ?? player.seasonRating) + 3,
   };
 }
 
