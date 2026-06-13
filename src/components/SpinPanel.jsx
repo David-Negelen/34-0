@@ -11,7 +11,6 @@ import {
 import PlayerCard from './PlayerCard';
 import './SpinPanel.css';
 
-const POS_ORDER = ['GK','CB','LB','RB','DM','CM','AM','LW','RW','ST'];
 
 const SPIN_FRAMES = 16;
 const SPIN_DELAYS = [60,60,70,80,90,110,130,155,175,200,240,270,310,350,390,440];
@@ -310,7 +309,7 @@ export default function SpinPanel({
           {candidates.length === 0 ? (
             <p className="no-candidates">Keine Kandidaten für deine offenen Positionen.</p>
           ) : (() => {
-            const availPos = POS_ORDER.filter(p => candidates.some(c => c.positions.includes(p)));
+            const availPos = [...new Set(openSlots.map(s => s.type))].filter(p => candidates.some(c => c.positions.includes(p)));
             const visible = posFilter ? candidates.filter(c => c.positions.includes(posFilter)) : candidates;
             return (
               <>
