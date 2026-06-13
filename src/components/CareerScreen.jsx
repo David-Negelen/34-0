@@ -255,7 +255,6 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
 
 // ── Draft ─────────────────────────────────────────────────────────────────────
 
-const POS_ORDER = ['GK','CB','LB','RB','DM','CM','AM','LW','RW','ST'];
 
 function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   const { slots, draftPool, formation } = state;
@@ -346,7 +345,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
           )}
           <div className="career-pos-filters">
             <button className={`career-filter-btn${posFilter === '' ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
-            {POS_ORDER.filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
+            {[...new Set(slots.map(s => s.type))].filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
               <button key={p} className={`career-filter-btn${posFilter === p ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
             ))}
           </div>
