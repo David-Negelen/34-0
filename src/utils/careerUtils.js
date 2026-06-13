@@ -94,41 +94,31 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   );
 
   const withPot = p => markPrime(assignPotential(p));
-  const withGemPot = p => {
-    const c = withPot(p);
-    // 20% chance the gem gets an elite ceiling (97–99) and is flagged
-    if (Math.random() < 0.2) {
-      return { ...c, isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
+
+  // 5% gem chance for any player, 7% for higher-rated ones (≥85).
+  // Gems get their rating boosted to 97–99.
+  const tryGem = p => {
+    const chance = p.seasonRating >= 85 ? 0.07 : 0.05;
+    if (Math.random() < chance) {
+      const r = 97 + Math.floor(Math.random() * 3);
+      return { ...p, isGem: true, seasonRating: r, displayRating: r };
     }
-    return c;
+    return p;
   };
 
   if (!teamAvg || !eligible.length) {
-    return eligible.map(p => withPot(attachSeason(p))).slice(0, count);
+    return eligible.map(p => tryGem(withPot(attachSeason(p)))).slice(0, count);
   }
 
   const result = [];
   const usedIds = new Set();
-  const gemSeasonTarget = Math.max(50, teamAvg - 8);
-  const potentialBar    = Math.min(teamAvg + 4, 97);
 
-  // 1. Potential gem: current OVR below avg but ceiling well above avg
-  for (const p of eligible) {
-    if (usedIds.has(p.id)) continue;
-    const candidate = withGemPot(attachSeasonNear(p, gemSeasonTarget));
-    if (candidate.seasonRating <= teamAvg - 2 && candidate.potential >= potentialBar) {
-      result.push(candidate);
-      usedIds.add(p.id);
-      break;
-    }
-  }
-
-  // 2. Optional standout: significantly above team avg (20% chance)
+  // 1. Optional standout: significantly above team avg (20% chance)
   if (Math.random() < 0.2) {
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
-      const candidate = withPot(attachSeasonNear(p, teamAvg + 7));
-      if (candidate.seasonRating >= teamAvg + 5) {
+      const candidate = tryGem(withPot(attachSeasonNear(p, teamAvg + 7)));
+      if (candidate.seasonRating >= teamAvg + 5 || candidate.isGem) {
         result.push(candidate);
         usedIds.add(p.id);
         break;
@@ -136,22 +126,22 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     }
   }
 
-  // 3. Normal offers: OVR near team avg
+  // 2. Normal offers: OVR near team avg
   for (const p of eligible) {
     if (result.length >= count) break;
     if (usedIds.has(p.id)) continue;
-    const candidate = withPot(attachSeasonNear(p, teamAvg + 1.75));
-    if (candidate.seasonRating >= teamAvg - 3) {
+    const candidate = tryGem(withPot(attachSeasonNear(p, teamAvg + 1.75)));
+    if (candidate.seasonRating >= teamAvg - 3 || candidate.isGem) {
       result.push(candidate);
       usedIds.add(p.id);
     }
   }
 
-  // 4. Fallback: remaining players, still biased toward team avg
+  // 3. Fallback: remaining players, still biased toward team avg
   for (const p of eligible) {
     if (result.length >= count) break;
     if (!usedIds.has(p.id)) {
-      result.push(withPot(attachSeasonNear(p, teamAvg)));
+      result.push(tryGem(withPot(attachSeasonNear(p, teamAvg))));
       usedIds.add(p.id);
     }
   }
