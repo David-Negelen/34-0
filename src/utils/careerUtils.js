@@ -144,8 +144,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     const p = final[idx];
     const chance = p.seasonRating >= 85 ? 0.07 : 0.05;
     if (Math.random() < chance) {
-      const r = 97 + Math.floor(Math.random() * 3);
-      final[idx] = { ...p, isGem: true, seasonRating: r, displayRating: r };
+      final[idx] = { ...p, isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
     }
   }
 
