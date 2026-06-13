@@ -68,7 +68,8 @@ export function markPrime(player) {
   };
 }
 
-const ICON_SEASONS = 5;
+const ICON_MIN_SEASONS = 10;
+const ICON_CHANCE = 1 / 6; // (1-p)/p = 5 → expected promotion at season ~15
 
 // Applies one season of growth to all squad slots.
 // Also increments seasonsInSquad and promotes players who reach ICON_SEASONS.
@@ -87,7 +88,7 @@ export function applyGrowth(slots, playerStats) {
     p = { ...p, seasonsInSquad: newSeasons };
 
     // Icon promotion: one-time +5 boost, skip normal growth this season
-    if (!p.isIcon && newSeasons >= ICON_SEASONS) {
+    if (!p.isIcon && newSeasons >= ICON_MIN_SEASONS && Math.random() < ICON_CHANCE) {
       const newRating = p.displayRating + 5;
       p = { ...p, isIcon: true, displayRating: newRating };
       iconLog.push({ name: p.name, slotType: slot.type, oldRating: newRating - 5, newRating, seasons: newSeasons });
