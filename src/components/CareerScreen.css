@@ -927,6 +927,113 @@
 }
 
 
+/* ── Potential display ── */
+.career-card-rating-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.career-card-potential {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pot-high { color: #f59e0b; }
+.pot-mid  { color: #94a3b8; }
+.pot-low  { color: var(--text-dim); }
+
+/* ── Entwicklung screen ── */
+.entw-body {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.entw-empty {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.entw-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.entw-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.entw-row:last-child { border-bottom: none; }
+
+.entw-gain-badge {
+  min-width: 28px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 6px;
+  padding: 2px 5px;
+  flex-shrink: 0;
+}
+
+.entw-pos {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.entw-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entw-ratings {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.entw-old   { color: var(--text-muted); }
+.entw-arrow { color: var(--text-dim); font-size: 11px; }
+.entw-new   { font-weight: 800; color: #4caf50; }
+
+.entw-cta { width: 100%; }
+
 /* ── Transfer sticky start bar (mobile only) ── */
 .career-transfer-sticky-bar {
   display: none;

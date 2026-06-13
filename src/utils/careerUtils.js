@@ -1,4 +1,5 @@
 import { canPlayerFillSlot } from './playerUtils';
+import { assignPotential } from './growthUtils';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -62,7 +63,7 @@ export function generateCareerDraftPool(players, formation, count = 30) {
     for (const e of shuffled) {
       if (usedIds.has(e.id)) continue;
       if (canPlayerFillSlot(e, slotType)) {
-        chosen.push(e);
+        chosen.push(assignPotential(e));
         usedIds.add(e.id);
         if (++added >= target) break;
       }
@@ -74,7 +75,7 @@ export function generateCareerDraftPool(players, formation, count = 30) {
     if (chosen.length >= count) break;
     if (!usedIds.has(e.id)) {
       if (canPlayerFillSlot(e, 'GK') && chosen.filter(p => canPlayerFillSlot(p, 'GK')).length >= GK_MAX) continue;
-      chosen.push(e);
+      chosen.push(assignPotential(e));
       usedIds.add(e.id);
     }
   }
@@ -82,46 +83,67 @@ export function generateCareerDraftPool(players, formation, count = 30) {
   return shuffle(chosen).slice(0, count);
 }
 
-// Generate transfer offers biased toward the team's current avg rating (+2 improvement).
-// 20% chance for a standout player (+5 to +8 above avg). teamAvg is optional.
+// Generate transfer offers. Always includes 1 potential gem (lower OVR, high ceiling)
+// alongside normal/standout offers. All offers have potential assigned.
 export function generateTransferOffers(players, excludeIds, formation, count = 5, teamAvg = null) {
   const slotTypes = formation.slots.map(s => s.type);
-  const eligible = players
-    .filter(p => !excludeIds.has(p.id) && p.seasons?.length)
-    .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)));
+  const eligible = shuffle(
+    players
+      .filter(p => !excludeIds.has(p.id) && p.seasons?.length)
+      .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
+  );
 
   if (!teamAvg || !eligible.length) {
-    return shuffle(eligible.map(attachSeason)).slice(0, count);
+    return eligible.map(p => assignPotential(attachSeason(p))).slice(0, count);
   }
-
-  const shuffled = shuffle(eligible);
-  const includeStandout = Math.random() < 0.2;
-
-  const standoutPool = shuffled
-    .map(p => attachSeasonNear(p, teamAvg + 7))
-    .filter(p => p.seasonRating >= teamAvg + 5);
-
-  const normalPool = shuffled
-    .map(p => attachSeasonNear(p, teamAvg + 1.75))
-    .filter(p => p.seasonRating >= teamAvg - 3);
 
   const result = [];
   const usedIds = new Set();
+  const gemSeasonTarget = Math.max(50, teamAvg - 8);
+  const potentialBar    = teamAvg + 4;
 
-  if (includeStandout) {
-    for (const p of standoutPool) {
-      if (!usedIds.has(p.id)) { result.push(p); usedIds.add(p.id); break; }
+  // 1. Potential gem: current OVR below avg but ceiling well above avg
+  for (const p of eligible) {
+    if (usedIds.has(p.id)) continue;
+    const candidate = assignPotential(attachSeasonNear(p, gemSeasonTarget));
+    if (candidate.seasonRating <= teamAvg - 2 && candidate.potential >= potentialBar) {
+      result.push(candidate);
+      usedIds.add(p.id);
+      break;
     }
   }
 
-  for (const p of normalPool) {
-    if (result.length >= count) break;
-    if (!usedIds.has(p.id)) { result.push(p); usedIds.add(p.id); }
+  // 2. Optional standout: significantly above team avg (20% chance)
+  if (Math.random() < 0.2) {
+    for (const p of eligible) {
+      if (usedIds.has(p.id)) continue;
+      const candidate = assignPotential(attachSeasonNear(p, teamAvg + 7));
+      if (candidate.seasonRating >= teamAvg + 5) {
+        result.push(candidate);
+        usedIds.add(p.id);
+        break;
+      }
+    }
   }
 
-  for (const p of shuffled.map(attachSeason)) {
+  // 3. Normal offers: OVR near team avg
+  for (const p of eligible) {
     if (result.length >= count) break;
-    if (!usedIds.has(p.id)) { result.push(p); usedIds.add(p.id); }
+    if (usedIds.has(p.id)) continue;
+    const candidate = assignPotential(attachSeasonNear(p, teamAvg + 1.75));
+    if (candidate.seasonRating >= teamAvg - 3) {
+      result.push(candidate);
+      usedIds.add(p.id);
+    }
+  }
+
+  // 4. Fallback: any remaining player
+  for (const p of eligible) {
+    if (result.length >= count) break;
+    if (!usedIds.has(p.id)) {
+      result.push(assignPotential(attachSeason(p)));
+      usedIds.add(p.id);
+    }
   }
 
   return shuffle(result).slice(0, count);

@@ -127,6 +127,20 @@ function reducer(state, action) {
         ),
       };
 
+    case 'APPLY_GROWTH': {
+      const { updatedSlots } = action.payload;
+      const growthMap = Object.fromEntries(
+        updatedSlots.filter(s => s.player).map(s => [s.player.id, s.player.displayRating])
+      );
+      return {
+        ...state,
+        slots: updatedSlots,
+        allPlayers: state.allPlayers.map(p =>
+          growthMap[p.id] != null ? { ...p, displayRating: growthMap[p.id] } : p
+        ),
+      };
+    }
+
     case 'RESET':
       return defaultState;
 
@@ -163,6 +177,7 @@ export function useCareerState() {
                      dispatch({ type: 'SWAP_OFFER', payload: { offerIndex, slotId } }),
     skipOffer:     i => dispatch({ type: 'SKIP_OFFER', payload: i }),
     removePlayer:  slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
+    applyGrowth:   updatedSlots => dispatch({ type: 'APPLY_GROWTH', payload: { updatedSlots } }),
     reset:         () => dispatch({ type: 'RESET' }),
   };
 }

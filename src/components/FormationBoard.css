@@ -109,3 +109,16 @@
   border-radius: 6px;
   line-height: 1;
 }
+
+.slot-pot-pip {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+.slot-pot-pip.pot-high { background: #f59e0b; }
+.slot-pot-pip.pot-mid  { background: #94a3b8; }
