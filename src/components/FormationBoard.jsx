@@ -1,4 +1,5 @@
-import { tokenName, ratingClass, labelDE } from '../utils/playerUtils';
+import { tokenName, labelDE } from '../utils/playerUtils';
+import { ovrColorClass } from '../utils/growthUtils';
 import './FormationBoard.css';
 
 export default function FormationBoard({
@@ -41,9 +42,10 @@ export default function FormationBoard({
               key={slot.id}
               className={[
                 'slot-token',
-                isEmpty ? 'slot-empty' : 'slot-filled',
+                isEmpty ? 'slot-empty' : `slot-filled ${ovrColorClass(slot.player.displayRating)}`,
                 isSelected ? 'slot-selected' : '',
                 isClickable ? 'slot-clickable' : '',
+                !isEmpty && slot.player.isPrime ? 'slot-token--prime' : '',
               ].filter(Boolean).join(' ')}
               style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
               onClick={isClickable ? () => onSlotClick(slot.id) : undefined}
@@ -58,7 +60,7 @@ export default function FormationBoard({
                     {(() => { const [a, b] = tokenName(slot.player.name); return b ? <>{a}<br />{b}</> : a; })()}
                   </span>
                   {showRatings && (
-                    <span className={`slot-rating ${ratingClass(slot.player.displayRating, league)}`}>
+                    <span className="slot-rating">
                       {slot.player.displayRating}
                     </span>
                   )}
