@@ -632,7 +632,7 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
                       <span className={`career-swap-rating rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>
                         {s.player.displayRating}
                       </span>
-                      {potentialTier(s.player) && (
+                      {s.player.potential && (
                         <span className={`career-card-potential ${ovrColorClass(s.player.potential)}`}>
                           →{s.player.potential}
                         </span>
