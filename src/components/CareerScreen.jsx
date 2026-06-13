@@ -691,13 +691,16 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
 
   if (offer.used) {
     return (
-      <div className="career-offer-card career-offer-card--done">
+      <div className={`career-offer-card career-offer-card--done${offer.isPrime ? ' career-offer-card--prime' : ''}`}>
         <div className="career-card-rating-wrap">
           <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
           {tier && <span className={`career-card-potential pot-${tier}`}>→{offer.potential}</span>}
         </div>
         <div className="career-offer-info">
-          <div className="career-offer-name">{offer.name}</div>
+          <div className="career-offer-name">
+            {offer.name}
+            {offer.isPrime && <span className="career-prime-badge">✦ PRIME</span>}
+          </div>
           <div className="career-offer-meta">
             <span>{offer.spunClub}</span>
             <span>{shortSeason(offer.spunSeason)}</span>
@@ -708,14 +711,20 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
     );
   }
 
+  const primeClass = offer.isPrime ? ' career-offer-card--prime' : '';
+  const activeClass = isActive ? ' career-offer-card--active' : '';
+
   return (
-    <div className={`career-offer-card ${isActive ? 'career-offer-card--active' : ''}`}>
+    <div className={`career-offer-card${activeClass}${primeClass}`}>
       <div className="career-card-rating-wrap">
         <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
         {tier && <span className={`career-card-potential pot-${tier}`}>→{offer.potential}</span>}
       </div>
       <div className="career-offer-info">
-        <div className="career-offer-name">{offer.name}</div>
+        <div className="career-offer-name">
+          {offer.name}
+          {offer.isPrime && <span className="career-prime-badge">✦ PRIME</span>}
+        </div>
         <div className="career-offer-meta">
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>

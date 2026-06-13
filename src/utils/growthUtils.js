@@ -44,6 +44,24 @@ function perfScore(stats, slotType) {
   return clamp((stats.goals * 1.5 + stats.assists * 0.8) / games / 0.6, 0, 1);
 }
 
+// Marks a transfer offer as "prime" if the player is being offered at their
+// career peak season. 15% chance when seasonRating >= primeRating - 1 and the
+// player is already high quality (>=82). Boosts seasonRating, displayRating,
+// and potential each by +2.
+export function markPrime(player) {
+  if (!player.primeRating) return player;
+  const atPeak      = player.seasonRating >= player.primeRating - 1;
+  const highQuality = player.seasonRating >= 82;
+  if (!atPeak || !highQuality || Math.random() >= 0.15) return player;
+  return {
+    ...player,
+    isPrime:      true,
+    seasonRating: player.seasonRating + 2,
+    displayRating: (player.displayRating ?? player.seasonRating) + 2,
+    potential:    (player.potential    ?? player.seasonRating) + 2,
+  };
+}
+
 // Applies one season of growth to all squad slots.
 // Returns { updatedSlots, growthLog } — does NOT mutate state.
 export function applyGrowth(slots, playerStats) {

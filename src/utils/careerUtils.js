@@ -1,5 +1,5 @@
 import { canPlayerFillSlot } from './playerUtils';
-import { assignPotential } from './growthUtils';
+import { assignPotential, markPrime } from './growthUtils';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -93,8 +93,10 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
       .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
   );
 
+  const withPot = p => markPrime(assignPotential(p));
+
   if (!teamAvg || !eligible.length) {
-    return eligible.map(p => assignPotential(attachSeason(p))).slice(0, count);
+    return eligible.map(p => withPot(attachSeason(p))).slice(0, count);
   }
 
   const result = [];
@@ -105,7 +107,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   // 1. Potential gem: current OVR below avg but ceiling well above avg
   for (const p of eligible) {
     if (usedIds.has(p.id)) continue;
-    const candidate = assignPotential(attachSeasonNear(p, gemSeasonTarget));
+    const candidate = withPot(attachSeasonNear(p, gemSeasonTarget));
     if (candidate.seasonRating <= teamAvg - 2 && candidate.potential >= potentialBar) {
       result.push(candidate);
       usedIds.add(p.id);
@@ -117,7 +119,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   if (Math.random() < 0.2) {
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
-      const candidate = assignPotential(attachSeasonNear(p, teamAvg + 7));
+      const candidate = withPot(attachSeasonNear(p, teamAvg + 7));
       if (candidate.seasonRating >= teamAvg + 5) {
         result.push(candidate);
         usedIds.add(p.id);
@@ -130,7 +132,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   for (const p of eligible) {
     if (result.length >= count) break;
     if (usedIds.has(p.id)) continue;
-    const candidate = assignPotential(attachSeasonNear(p, teamAvg + 1.75));
+    const candidate = withPot(attachSeasonNear(p, teamAvg + 1.75));
     if (candidate.seasonRating >= teamAvg - 3) {
       result.push(candidate);
       usedIds.add(p.id);
@@ -141,7 +143,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   for (const p of eligible) {
     if (result.length >= count) break;
     if (!usedIds.has(p.id)) {
-      result.push(assignPotential(attachSeason(p)));
+      result.push(withPot(attachSeason(p)));
       usedIds.add(p.id);
     }
   }
