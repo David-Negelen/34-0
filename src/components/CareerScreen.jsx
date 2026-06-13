@@ -6,9 +6,10 @@ import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
-import { canPlayerFillSlot, getCompatibleSlots, labelDE, ratingClass } from '../utils/playerUtils';
+import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
+import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
@@ -59,6 +60,7 @@ export default function CareerScreen() {
   const career = useCareerState();
   const { state } = career;
   const [endData, setEndData] = useState(null);
+  const [entwicklungData, setEntwicklungData] = useState(null);
 
   function runSeason(slots, division, seasonNumber) {
     const players = getPlayers(division);
@@ -150,20 +152,36 @@ export default function CareerScreen() {
     const relegated = directRelegated || playoffRelegated;
     const newDivision = promoted ? 'bl' : relegated ? '2bl' : state.division;
 
+    if (entwicklungData) {
+      return (
+        <CareerEntwicklung
+          growthLog={entwicklungData.growthLog}
+          iconLog={entwicklungData.iconLog}
+          seasonNumber={state.seasonNumber}
+          onContinue={() => {
+            career.applyGrowth(entwicklungData.updatedSlots);
+            const divPlayers = getPlayers(newDivision);
+            const filled = entwicklungData.updatedSlots.filter(s => s.player);
+            const excludeIds = new Set(filled.map(s => s.player.id));
+            const teamAvg = filled.length
+              ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
+              : null;
+            const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg);
+            career.beginTransfer(newDivision, offers);
+            setEntwicklungData(null);
+          }}
+        />
+      );
+    }
+
     return (
       <CareerResult
         state={state}
         promoted={promoted}
         relegated={relegated}
         onContinue={() => {
-          const divPlayers = getPlayers(newDivision);
-          const filled = state.slots.filter(s => s.player);
-          const excludeIds = new Set(filled.map(s => s.player.id));
-          const teamAvg = filled.length
-            ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? s.player.seasonRating ?? 0), 0) / filled.length)
-            : null;
-          const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg);
-          career.beginTransfer(newDivision, offers);
+          const { updatedSlots, growthLog, iconLog } = applyGrowth(state.slots, state.result?.playerStats);
+          setEntwicklungData({ updatedSlots, growthLog, iconLog });
         }}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
@@ -610,14 +628,30 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
                 compatSlots.map(s => (
                   <button key={s.id} className="career-swap-row" onClick={() => handleSwap(s.id)}>
                     <span className="career-swap-pos">{labelDE(s.label)}</span>
-                    <span className="career-swap-name">{s.player.name}</span>
-                    <span className={`career-swap-rating rating rating-sm ${ratingClass(s.player.displayRating, division)}`}>
-                      {s.player.displayRating}
+                    <span className="career-swap-name">
+                      {s.player.name}
                     </span>
+                    <div className="career-card-rating-wrap">
+                      <span className={`career-swap-rating rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>
+                        {s.player.displayRating}
+                      </span>
+                      {!s.player.isIcon && potentialTier(s.player) && (
+                        <span className={`career-card-potential ${ovrColorClass(s.player.potential)}`}>
+                          →{s.player.potential}
+                        </span>
+                      )}
+                    </div>
                     <span className="career-swap-arrow">→</span>
-                    <span className={`career-swap-rating rating rating-sm ${ratingClass(selectedOffer.seasonRating, division)}`}>
-                      {selectedOffer.seasonRating}
-                    </span>
+                    <div className="career-card-rating-wrap">
+                      <span className={`career-swap-rating rating rating-sm ${ovrColorClass(selectedOffer.seasonRating)}`}>
+                        {selectedOffer.seasonRating}
+                      </span>
+                      {potentialTier(selectedOffer) && (
+                        <span className={`career-card-potential ${ovrColorClass(selectedOffer.potential)}`}>
+                          →{selectedOffer.potential}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 ))
               )}
@@ -669,14 +703,21 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
 }
 
 function TransferOfferCard({ offer, division, isActive, onUse }) {
-  const rcls = ratingClass(offer.seasonRating, division);
+  const rcls = ovrColorClass(offer.seasonRating);
+  const tier = potentialTier(offer);
 
   if (offer.used) {
     return (
-      <div className="career-offer-card career-offer-card--done">
-        <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
+      <div className={`career-offer-card career-offer-card--done${offer.isPrime ? ' career-offer-card--prime' : ''}`}>
+        <div className="career-card-rating-wrap">
+          <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
+          {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
+        </div>
         <div className="career-offer-info">
-          <div className="career-offer-name">{offer.name}</div>
+          <div className="career-offer-name">
+            {offer.name}
+            {offer.isPrime && <span className="career-prime-badge">✦ PRIME</span>}
+          </div>
           <div className="career-offer-meta">
             <span>{offer.spunClub}</span>
             <span>{shortSeason(offer.spunSeason)}</span>
@@ -687,11 +728,20 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
     );
   }
 
+  const primeClass = offer.isPrime ? ' career-offer-card--prime' : '';
+  const activeClass = isActive ? ' career-offer-card--active' : '';
+
   return (
-    <div className={`career-offer-card ${isActive ? 'career-offer-card--active' : ''}`}>
-      <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
+    <div className={`career-offer-card${activeClass}${primeClass}`}>
+      <div className="career-card-rating-wrap">
+        <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
+        {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
+      </div>
       <div className="career-offer-info">
-        <div className="career-offer-name">{offer.name}</div>
+        <div className="career-offer-name">
+          {offer.name}
+          {offer.isPrime && <span className="career-prime-badge">✦ PRIME</span>}
+        </div>
         <div className="career-offer-meta">
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>
@@ -713,20 +763,92 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
   );
 }
 
+// ── Entwicklung ───────────────────────────────────────────────────────────────
+
+function CareerEntwicklung({ growthLog, iconLog = [], seasonNumber, onContinue }) {
+  const sorted = [...growthLog].sort((a, b) => b.gain - a.gain);
+  const hasContent = sorted.length > 0 || iconLog.length > 0;
+
+  return (
+    <div className="career-screen">
+      <header className="career-header">
+        <div />
+        <div className="career-header-title">
+          <span className="career-eyebrow">KARRIERE · SAISON {seasonNumber}</span>
+          <h1 className="career-main-title">ENTWICKLUNG</h1>
+          <p className="career-main-sub">Spieler die sich diese Saison verbessert haben</p>
+        </div>
+        <div />
+      </header>
+
+      <div className="entw-body">
+        {iconLog.length > 0 && (
+          <div className="entw-icon-section">
+            <div className="entw-icon-header">Upgrade zur Legende</div>
+            <div className="entw-icon-cards">
+              {iconLog.map((entry, i) => (
+                <div key={i} className="entw-icon-card">
+                  <div className="entw-icon-card-stars">★ ★ ★</div>
+                  <div className="entw-icon-card-label">IKONE</div>
+                  <div className="entw-icon-card-ovr">{entry.newRating}</div>
+                  <div className="entw-icon-card-pos">{labelDE(entry.slotType)}</div>
+                  <div className="entw-icon-card-name">{entry.name}</div>
+                  <div className="entw-icon-card-seasons">{entry.seasons} Saisons im Kader</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!hasContent ? (
+          <div className="entw-empty">Keine Entwicklung diese Saison.</div>
+        ) : sorted.length > 0 && (
+          <div className="entw-list">
+            {sorted.map((entry, i) => (
+              <div key={i} className="entw-row">
+                <span className="entw-gain-badge">+{entry.gain}</span>
+                <span className="entw-pos">{labelDE(entry.slotType)}</span>
+                <span className="entw-name">{entry.name}</span>
+                <span className="entw-ratings">
+                  <span className="entw-old">{entry.oldRating}</span>
+                  <span className="entw-arrow">→</span>
+                  <span className="entw-new">{entry.newRating}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button className="btn btn-primary entw-cta" onClick={onContinue}>
+          Transferfenster →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function CareerCard({ player, league, picked, incompatible, offRole, onClick }) {
-  const rcls = ratingClass(player.seasonRating, league);
+  const rcls = ovrColorClass(player.seasonRating);
+  const tier = potentialTier(player);
   const cls = [
     'career-card',
-    picked      ? 'career-card--picked'  : '',
-    incompatible ? 'career-card--dim'    : '',
-    offRole     ? 'career-card--offrole' : '',
+    picked       ? 'career-card--picked'  : '',
+    incompatible ? 'career-card--dim'     : '',
+    offRole      ? 'career-card--offrole' : '',
   ].filter(Boolean).join(' ');
 
   return (
     <button className={cls} onClick={onClick}>
-      <div className={`rating rating-sm ${rcls}`}>{player.seasonRating}</div>
+      <div className="career-card-rating-wrap">
+        <div className={`rating rating-sm ${rcls}`}>{player.seasonRating}</div>
+        {tier && (
+          <span className={`career-card-potential ${ovrColorClass(player.potential)}`}>
+            →{player.potential}
+          </span>
+        )}
+      </div>
       <div className="career-card-info">
         <div className="career-card-name">{player.name}</div>
         <div className="career-card-meta">

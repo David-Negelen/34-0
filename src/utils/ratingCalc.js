@@ -1,6 +1,6 @@
 const GK_TYPES   = ['GK'];
 const DEF_TYPES  = ['RB', 'CB', 'LB'];
-const MID_TYPES  = ['DM', 'CM', 'AM'];
+const MID_TYPES  = ['DM', 'CM', 'AM', 'LM', 'RM'];
 const ATT_TYPES  = ['RW', 'LW', 'SS', 'ST'];
 
 function avg(values) {

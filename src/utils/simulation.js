@@ -17,8 +17,8 @@ function gauss(sigma) {
 
 // ── Player event simulation ───────────────────────────────────────────────────
 
-const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, RW:14, LW:14, ST:22 };
-const ASSIST_WEIGHTS = { GK:1, RB:5, CB:2, LB:5, DM:8, CM:14, AM:20, RW:14, LW:14, ST:6 };
+const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, LM:12, RM:12, RW:14, LW:14, ST:22 };
+const ASSIST_WEIGHTS = { GK:1, RB:5, CB:2, LB:5, DM:8, CM:14, AM:20, LM:16, RM:16, RW:14, LW:14, ST:6 };
 
 // Scale each player's weight by their rating relative to a baseline of 75.
 // A 90-rated player gets ~1.7x the baseline weight; a 60-rated player gets ~0.51x.
@@ -42,9 +42,10 @@ function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01,
   const gk = squad.find(p => p.slotType === 'GK');
   const regGoals = goalsForReg ?? goalsFor;
 
-  // GK last-minute heroics: only when losing by exactly 1 and team scored at least once.
-  // Triggers at 90+ (or 119+ in AET) — a desperate push from the keeper.
-  const gkLateGoal = gk && goalsFor > 0 && goalsAgainst - goalsFor === 1 && Math.random() < gkGoalChance;  // league: 1%, pokal: 4%
+  // GK last-minute equalizer: keeper pushes up when 1 goal down and scores.
+  // Check is against the pre-GK-goal score (goalsFor - 1 vs goalsAgainst), so
+  // the condition is goalsAgainst === goalsFor (the GK's goal brings it level).
+  const gkLateGoal = gk && goalsAgainst === goalsFor && Math.random() < gkGoalChance;  // league: 1%, pokal: 4%
 
   for (let i = 0; i < goalsFor; i++) {
     const isLast = i === goalsFor - 1;
@@ -331,8 +332,9 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
     const goalsAgainst = m.home === 'Deine 11' ? m.ag : m.hg;
     if (goalsAgainst === 0) {
-      const gk = squad.find(p => p.slotType === 'GK');
-      if (gk) statsMap[gk.name].cleanSheets++;
+      squad
+        .filter(p => ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p.slotType))
+        .forEach(p => { statsMap[p.name].cleanSheets++; });
     }
     const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
