@@ -68,16 +68,34 @@ export function markPrime(player) {
   };
 }
 
+const ICON_SEASONS = 5;
+
 // Applies one season of growth to all squad slots.
-// Returns { updatedSlots, growthLog } — does NOT mutate state.
+// Also increments seasonsInSquad and promotes players who reach ICON_SEASONS.
+// Returns { updatedSlots, growthLog, iconLog } — does NOT mutate state.
 export function applyGrowth(slots, playerStats) {
   const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.name, p]));
   const growthLog = [];
+  const iconLog = [];
 
   const updatedSlots = slots.map(slot => {
     if (!slot.player) return slot;
-    const p = slot.player;
-    if (!p.potential || p.displayRating >= p.potential) return slot;
+    let p = slot.player;
+
+    // Track time in squad
+    const newSeasons = (p.seasonsInSquad ?? 0) + 1;
+    p = { ...p, seasonsInSquad: newSeasons };
+
+    // Icon promotion: one-time +5 boost, skip normal growth this season
+    if (!p.isIcon && newSeasons >= ICON_SEASONS) {
+      const newRating = p.displayRating + 5;
+      p = { ...p, isIcon: true, displayRating: newRating };
+      iconLog.push({ name: p.name, slotType: slot.type, oldRating: newRating - 5, newRating, seasons: newSeasons });
+      return { ...slot, player: p };
+    }
+
+    // Normal growth
+    if (!p.potential || p.displayRating >= p.potential) return { ...slot, player: p };
 
     const gap = p.potential - p.displayRating;
     const score = perfScore(statsMap[p.name], slot.type);
@@ -92,11 +110,11 @@ export function applyGrowth(slots, playerStats) {
         newRating: p.displayRating + gain,
         gain,
       });
+      p = { ...p, displayRating: p.displayRating + gain };
     }
-    return gain > 0
-      ? { ...slot, player: { ...p, displayRating: p.displayRating + gain } }
-      : slot;
+
+    return { ...slot, player: p };
   });
 
-  return { updatedSlots, growthLog };
+  return { updatedSlots, growthLog, iconLog };
 }

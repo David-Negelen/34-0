@@ -129,14 +129,18 @@ function reducer(state, action) {
 
     case 'APPLY_GROWTH': {
       const { updatedSlots } = action.payload;
-      const growthMap = Object.fromEntries(
-        updatedSlots.filter(s => s.player).map(s => [s.player.id, s.player.displayRating])
+      const playerUpdates = Object.fromEntries(
+        updatedSlots.filter(s => s.player).map(s => [s.player.id, {
+          displayRating: s.player.displayRating,
+          seasonsInSquad: s.player.seasonsInSquad,
+          isIcon: s.player.isIcon,
+        }])
       );
       return {
         ...state,
         slots: updatedSlots,
         allPlayers: state.allPlayers.map(p =>
-          growthMap[p.id] != null ? { ...p, displayRating: growthMap[p.id] } : p
+          playerUpdates[p.id] != null ? { ...p, ...playerUpdates[p.id] } : p
         ),
       };
     }

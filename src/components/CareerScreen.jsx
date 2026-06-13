@@ -156,6 +156,7 @@ export default function CareerScreen() {
       return (
         <CareerEntwicklung
           growthLog={entwicklungData.growthLog}
+          iconLog={entwicklungData.iconLog}
           seasonNumber={state.seasonNumber}
           onContinue={() => {
             career.applyGrowth(entwicklungData.updatedSlots);
@@ -179,8 +180,8 @@ export default function CareerScreen() {
         promoted={promoted}
         relegated={relegated}
         onContinue={() => {
-          const { updatedSlots, growthLog } = applyGrowth(state.slots, state.result?.playerStats);
-          setEntwicklungData({ updatedSlots, growthLog });
+          const { updatedSlots, growthLog, iconLog } = applyGrowth(state.slots, state.result?.playerStats);
+          setEntwicklungData({ updatedSlots, growthLog, iconLog });
         }}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
@@ -627,7 +628,10 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
                 compatSlots.map(s => (
                   <button key={s.id} className="career-swap-row" onClick={() => handleSwap(s.id)}>
                     <span className="career-swap-pos">{labelDE(s.label)}</span>
-                    <span className="career-swap-name">{s.player.name}</span>
+                    <span className="career-swap-name">
+                      {s.player.name}
+                      {s.player.isIcon && <span className="career-icon-badge">⭐</span>}
+                    </span>
                     <div className="career-card-rating-wrap">
                       <span className={`career-swap-rating rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>
                         {s.player.displayRating}
@@ -762,8 +766,9 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
 
 // ── Entwicklung ───────────────────────────────────────────────────────────────
 
-function CareerEntwicklung({ growthLog, seasonNumber, onContinue }) {
+function CareerEntwicklung({ growthLog, iconLog = [], seasonNumber, onContinue }) {
   const sorted = [...growthLog].sort((a, b) => b.gain - a.gain);
+  const hasContent = sorted.length > 0 || iconLog.length > 0;
 
   return (
     <div className="career-screen">
@@ -778,9 +783,30 @@ function CareerEntwicklung({ growthLog, seasonNumber, onContinue }) {
       </header>
 
       <div className="entw-body">
-        {sorted.length === 0 ? (
+        {iconLog.length > 0 && (
+          <div className="entw-icon-section">
+            <div className="entw-icon-header">⭐ LEGENDE</div>
+            {iconLog.map((entry, i) => (
+              <div key={i} className="entw-icon-row">
+                <span className="entw-icon-aura" />
+                <div className="entw-icon-info">
+                  <span className="entw-icon-name">{entry.name}</span>
+                  <span className="entw-icon-sub">{entry.seasons} Saisonen im Kader · {labelDE(entry.slotType)}</span>
+                </div>
+                <span className="entw-icon-boost">
+                  <span className="entw-old">{entry.oldRating}</span>
+                  <span className="entw-arrow">→</span>
+                  <span className="entw-new">{entry.newRating}</span>
+                  <span className="entw-gain-badge">+5</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!hasContent ? (
           <div className="entw-empty">Keine Entwicklung diese Saison.</div>
-        ) : (
+        ) : sorted.length > 0 && (
           <div className="entw-list">
             {sorted.map((entry, i) => (
               <div key={i} className="entw-row">

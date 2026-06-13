@@ -49,6 +49,7 @@ export default function FormationBoard({
                 isEmpty ? 'slot-empty' : `slot-filled ${ovrColorClass(slot.player.displayRating)}`,
                 isSelected ? 'slot-selected' : '',
                 isClickable ? 'slot-clickable' : '',
+                !isEmpty && slot.player.isIcon  ? 'slot-token--icon'  : '',
                 !isEmpty && slot.player.isPrime ? 'slot-token--prime' : '',
               ].filter(Boolean).join(' ')}
               style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
