@@ -559,6 +559,34 @@
   background: rgba(227, 0, 11, 0.06);
 }
 
+.career-swap-row--icon {
+  border-color: rgba(201, 162, 39, 0.35);
+  background: rgba(201, 162, 39, 0.04);
+}
+.career-swap-row--icon:hover {
+  border-color: #c9a227;
+  background: rgba(201, 162, 39, 0.1);
+}
+
+.career-swap-icon-tag {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #c9a227;
+  background: rgba(201, 162, 39, 0.12);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.career-swap-rating--icon {
+  background: linear-gradient(135deg, #fdfaf0 0%, #ede6b8 100%) !important;
+  color: #1a1005 !important;
+  border: 1px solid #c9a227 !important;
+}
+
 .career-swap-pos {
   font-size: 11px;
   font-weight: 700;

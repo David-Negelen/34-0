@@ -587,6 +587,8 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
   }
 
   function handleSwap(slotId) {
+    const slot = slots.find(s => s.id === slotId);
+    if (slot?.player?.isIcon && !window.confirm(`${slot.player.name} ist eine Legende. Wirklich aus dem Kader entfernen?`)) return;
     onSwap(activeOffer, slotId);
     setActiveOffer(null);
   }
@@ -626,13 +628,12 @@ function CareerTransfer({ state, onSwap, onSkip, onStartSeason, onEnd, onHome })
                 <p className="career-swap-empty">Keine kompatible Position im Kader.</p>
               ) : (
                 compatSlots.map(s => (
-                  <button key={s.id} className="career-swap-row" onClick={() => handleSwap(s.id)}>
+                  <button key={s.id} className={`career-swap-row${s.player.isIcon ? ' career-swap-row--icon' : ''}`} onClick={() => handleSwap(s.id)}>
                     <span className="career-swap-pos">{labelDE(s.label)}</span>
-                    <span className="career-swap-name">
-                      {s.player.name}
-                    </span>
+                    <span className="career-swap-name">{s.player.name}</span>
+                    {s.player.isIcon && <span className="career-swap-icon-tag">IKONE</span>}
                     <div className="career-card-rating-wrap">
-                      <span className={`career-swap-rating rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>
+                      <span className={`career-swap-rating rating rating-sm${s.player.isIcon ? ' career-swap-rating--icon' : ` ${ovrColorClass(s.player.displayRating)}`}`}>
                         {s.player.displayRating}
                       </span>
                       {!s.player.isIcon && potentialTier(s.player) && (
