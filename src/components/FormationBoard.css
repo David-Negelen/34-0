@@ -111,6 +111,11 @@
   box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.4);
 }
 
+.slot-highlight {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(76, 217, 100, 0.35);
+}
+
 .slot-clickable {
   cursor: pointer;
   border-color: rgba(255, 255, 255, 0.55);

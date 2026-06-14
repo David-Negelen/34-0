@@ -126,22 +126,23 @@ export function generateCareerDraftPool(players, formation, count = 30) {
   return shuffle(chosen).slice(0, count);
 }
 
-export function generateTransferOffers(players, excludeIds, formation, count = 5, teamAvg = null, currentYear = null) {
-  const slotTypes = formation.slots.map(s => s.type);
+// Generate up to `count` offers for a single slot type.
+// Each offer is tagged with { slotType }.
+function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg, currentYear) {
   const eligible = shuffle(
     players
       .filter(p => !excludeIds.has(p.id) && p.seasons?.length)
-      .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
+      .filter(p => canPlayerFillSlot(p, slotType))
   );
 
   const withPot = p => assignPotential(p);
 
   if (!teamAvg || !eligible.length) {
-    return eligible.map(p => {
+    return eligible.slice(0, count).map(p => {
       const offer = withPot(attachSeason(p));
       const age = getAge(offer.id, currentYear);
-      return { ...offer, price: offerPrice(offer.seasonRating, false, age) };
-    }).slice(0, count);
+      return { ...offer, slotType, price: offerPrice(offer.seasonRating, false, age) };
+    });
   }
 
   const result = [];
@@ -152,9 +153,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
       if (usedIds.has(p.id)) continue;
       const candidate = withPot(attachSeasonNear(p, teamAvg + 7));
       if (candidate.seasonRating >= teamAvg + 5) {
-        result.push(candidate);
-        usedIds.add(p.id);
-        break;
+        result.push(candidate); usedIds.add(p.id); break;
       }
     }
   }
@@ -163,34 +162,39 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     if (result.length >= count) break;
     if (usedIds.has(p.id)) continue;
     const candidate = withPot(attachSeasonNear(p, teamAvg + 1.75));
-    if (candidate.seasonRating >= teamAvg - 3) {
-      result.push(candidate);
-      usedIds.add(p.id);
-    }
+    if (candidate.seasonRating >= teamAvg - 3) { result.push(candidate); usedIds.add(p.id); }
   }
 
   for (const p of eligible) {
     if (result.length >= count) break;
-    if (!usedIds.has(p.id)) {
-      result.push(withPot(attachSeasonNear(p, teamAvg)));
-      usedIds.add(p.id);
-    }
+    if (!usedIds.has(p.id)) { result.push(withPot(attachSeasonNear(p, teamAvg))); usedIds.add(p.id); }
   }
 
   const final = shuffle(result).slice(0, count);
 
-  // Late-game gem: low OVR, elite potential (97–99)
   const hasRealUpgrade = final.some(p => p.seasonRating >= teamAvg - 3);
   if (teamAvg >= 90 && !hasRealUpgrade && final.length && Math.random() < 0.4) {
     const idx = Math.floor(Math.random() * final.length);
     final[idx] = { ...final[idx], isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
   }
 
-  // Attach price tags (age-adjusted) and age-gated gem detection
   return final.map(p => {
     const age = getAge(p.id, currentYear);
     const isYoungGem = age !== null && age <= 21 && (p.potential - p.seasonRating) >= 10;
     const isGem = !!(p.isGem || isYoungGem);
-    return { ...p, isGem, price: offerPrice(p.seasonRating, isGem, age) };
+    return { ...p, isGem, slotType, price: offerPrice(p.seasonRating, isGem, age) };
   });
+}
+
+// Build a full transfer market: 5 offers per unique slot type in the formation.
+export function generateTransferMarket(players, excludeIds, formation, teamAvg = null, currentYear = null) {
+  const slotTypes = [...new Set(formation.slots.map(s => s.type))];
+  return slotTypes.flatMap(slotType =>
+    generateOffersForSlotType(players, excludeIds, slotType, 5, teamAvg, currentYear)
+  );
+}
+
+// Fresh offers for one slot type — call after selling a player to replenish that position.
+export function generateOffersForType(players, excludeIds, slotType, teamAvg = null, currentYear = null) {
+  return generateOffersForSlotType(players, excludeIds, slotType, 5, teamAvg, currentYear);
 }

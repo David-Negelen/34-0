@@ -3,14 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useCareerState } from '../hooks/useCareerState';
 import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
-import { generateCareerDraftPool, generateTransferOffers } from '../utils/careerUtils';
+import { generateCareerDraftPool, generateTransferMarket, generateOffersForType, generateIncomingBids, prizeMoney } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { generateIncomingBids, prizeMoney } from '../utils/careerUtils';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
@@ -169,7 +168,7 @@ export default function CareerScreen() {
             const teamAvg = filled.length
               ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
               : null;
-            const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg, currentYear);
+            const offers = generateTransferMarket(divPlayers, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear);
             const prize = prizeMoney(state.result?.pos ?? 18, state.division);
             const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear);
             career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize, incomingBids);
@@ -196,19 +195,31 @@ export default function CareerScreen() {
   }
 
   if (state.phase === 'transfer') {
+    function handleSell(playerId, amount) {
+      const bid = state.incomingBids.find(b => b.playerId === playerId);
+      const slotType = bid?.slotType;
+      const divPlayers = getPlayers(state.division);
+      const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
+      const filled = state.slots.filter(s => s.player && s.type !== 'BENCH' && s.player.id !== playerId);
+      const teamAvg = filled.length
+        ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
+        : null;
+      const excludeIds = new Set(state.slots.filter(s => s.player && s.player.id !== playerId).map(s => s.player.id));
+      const newOffers = slotType ? generateOffersForType(divPlayers, excludeIds, slotType, teamAvg, currentYear) : [];
+      career.sellPlayer(playerId, amount, newOffers);
+    }
+
     return (
-      <>
-        <CareerTransfer
-          state={state}
-          onSwap={career.swapOffer}
-          onUndo={career.undoSwap}
-          onSkip={career.skipOffer}
-          onSell={career.sellPlayer}
-          onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
-          onEnd={handleEndCareer}
-          onHome={() => { career.reset(); navigate('/'); }}
-        />
-      </>
+      <CareerTransfer
+        state={state}
+        onBuy={career.buyOffer}
+        onUndo={career.undoBuy}
+        onMove={career.moveInSquad}
+        onSell={handleSell}
+        onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
+        onEnd={handleEndCareer}
+        onHome={() => { career.reset(); navigate('/'); }}
+      />
     );
   }
 
@@ -579,30 +590,68 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onSwap, onUndo, onSkip, onSell, onStartSeason, onEnd }) {
+function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onStartSeason, onEnd }) {
   const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0 } = state;
-  const benchSlots = slots.filter(s => s.type === 'BENCH');
-  const [activeOffer, setActiveOffer] = useState(null);
+  const formationSlots = slots.filter(s => s.type !== 'BENCH');
+  const benchSlots     = slots.filter(s => s.type === 'BENCH');
+  const [selectedSlotId, setSelectedSlotId] = useState(null);
 
-  const prevDivision = seasonHistory[seasonHistory.length - 1]?.division;
+  const prevDivision  = seasonHistory[seasonHistory.length - 1]?.division;
   const justPromoted  = prevDivision === '2bl' && division === 'bl';
   const justRelegated = prevDivision === 'bl'  && division === '2bl';
 
-  const selectedOffer = activeOffer !== null ? transferOffers[activeOffer] : null;
-  const compatSlots   = selectedOffer
-    ? slots.filter(s => s.player && (s.type === 'BENCH' || canPlayerFillSlot(selectedOffer, s.type)))
+  const selectedSlot    = selectedSlotId ? slots.find(s => s.id === selectedSlotId) : null;
+  const isBenchSelected = selectedSlot?.type === 'BENCH';
+
+  // Market offers for the selected formation slot's position type
+  const marketOffers = !isBenchSelected && selectedSlot
+    ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type)
     : [];
 
-  function handleUseOffer(i) {
-    setActiveOffer(prev => prev === i ? null : i);
+  // Bench players eligible for the selected formation slot
+  const eligibleBenchIds = !isBenchSelected && selectedSlot
+    ? new Set(benchSlots.filter(s => s.player && canPlayerFillSlot(s.player, selectedSlot.type)).map(s => s.id))
+    : new Set();
+
+  // Formation slots the selected bench player can fill
+  const formationTargets = isBenchSelected && selectedSlot?.player
+    ? formationSlots.filter(s => canPlayerFillSlot(selectedSlot.player, s.type))
+    : [];
+
+  const highlightSlotIds = formationTargets.map(s => s.id);
+  const emptyBenchSlot   = slots.find(s => s.type === 'BENCH' && !s.player);
+
+  function handleFormationClick(slotId) {
+    if (isBenchSelected && selectedSlot?.player && formationTargets.some(s => s.id === slotId)) {
+      onMove(selectedSlotId, slotId);
+      setSelectedSlotId(null);
+    } else {
+      setSelectedSlotId(prev => prev === slotId ? null : slotId);
+    }
   }
 
-  function handleSwap(slotId) {
-    onSwap(activeOffer, slotId);
-    setActiveOffer(null);
+  function handleBenchClick(slotId) {
+    if (!isBenchSelected && selectedSlot && eligibleBenchIds.has(slotId)) {
+      onMove(slotId, selectedSlotId);
+      setSelectedSlotId(null);
+    } else {
+      setSelectedSlotId(prev => prev === slotId ? null : slotId);
+    }
   }
 
-  const usedCount = transferOffers.filter(o => o.used).length;
+  function handleMoveToBench() {
+    if (!selectedSlot?.player || !emptyBenchSlot) return;
+    onMove(selectedSlotId, emptyBenchSlot.id);
+    setSelectedSlotId(null);
+  }
+
+  function handleBuyOffer(offerIndex) {
+    if (!selectedSlotId) return;
+    onBuy(offerIndex, selectedSlotId);
+    setSelectedSlotId(null);
+  }
+
+  const signedCount = transferOffers.filter(o => o.used).length;
 
   return (
     <div className="career-screen">
@@ -626,139 +675,189 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onSell, onStartSeason, 
 
       <div className="career-transfer-layout">
 
-        {/* Left: formation + bench + swap list */}
+        {/* Left: squad */}
         <div className="career-transfer-left">
-          <div className="result-section-label">Aktuelle Startelf</div>
-          <FormationBoard slots={slots} showRatings league={division} />
+          <div className="result-section-label">Startelf</div>
+          <FormationBoard
+            slots={formationSlots}
+            showRatings
+            league={division}
+            selectedSlotId={selectedSlotId}
+            highlightSlotIds={highlightSlotIds}
+            onSlotClick={handleFormationClick}
+          />
 
           <div className="career-bench">
             <div className="result-section-label" style={{ marginTop: 16 }}>Bank</div>
             <div className="career-bench-row">
-              {benchSlots.map(s => (
-                <div
-                  key={s.id}
-                  className={`career-bench-slot${s.player ? '' : ' career-bench-slot--empty'}${selectedOffer && s.player ? ' career-bench-slot--swappable' : ''}`}
-                  onClick={() => selectedOffer && s.player ? handleSwap(s.id) : undefined}
-                >
-                  {s.player ? (
-                    <>
-                      <span className={`career-bench-ovr rating rating-sm ${s.player.isIcon ? 'rating-icon' : ovrColorClass(s.player.displayRating)}`}>
-                        {s.player.displayRating}
-                      </span>
-                      <span className="career-bench-name">{s.player.name.split(' ').pop()}</span>
-                    </>
-                  ) : (
-                    <span className="career-bench-empty-label">—</span>
-                  )}
-                </div>
-              ))}
+              {benchSlots.map(s => {
+                const isSelected = s.id === selectedSlotId;
+                const isEligible = eligibleBenchIds.has(s.id);
+                return (
+                  <div
+                    key={s.id}
+                    className={[
+                      'career-bench-slot',
+                      !s.player  ? 'career-bench-slot--empty'    : '',
+                      isSelected ? 'career-bench-slot--selected'  : '',
+                      isEligible ? 'career-bench-slot--eligible'  : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => handleBenchClick(s.id)}
+                  >
+                    {s.player ? (
+                      <>
+                        <span className={`career-bench-ovr rating rating-sm ${s.player.isIcon ? 'rating-icon' : ovrColorClass(s.player.displayRating)}`}>
+                          {s.player.displayRating}
+                        </span>
+                        <span className="career-bench-name">{s.player.name.split(' ').pop()}</span>
+                      </>
+                    ) : (
+                      <span className="career-bench-empty-label">—</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {selectedOffer && (
-            <div className="career-swap-list fade-in">
-              <div className="career-swap-header">
-                Wen ersetzen durch <strong>{selectedOffer.name}</strong>?
-              </div>
-              {compatSlots.length === 0 ? (
-                <p className="career-swap-empty">Keine kompatible Position im Kader.</p>
-              ) : (
-                compatSlots.map(s => (
-                  <button key={s.id} className={`career-swap-row${s.player.isIcon ? ' career-swap-row--icon' : ''}`} onClick={() => handleSwap(s.id)}>
-                    <span className="career-swap-pos">{labelDE(s.label)}</span>
-                    <span className="career-swap-name">{s.player.name}</span>
-                    {s.player.isIcon && <span className="career-swap-icon-tag">IKONE</span>}
-                    <div className="career-card-rating-wrap">
-                      <span className={`career-swap-rating rating rating-sm${s.player.isIcon ? ' career-swap-rating--icon' : ` ${ovrColorClass(s.player.displayRating)}`}`}>
-                        {s.player.displayRating}
-                      </span>
-                      {!s.player.isIcon && potentialTier(s.player) && (
-                        <span className={`career-card-potential ${ovrColorClass(s.player.potential)}`}>
-                          →{s.player.potential}
-                        </span>
-                      )}
-                    </div>
-                    <span className="career-swap-arrow">→</span>
-                    <div className="career-card-rating-wrap">
-                      <span className={`career-swap-rating rating rating-sm ${ovrColorClass(selectedOffer.seasonRating)}`}>
-                        {selectedOffer.seasonRating}
-                      </span>
-                      {potentialTier(selectedOffer) && (
-                        <span className={`career-card-potential ${ovrColorClass(selectedOffer.potential)}`}>
-                          →{selectedOffer.potential}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))
-              )}
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ marginTop: 8, width: '100%' }}
-                onClick={() => setActiveOffer(null)}
-              >
-                Abbrechen
-              </button>
-            </div>
+          {swapHistory.length > 0 && (
+            <button className="btn btn-ghost btn-sm" style={{ marginTop: 12, width: '100%' }} onClick={onUndo}>
+              ↩ Letzten Kauf rückgängig
+            </button>
           )}
         </div>
 
-        {/* Right: incoming bids + offer cards */}
+        {/* Right: context panel */}
         <div className="career-transfer-right">
 
-          {incomingBids.length > 0 && (
-            <div className="career-incoming-bids">
-              <div className="result-section-label" style={{ marginBottom: 8 }}>Kaufangebote</div>
-              {incomingBids.map((bid, i) => (
-                <div key={i} className="career-bid-row">
-                  <div className="career-bid-info">
-                    <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
-                    <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
-                    <span className="career-bid-name">{bid.playerName}</span>
-                  </div>
-                  <div className="career-bid-actions">
-                    <span className="career-bid-amount">€{bid.amount}M</span>
-                    <button
-                      className="btn btn-sm career-bid-accept"
-                      onClick={() => onSell(bid.playerId, bid.amount)}
-                    >
-                      Verkaufen
-                    </button>
-                  </div>
+          {/* No slot selected */}
+          {!selectedSlot && (
+            <>
+              {incomingBids.length > 0 && (
+                <div className="career-incoming-bids">
+                  <div className="result-section-label" style={{ marginBottom: 8 }}>Kaufangebote</div>
+                  {incomingBids.map((bid, i) => (
+                    <div key={i} className="career-bid-row">
+                      <div className="career-bid-info">
+                        <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
+                        <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
+                        <span className="career-bid-name">{bid.playerName}</span>
+                      </div>
+                      <div className="career-bid-actions">
+                        <span className="career-bid-amount">€{bid.amount}M</span>
+                        <button className="btn btn-sm career-bid-accept" onClick={() => onSell(bid.playerId, bid.amount)}>
+                          Verkaufen
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+              <div className="career-market-hint">
+                {signedCount > 0
+                  ? `${signedCount} Spieler verpflichtet — wähle eine Position für mehr Optionen`
+                  : 'Wähle eine Position um Transferangebote zu sehen'}
+              </div>
+              <button className="btn btn-primary btn-lg career-transfer-inline-btn" style={{ width: '100%', marginTop: 20 }} onClick={onStartSeason}>
+                Saison {seasonNumber} starten →
+              </button>
+            </>
+          )}
+
+          {/* Formation slot selected */}
+          {selectedSlot && !isBenchSelected && (
+            <div className="career-market-panel fade-in">
+              <div className="career-market-header">
+                <div>
+                  <span className="career-market-pos">{labelDE(selectedSlot.type)}</span>
+                  {selectedSlot.player && (
+                    <span className="career-market-current">{selectedSlot.player.name}</span>
+                  )}
+                </div>
+                <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
+              </div>
+
+              {eligibleBenchIds.size > 0 && (
+                <div className="career-from-bench">
+                  <div className="career-from-bench-label">Von der Bank (kostenlos):</div>
+                  {benchSlots.filter(s => eligibleBenchIds.has(s.id)).map(s => (
+                    <button key={s.id} className="career-bench-pick-row" onClick={() => { onMove(s.id, selectedSlotId); setSelectedSlotId(null); }}>
+                      <span className={`rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>{s.player.displayRating}</span>
+                      <span className="career-bench-pick-name">{s.player.name}</span>
+                      <span className="career-bench-pick-tag">kostenlos →</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {selectedSlot.player && emptyBenchSlot && (
+                <button className="btn btn-ghost btn-sm career-to-bench-btn" onClick={handleMoveToBench}>
+                  {selectedSlot.player.name.split(' ').pop()} → Bank
+                </button>
+              )}
+
+              <div className="result-section-label" style={{ marginTop: 16, marginBottom: 4 }}>
+                Markt — {labelDE(selectedSlot.type)}
+                {selectedSlot.player && !emptyBenchSlot && (
+                  <span className="career-bank-full-note"> (Bank voll — alter Spieler verlässt den Kader)</span>
+                )}
+              </div>
+
+              {marketOffers.length === 0 ? (
+                <div className="career-swap-empty">Keine Angebote für diese Position.</div>
+              ) : (
+                marketOffers.map(offer => {
+                  const idx = transferOffers.indexOf(offer);
+                  return (
+                    <TransferOfferCard
+                      key={`${offer.id}-${idx}`}
+                      offer={offer}
+                      division={division}
+                      canAfford={budget >= (offer.price ?? 0)}
+                      onBuy={() => handleBuyOffer(idx)}
+                    />
+                  );
+                })
+              )}
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div className="result-section-label" style={{ marginBottom: 0 }}>
-              Angebote — {usedCount} von {transferOffers.length} eingesetzt
+          {/* Bench slot selected */}
+          {selectedSlot && isBenchSelected && (
+            <div className="career-market-panel fade-in">
+              <div className="career-market-header">
+                <div>
+                  <span className="career-market-pos">Bank</span>
+                  {selectedSlot.player && (
+                    <span className="career-market-current">{selectedSlot.player.name}</span>
+                  )}
+                </div>
+                <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
+              </div>
+
+              {selectedSlot.player && formationTargets.length > 0 && (
+                <div className="career-from-bench">
+                  <div className="career-from-bench-label">In die Startelf (kostenlos):</div>
+                  {formationTargets.map(s => (
+                    <button key={s.id} className="career-bench-pick-row" onClick={() => { onMove(selectedSlotId, s.id); setSelectedSlotId(null); }}>
+                      <span className="career-market-pos">{labelDE(s.type)}</span>
+                      <span className="career-bench-pick-name">{s.player?.name ?? '— leer —'}</span>
+                      <span className="career-bench-pick-tag">tauschen →</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {selectedSlot.player && formationTargets.length === 0 && (
+                <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
+              )}
+              {!selectedSlot.player && (
+                <div className="career-swap-empty">Leerer Bankplatz.</div>
+              )}
             </div>
-            {swapHistory.length > 0 && (
-              <button className="btn btn-ghost btn-sm" onClick={onUndo}>↩ Rückgängig</button>
-            )}
-          </div>
+          )}
 
-          {transferOffers.map((offer, i) => (
-            <TransferOfferCard
-              key={`${offer.id}-${i}`}
-              offer={offer}
-              division={division}
-              isActive={activeOffer === i}
-              canAfford={budget >= (offer.price ?? 0)}
-              onUse={() => handleUseOffer(i)}
-            />
-          ))}
-
-          <button
-            className="btn btn-primary btn-lg career-transfer-inline-btn"
-            style={{ width: '100%', marginTop: 20 }}
-            onClick={onStartSeason}
-          >
-            Saison {seasonNumber} starten →
-          </button>
         </div>
-
       </div>
 
       <div className="career-transfer-sticky-bar">
@@ -770,39 +869,17 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onSell, onStartSeason, 
   );
 }
 
-function TransferOfferCard({ offer, division, isActive, canAfford = true, onUse }) {
+function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
   const rcls = ovrColorClass(offer.seasonRating);
   const tier = potentialTier(offer);
   const price = offer.price ?? 0;
 
-  if (offer.used) {
-    return (
-      <div className={`career-offer-card career-offer-card--done${offer.isGem ? ' career-offer-card--gem' : ''}`}>
-        <div className="career-card-rating-wrap">
-          <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
-          {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
-        </div>
-        <div className="career-offer-info">
-          <div className="career-offer-name">
-            {offer.name}
-            {offer.isGem && <span className="career-gem-badge">◆ GEM</span>}
-          </div>
-          <div className="career-offer-meta">
-            <span>{offer.spunClub}</span>
-            <span>{shortSeason(offer.spunSeason)}</span>
-          </div>
-        </div>
-        <span className="career-offer-status career-offer-status--used">✓</span>
-      </div>
-    );
-  }
-
-  const gemClass    = offer.isGem ? ' career-offer-card--gem' : '';
-  const activeClass = isActive    ? ' career-offer-card--active' : '';
-  const frozenClass = !canAfford  ? ' career-offer-card--unaffordable' : '';
-
   return (
-    <div className={`career-offer-card${activeClass}${gemClass}${frozenClass}`}>
+    <div className={[
+      'career-offer-card',
+      offer.isGem ? 'career-offer-card--gem' : '',
+      !canAfford  ? 'career-offer-card--unaffordable' : '',
+    ].filter(Boolean).join(' ')}>
       <div className="career-card-rating-wrap">
         <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
         {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
@@ -816,7 +893,7 @@ function TransferOfferCard({ offer, division, isActive, canAfford = true, onUse 
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>
           <span>
-            {offer.positions.map(p => (
+            {offer.positions?.map(p => (
               <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 4 }}>
                 {labelDE(p)}
               </span>
@@ -826,8 +903,8 @@ function TransferOfferCard({ offer, division, isActive, canAfford = true, onUse 
       </div>
       <div className="career-offer-actions">
         <span className="career-offer-price">€{price}M</span>
-        <button className="btn btn-primary btn-sm" onClick={onUse} disabled={!canAfford && !isActive}>
-          {isActive ? 'Abbrechen' : 'Einsetzen'}
+        <button className="btn btn-primary btn-sm" onClick={onBuy} disabled={!canAfford}>
+          Verpflichten
         </button>
       </div>
     </div>
@@ -860,14 +937,31 @@ function CareerEntwicklung({ growthLog, retirements = [], seasonNumber, onContin
             <div className="entw-icon-cards">
               {retirements.map((entry, i) => {
                 const s = entry.stats;
+                if (entry.isIcon) {
+                  return (
+                    <div key={i} className="entw-icon-card entw-retirement-card">
+                      <div className="entw-icon-card-stars">★ ★ ★</div>
+                      <div className="entw-icon-card-label">IKONE</div>
+                      <div className="entw-icon-card-ovr">{entry.newRating}</div>
+                      <div className="entw-icon-card-pos">{labelDE(entry.slotType)}</div>
+                      <div className="entw-icon-card-name">{entry.name}</div>
+                      <div className="entw-icon-card-seasons">{entry.seasons} Saisons im Kader</div>
+                      {s && (
+                        <div className="entw-retirement-stats">
+                          <span>{s.games} Spiele</span>
+                          {s.goals > 0 && <span>{s.goals} Tore</span>}
+                          {s.assists > 0 && <span>{s.assists} Assists</span>}
+                          {s.cleanSheets > 0 && <span>{s.cleanSheets} Zu-Null</span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
                 return (
-                  <div key={i} className="entw-icon-card entw-retirement-card">
-                    <div className="entw-icon-card-stars">★ ★ ★</div>
-                    <div className="entw-icon-card-label">IKONE</div>
-                    <div className="entw-icon-card-ovr">{entry.newRating}</div>
-                    <div className="entw-icon-card-pos">{labelDE(entry.slotType)}</div>
-                    <div className="entw-icon-card-name">{entry.name}</div>
-                    <div className="entw-icon-card-seasons">{entry.seasons} Saisons im Kader</div>
+                  <div key={i} className="entw-retirement-plain">
+                    <div className="entw-retirement-plain-pos">{labelDE(entry.slotType)}</div>
+                    <div className="entw-retirement-plain-name">{entry.name}</div>
+                    <div className="entw-retirement-plain-seasons">{entry.seasons} Saisons · Karriereende</div>
                     {s && (
                       <div className="entw-retirement-stats">
                         <span>{s.games} Spiele</span>

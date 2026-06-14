@@ -7,6 +7,7 @@ export default function FormationBoard({
   slots,
   showRatings,
   selectedSlotId,
+  highlightSlotIds = [],
   onSlotClick,
   draftMode,
   league = 'bl',
@@ -38,8 +39,10 @@ export default function FormationBoard({
         {/* Slot tokens */}
         {slots.map(slot => {
           const isSelected = slot.id === selectedSlotId;
+          const isHighlighted = highlightSlotIds.includes(slot.id);
           const isEmpty = slot.player === null;
-          const isClickable = draftMode === 'position-first' && isEmpty && !!onSlotClick;
+          // draft mode: only empty slots clickable; transfer mode (no draftMode): all slots clickable
+          const isClickable = !!onSlotClick && (draftMode !== 'position-first' || isEmpty);
 
           return (
             <button
@@ -47,8 +50,9 @@ export default function FormationBoard({
               className={[
                 'slot-token',
                 isEmpty ? 'slot-empty' : `slot-filled ${ovrColorClass(slot.player.displayRating)}`,
-                isSelected ? 'slot-selected' : '',
-                isClickable ? 'slot-clickable' : '',
+                isSelected    ? 'slot-selected'   : '',
+                isHighlighted ? 'slot-highlight'  : '',
+                isClickable   ? 'slot-clickable'  : '',
                 !isEmpty && slot.player.isIcon  ? 'slot-token--icon'  : '',
                 !isEmpty && slot.player.isPrime ? 'slot-token--prime' : '',
                 !isEmpty && slot.player.isGem   ? 'slot-token--gem'   : '',
