@@ -75,7 +75,7 @@ const ICON_CHANCE = 1 / 6; // (1-p)/p = 5 → expected promotion at season ~15
 // Also increments seasonsInSquad and promotes players who reach ICON_SEASONS.
 // Returns { updatedSlots, growthLog, iconLog } — does NOT mutate state.
 export function applyGrowth(slots, playerStats) {
-  const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.name, p]));
+  const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.id ?? p.name, p]));
   const growthLog = [];
   const iconLog = [];
 
@@ -100,7 +100,7 @@ export function applyGrowth(slots, playerStats) {
     if (!p.potential || p.displayRating >= p.potential) return { ...slot, player: p };
 
     const gap = p.potential - p.displayRating;
-    const score = perfScore(statsMap[p.name], slot.type);
+    const score = perfScore(statsMap[p.id ?? p.name], slot.type);
     const rawGain = score * gap * 0.35 + Math.random() * 0.4;
     const gainCap = gap >= 20 ? 5 : gap >= 12 ? 4 : 3;
     const gain = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));

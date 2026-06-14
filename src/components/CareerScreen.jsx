@@ -88,9 +88,11 @@ export default function CareerScreen() {
   function mergeStats(base, playerStats) {
     const next = { ...base };
     for (const p of (playerStats ?? [])) {
-      const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
-      next[p.name] = {
+      const key = p.id ?? p.name;
+      const prev = next[key] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
+      next[key] = {
         ...prev,
+        id:          p.id,
         name:        p.name,
         games:       prev.games       + (p.games       ?? 34),
         goals:       prev.goals       + (p.goals        ?? 0),
@@ -1073,8 +1075,8 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
   const totalGA  = history.reduce((sum, s) => sum + (s.GA  ?? 0), 0);
   const lastDivision = history[history.length - 1]?.division ?? '2bl';
 
-  const ratingByName = Object.fromEntries(
-    allPlayers.map(p => [p.name, { displayRating: p.displayRating, isIcon: p.isIcon }])
+  const ratingById = Object.fromEntries(
+    allPlayers.map(p => [p.id, { displayRating: p.displayRating, isIcon: p.isIcon }])
   );
 
   const [sortCol, setSortCol] = useState('games');
@@ -1085,10 +1087,10 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
     else { setSortCol(col); setSortDir(-1); }
   }
 
-  const base = Object.entries(careerStats).map(([name, stats]) => ({
-    name, ...stats,
-    displayRating: ratingByName[name]?.displayRating,
-    isIcon: ratingByName[name]?.isIcon,
+  const base = Object.values(careerStats).map(stats => ({
+    ...stats,
+    displayRating: ratingById[stats.id]?.displayRating,
+    isIcon: ratingById[stats.id]?.isIcon,
   }));
   const statsList = [...base].sort((a, b) => {
     const diff = (a[sortCol] ?? 0) - (b[sortCol] ?? 0);

@@ -330,10 +330,10 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   // Generate per-player events and aggregate season stats
   const squad = slots
     .filter(s => s.player)
-    .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
+    .map(s => ({ id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
 
   const statsMap = {};
-  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0, cleanSheets: 0 }; });
+  squad.forEach(p => { statsMap[p.id] = { id: p.id, name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0, cleanSheets: 0 }; });
 
   playerMatches.forEach(m => {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
@@ -341,7 +341,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
     if (goalsAgainst === 0) {
       squad
         .filter(p => ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p.slotType))
-        .forEach(p => { statsMap[p.name].cleanSheets++; });
+        .forEach(p => { statsMap[p.id].cleanSheets++; });
     }
     const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
@@ -360,11 +360,11 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
       return { minute, scorerName };
     }).sort((a, b) => a.minute - b.minute);
     events.forEach(e => {
-      if (e.type === 'goal') { statsMap[e.scorer.name].goals++; if (e.assister) statsMap[e.assister.name].assists++; }
+      if (e.type === 'goal') { statsMap[e.scorer.id].goals++; if (e.assister) statsMap[e.assister.id].assists++; }
     });
   });
 
-  const playerStats = squad.map(p => ({ ...statsMap[p.name], games: 34 }));
+  const playerStats = squad.map(p => ({ ...statsMap[p.id], games: 34 }));
 
   // Build sorted table
   const table = teams.map((t, i) => ({
