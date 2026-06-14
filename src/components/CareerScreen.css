@@ -698,6 +698,74 @@
   letter-spacing: -0.5px;
 }
 
+/* ── Missing players banner ── */
+.career-missing-banner {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.career-missing-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f87171;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.career-missing-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.career-missing-slot-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(239, 68, 68, 0.6);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.career-missing-slot-btn:hover {
+  background: rgba(239, 68, 68, 0.85);
+}
+
+/* ── Transfer offer filter row ── */
+.career-transfer-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.career-pos-filters--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.career-filter-btn--missing {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  color: #f87171 !important;
+}
+
+.career-filter-btn--missing.career-filter-btn-active {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #fff !important;
+}
+
 /* ── Start warning ── */
 .career-start-warning {
   font-size: 12px;
