@@ -246,7 +246,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
 
   // Late-game boost: for 90+ OVR squads, effective strength can exceed 99 in lambda
   // calculations, making 34-0-0 achievable. 95 OVR → +7.5, 100 OVR → +15.
-  const lateBoost = overall > 90 ? (overall - 90) * 1.5 : 0;
+  const lateBoost = overall > 90 ? (overall - 90) * 3 : 0;
 
   // Bad season: 12% chance of underperforming — makes finishing 2nd or lower possible.
   const formPenalty = Math.random() < 0.12 ? -(8 + Math.floor(Math.random() * 6)) : 0;

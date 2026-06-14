@@ -137,9 +137,11 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
 
   const final = shuffle(result).slice(0, count);
 
-  // Late-game only (teamAvg ≥ 85): one random offer gets a gem chance.
-  // 5% normally, 7% if the player is already high-rated (≥ 85).
-  if (teamAvg >= 85 && final.length) {
+  // Gem: only in late game (teamAvg ≥ 90) AND only when no offer is a real upgrade.
+  // A gem is a low-OVR player with elite potential (97–99) — a consolation when the
+  // market has nothing worth buying. 5% chance normally, 7% for higher-rated players.
+  const hasRealUpgrade = final.some(p => p.seasonRating >= teamAvg - 3);
+  if (teamAvg >= 90 && !hasRealUpgrade && final.length) {
     const idx = Math.floor(Math.random() * final.length);
     const p = final[idx];
     const chance = p.seasonRating >= 85 ? 0.07 : 0.05;
