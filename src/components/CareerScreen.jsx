@@ -10,9 +10,67 @@ import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerU
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
+import { encodeCareerState, decodeCareerState } from '../utils/savecode';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
+
+// ── Save Code Modal ───────────────────────────────────────────────────────────
+
+function SaveCodeModal({ state, onRestore, onClose }) {
+  const [code, setCode] = useState('');
+  const [input, setInput] = useState('');
+  const [status, setStatus] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    encodeCareerState(state).then(setCode).catch(() => setCode('Fehler beim Erstellen des Codes'));
+  }, [state]);
+
+  async function handleLoad() {
+    if (!input.trim()) return;
+    try {
+      const restored = await decodeCareerState(input.trim());
+      onRestore(restored);
+      onClose();
+    } catch {
+      setStatus('Ungültiger Code.');
+    }
+  }
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <div className="savecode-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="savecode-modal">
+        <div className="savecode-header">
+          <span>Spielstand-Code</span>
+          <button className="savecode-close" onClick={onClose}>✕</button>
+        </div>
+        <p className="savecode-hint">Kopiere den Code um deinen Spielstand zu sichern. Füge einen Code ein um einen alten Stand zu laden.</p>
+        <div className="savecode-row">
+          <textarea className="savecode-textarea" readOnly value={code} onClick={e => e.target.select()} />
+          <button className="btn btn-ghost btn-sm" onClick={handleCopy}>{copied ? '✓' : 'Kopieren'}</button>
+        </div>
+        <div className="savecode-row">
+          <input
+            className="savecode-input"
+            placeholder="Code einfügen…"
+            value={input}
+            onChange={e => { setInput(e.target.value); setStatus(''); }}
+          />
+          <button className="btn btn-primary btn-sm" onClick={handleLoad}>Laden</button>
+        </div>
+        {status && <p className="savecode-status">{status}</p>}
+      </div>
+    </div>
+  );
+}
 
 const PLAYOFF_OPPONENTS = {
   bl:  ['Hamburger SV', 'FC Schalke 04', 'Hannover 96', '1. FC Köln', 'Hertha BSC',
@@ -61,6 +119,7 @@ export default function CareerScreen() {
   const { state } = career;
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
+  const [showSaveCode, setShowSaveCode] = useState(false);
 
   function runSeason(slots, division, seasonNumber) {
     const players = getPlayers(division);
@@ -191,15 +250,25 @@ export default function CareerScreen() {
 
   if (state.phase === 'transfer') {
     return (
-      <CareerTransfer
-        state={state}
-        onSwap={career.swapOffer}
-        onUndo={career.undoSwap}
-        onSkip={career.skipOffer}
-        onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
-        onEnd={handleEndCareer}
-        onHome={() => { career.reset(); navigate('/'); }}
-      />
+      <>
+        <CareerTransfer
+          state={state}
+          onSwap={career.swapOffer}
+          onUndo={career.undoSwap}
+          onSkip={career.skipOffer}
+          onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
+          onEnd={handleEndCareer}
+          onHome={() => { career.reset(); navigate('/'); }}
+          onSaveCode={() => setShowSaveCode(true)}
+        />
+        {showSaveCode && (
+          <SaveCodeModal
+            state={state}
+            onRestore={career.restoreState}
+            onClose={() => setShowSaveCode(false)}
+          />
+        )}
+      </>
     );
   }
 
@@ -569,7 +638,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, onHome }) {
+function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, onHome, onSaveCode }) {
   const { slots, transferOffers, division, seasonNumber, seasonHistory, swapHistory } = state;
   const [activeOffer, setActiveOffer] = useState(null);
 
@@ -610,6 +679,7 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className="btn btn-ghost btn-sm" onClick={onSaveCode}>Code</button>
           <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
         </div>
       </header>
