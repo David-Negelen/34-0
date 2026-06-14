@@ -234,6 +234,7 @@ function reducer(state, action) {
         ),
         incomingBids: state.incomingBids.filter(b => b.playerId !== playerId),
         transferOffers: [...state.transferOffers, ...newOffers],
+        swapHistory: [], // sells can't be undone; clear so undo doesn't revert an older buy
       };
     }
 
