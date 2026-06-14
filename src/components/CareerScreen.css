@@ -671,6 +671,42 @@
   opacity: 0.45;
 }
 
+/* ── Budget display (prominent, in right panel) ── */
+.career-budget-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(104, 211, 145, 0.08);
+  border: 1px solid rgba(104, 211, 145, 0.25);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.career-budget-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+}
+
+.career-budget-value {
+  font-size: 22px;
+  font-weight: 900;
+  color: #68d391;
+  letter-spacing: -0.5px;
+}
+
+/* ── Start warning ── */
+.career-start-warning {
+  font-size: 12px;
+  color: var(--red);
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
 /* ── Budget badge in transfer header ── */
 .career-budget-badge {
   font-size: 13px;

@@ -575,16 +575,21 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormation, onStartSeason, onEnd }) {
   const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0, formation } = state;
-  const formationSlots = slots.filter(s => s.type !== 'BENCH');
-  const benchSlots     = slots.filter(s => s.type === 'BENCH');
+  const formationSlots  = slots.filter(s => s.type !== 'BENCH');
+  const benchSlots      = slots.filter(s => s.type === 'BENCH');
   const [selectedSlotId, setSelectedSlotId] = useState(null);
 
   const prevDivision  = seasonHistory[seasonHistory.length - 1]?.division;
   const justPromoted  = prevDivision === '2bl' && division === 'bl';
   const justRelegated = prevDivision === 'bl'  && division === '2bl';
 
+  const filledFormation = formationSlots.filter(s => s.player !== null).length;
+  const canStart        = filledFormation === 11;
+
   const selectedSlot    = selectedSlotId ? slots.find(s => s.id === selectedSlotId) : null;
   const isBenchSelected = selectedSlot?.type === 'BENCH';
+
+  const allAvailableOffers = transferOffers.filter(o => !o.used && !o.skipped);
 
   // Market offers for the selected formation slot's position type
   const marketOffers = !isBenchSelected && selectedSlot
@@ -634,7 +639,17 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
     setSelectedSlotId(null);
   }
 
-  const signedCount = transferOffers.filter(o => o.used).length;
+  // Buy from overview: auto-place in empty matching slot, else select that slot for user to choose
+  function handleBuyFromOverview(offerIndex) {
+    const offer = transferOffers[offerIndex];
+    const emptyMatch = formationSlots.find(s => s.type === offer.slotType && !s.player);
+    if (emptyMatch) {
+      onBuy(offerIndex, emptyMatch.id);
+      return;
+    }
+    const anyMatch = formationSlots.find(s => s.type === offer.slotType);
+    if (anyMatch) setSelectedSlotId(anyMatch.id);
+  }
 
   return (
     <div className="career-screen">
@@ -650,10 +665,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div className="career-budget-badge">€ {budget}M</div>
-          <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
-        </div>
+        <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
       </header>
 
       <div className="career-transfer-layout">
@@ -723,11 +735,36 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
         {/* Right: context panel */}
         <div className="career-transfer-right">
 
-          {/* No slot selected */}
+          {/* No slot selected — overview */}
           {!selectedSlot && (
             <>
+              <div className="career-budget-display">
+                <span className="career-budget-label">Budget</span>
+                <span className="career-budget-value">€ {budget}M</span>
+              </div>
+
+              {allAvailableOffers.length > 0 ? (
+                <div>
+                  <div className="result-section-label" style={{ marginBottom: 8 }}>Transferangebote</div>
+                  {allAvailableOffers.map(offer => {
+                    const idx = transferOffers.indexOf(offer);
+                    return (
+                      <TransferOfferCard
+                        key={`${offer.id}-${idx}`}
+                        offer={offer}
+                        division={division}
+                        canAfford={budget >= (offer.price ?? 0)}
+                        onBuy={() => handleBuyFromOverview(idx)}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="career-market-hint">Keine Transferangebote verfügbar.</div>
+              )}
+
               {incomingBids.length > 0 && (
-                <div className="career-incoming-bids">
+                <div className="career-incoming-bids" style={{ marginTop: 20 }}>
                   <div className="result-section-label" style={{ marginBottom: 8 }}>Kaufangebote</div>
                   {incomingBids.map((bid, i) => (
                     <div key={i} className="career-bid-row">
@@ -746,14 +783,22 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                   ))}
                 </div>
               )}
-              <div className="career-market-hint">
-                {signedCount > 0
-                  ? `${signedCount} Spieler verpflichtet — wähle eine Position für mehr Optionen`
-                  : 'Wähle eine Position um Transferangebote zu sehen'}
+
+              <div style={{ marginTop: 24 }}>
+                {!canStart && (
+                  <div className="career-start-warning">
+                    Alle 11 Positionen müssen besetzt sein ({filledFormation}/11)
+                  </div>
+                )}
+                <button
+                  className="btn btn-primary btn-lg career-transfer-inline-btn"
+                  style={{ width: '100%' }}
+                  onClick={onStartSeason}
+                  disabled={!canStart}
+                >
+                  Saison {seasonNumber} starten →
+                </button>
               </div>
-              <button className="btn btn-primary btn-lg career-transfer-inline-btn" style={{ width: '100%', marginTop: 20 }} onClick={onStartSeason}>
-                Saison {seasonNumber} starten →
-              </button>
             </>
           )}
 
@@ -854,7 +899,17 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
       </div>
 
       <div className="career-transfer-sticky-bar">
-        <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={onStartSeason}>
+        {!canStart && (
+          <div className="career-start-warning">
+            Alle 11 Positionen müssen besetzt sein ({filledFormation}/11)
+          </div>
+        )}
+        <button
+          className="btn btn-primary btn-lg"
+          style={{ width: '100%' }}
+          onClick={onStartSeason}
+          disabled={!canStart}
+        >
           Saison {seasonNumber} starten →
         </button>
       </div>
