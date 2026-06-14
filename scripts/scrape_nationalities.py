@@ -69,12 +69,10 @@ print(f"Unique players across DBs: {len(players)}")
 
 # ── Resume support ────────────────────────────────────────────────────────────
 
-cache: dict[str, str | None] = {}
-if OUTPUT.exists():
-    cache = json.loads(OUTPUT.read_text(encoding="utf-8"))
+cache: dict[str, list[str]] = {}
 
-todo = [(tm_id, name) for tm_id, name in players.items() if str(tm_id) not in cache]
-print(f"Already cached: {len(cache)} | Remaining: {len(todo)}\n")
+todo = list(players.items())
+print(f"Scraping all {len(todo)} players (no cache)\n")
 
 if not todo:
     print("All done!")
@@ -112,21 +110,23 @@ def fetch_html(url: str, retries: int = 5) -> str | None:
 
 # ── Parsing ───────────────────────────────────────────────────────────────────
 
-def parse_nationality(soup: BeautifulSoup) -> str | None:
-    # Method 1: itemprop="nationality" span (modern TM layout)
-    el = soup.find(attrs={"itemprop": "nationality"})
-    if el:
+def parse_nationalities(soup: BeautifulSoup) -> list[str]:
+    # Method 1: all itemprop="nationality" spans (modern TM layout)
+    results = []
+    for el in soup.find_all(attrs={"itemprop": "nationality"}):
         text = el.get_text(strip=True)
-        if text:
-            return text
+        if text and text not in results:
+            results.append(text)
+    if results:
+        return results
 
-    # Method 2: flag image inside the info table (fallback)
+    # Method 2: all flag images in the info table (fallback)
     for img in soup.select("img.flaggenrahmen"):
-        title = img.get("title") or img.get("alt") or ""
-        if title:
-            return title.strip()
+        title = (img.get("title") or img.get("alt") or "").strip()
+        if title and title not in results:
+            results.append(title)
 
-    return None
+    return results
 
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
@@ -143,20 +143,20 @@ for i, (tm_id, name) in enumerate(todo):
     try:
         html = fetch_html(url)
         if html is None:
-            cache[str(tm_id)] = None
+            cache[str(tm_id)] = []
             not_found += 1
             print(f"{label} 404")
         else:
             soup = BeautifulSoup(html, "lxml")
-            nat = parse_nationality(soup)
-            cache[str(tm_id)] = nat
-            if nat:
+            nats = parse_nationalities(soup)
+            cache[str(tm_id)] = nats
+            if nats:
                 found += 1
-                print(f"{label} → {nat}")
+                print(f"{label} → {', '.join(nats)}")
             else:
                 print(f"{label} → (no nationality found)")
     except Exception as e:
-        cache[str(tm_id)] = None
+        cache[str(tm_id)] = []
         errors += 1
         print(f"{label} ERROR: {e}")
 

@@ -43,7 +43,7 @@ LEAGUES = [
         "id":       "L3",
         "name":     "3. Liga",
         "db_path":  ROOT / "dritte_liga_draft.db",
-        "seasons":  list(range(2024, 2009, -1)),  # 2024/25 → 2010/11
+        "seasons":  list(range(2024, 2007, -1)),  # 2024/25 → 2008/09 (first season)
     },
     {
         "id":       "FBL",
@@ -73,7 +73,7 @@ RETRY_DELAY = 45.0
 # ── Shared JSON state (loaded once, written after every profile) ──────────────
 
 birth_dates:   dict[str, str | None] = {}
-nationalities: dict[str, str | None] = {}
+nationalities: dict[str, list[str]] = {}
 
 if BIRTH_DATES_PATH.exists():
     birth_dates = json.loads(BIRTH_DATES_PATH.read_text(encoding="utf-8"))
@@ -200,12 +200,12 @@ def season_label(year: int) -> str:
 
 # ── Profile parsing ───────────────────────────────────────────────────────────
 
-def parse_player_profile(soup: BeautifulSoup) -> tuple[list[str], str | None, str | None]:
-    """Returns (positions, birth_date_iso, nationality_str)."""
+def parse_player_profile(soup: BeautifulSoup) -> tuple[list[str], str | None, list[str]]:
+    """Returns (positions, birth_date_iso, nationalities)."""
 
     positions = [dd.get_text(strip=True) for dd in soup.select("dd.detail-position__position")]
 
-    # Birth date: itemprop="birthDate" contains text like "01.01.1990"
+    # Birth date
     birth_date = None
     bd_el = soup.find(attrs={"itemprop": "birthDate"})
     if bd_el:
@@ -214,19 +214,19 @@ def parse_player_profile(soup: BeautifulSoup) -> tuple[list[str], str | None, st
         if m:
             birth_date = f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
 
-    # Nationality: itemprop first, then flag image fallback
-    nationality = None
-    nat_el = soup.find(attrs={"itemprop": "nationality"})
-    if nat_el:
-        nationality = nat_el.get_text(strip=True) or None
-    if not nationality:
+    # Nationalities: collect all (itemprop first, flag images as fallback)
+    nats: list[str] = []
+    for el in soup.find_all(attrs={"itemprop": "nationality"}):
+        text = el.get_text(strip=True)
+        if text and text not in nats:
+            nats.append(text)
+    if not nats:
         for img in soup.select("img.flaggenrahmen"):
-            title = img.get("title") or img.get("alt") or ""
-            if title:
-                nationality = title.strip()
-                break
+            title = (img.get("title") or img.get("alt") or "").strip()
+            if title and title not in nats:
+                nats.append(title)
 
-    return positions, birth_date, nationality
+    return positions, birth_date, nats
 
 
 # ── Scrapers ──────────────────────────────────────────────────────────────────
@@ -314,17 +314,18 @@ def profile_fetched(con, player_id: int) -> bool:
 
 
 def save_player(con, player: dict, positions: list[str],
-                birth_date: str | None, nationality: str | None):
+                birth_date: str | None, nats: list[str]):
+    nat_primary = nats[0] if nats else None
     con.execute(
         "INSERT OR IGNORE INTO players (tm_id, name, birth_date, nationality) "
         "VALUES (?, ?, ?, ?)",
-        (player["tm_id"], player["name"], birth_date, nationality)
+        (player["tm_id"], player["name"], birth_date, nat_primary)
     )
     # Update birth_date / nationality if previously NULL
     con.execute(
         "UPDATE players SET birth_date=COALESCE(birth_date,?), "
         "nationality=COALESCE(nationality,?) WHERE tm_id=?",
-        (birth_date, nationality, player["tm_id"])
+        (birth_date, nat_primary, player["tm_id"])
     )
     for i, pos in enumerate(positions):
         con.execute(
@@ -359,6 +360,43 @@ def mark_scraped(con, year, club_id):
         (year, club_id)
     )
     con.commit()
+
+
+# ── Fill-pass: update players missing nationality ─────────────────────────────
+
+def fill_missing_nationalities(con: sqlite3.Connection):
+    """Re-fetch profiles for players whose nationality is missing from the JSON."""
+    all_players = con.execute("SELECT tm_id, name FROM players").fetchall()
+    missing = [(tm_id, name) for tm_id, name in all_players
+               if not nationalities.get(str(tm_id))]
+
+    if not missing:
+        print("  Nationalities: all filled.")
+        return
+
+    print(f"\n  Fill-pass: {len(missing)} players missing nationality …")
+    for i, (tm_id, name) in enumerate(missing, 1):
+        tm_id_str = str(tm_id)
+        url = f"{BASE}/-/profil/spieler/{tm_id}"
+        print(f"  [{i}/{len(missing)}] {name[:30]:<30} … ", end="", flush=True)
+        try:
+            soup = fetch(url)
+            _, birth_date, nats = parse_player_profile(soup)
+            nationalities[tm_id_str] = nats
+            if not birth_dates.get(tm_id_str):
+                birth_dates[tm_id_str] = birth_date
+            nat_primary = nats[0] if nats else None
+            con.execute(
+                "UPDATE players SET nationality=? WHERE tm_id=? AND nationality IS NULL",
+                (nat_primary, tm_id)
+            )
+            con.commit()
+            save_json()
+            print(", ".join(nats) if nats else "(not found)")
+        except Exception as e:
+            nationalities[tm_id_str] = []
+            save_json()
+            print(f"ERROR: {e}")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -407,22 +445,22 @@ def scrape_league(league: dict):
                     print(f"    [{k}/{len(players)}] {p['name']} … ", end="", flush=True)
                     try:
                         soup = fetch(p["profile_url"])
-                        positions, birth_date, nationality = parse_player_profile(soup)
+                        positions, birth_date, nats = parse_player_profile(soup)
                     except Exception as e:
                         print(f"ERROR: {e}")
-                        positions, birth_date, nationality = [], None, None
+                        positions, birth_date, nats = [], None, []
 
-                    save_player(con, p, positions, birth_date, nationality)
+                    save_player(con, p, positions, birth_date, nats)
 
                     # Write to shared JSON files
                     if tm_id_str not in birth_dates or birth_dates[tm_id_str] is None:
                         birth_dates[tm_id_str] = birth_date
-                    if tm_id_str not in nationalities or nationalities[tm_id_str] is None:
-                        nationalities[tm_id_str] = nationality
+                    if not nationalities.get(tm_id_str):
+                        nationalities[tm_id_str] = nats
                     save_json()
 
                     pos_str = ", ".join(positions) if positions else "no position"
-                    nat_str = nationality or "?"
+                    nat_str = ", ".join(nats) if nats else "?"
                     bd_str  = birth_date or "?"
                     print(f"→ {pos_str}  |  {bd_str}  |  {nat_str}")
                     new_profiles += 1
@@ -436,6 +474,10 @@ def scrape_league(league: dict):
             con.commit()
             mark_scraped(con, year, club["tm_id"])
             print(f"  ✓ {club['name']}: {len(players)} players ({new_profiles} new profiles)")
+
+    # Fill-pass: re-fetch profiles that are still missing nationality in the JSON.
+    # Runs even when all squads are already in scrape_log (idempotent).
+    fill_missing_nationalities(con)
 
     n_players = con.execute("SELECT COUNT(*) FROM players").fetchone()[0]
     n_entries = con.execute("SELECT COUNT(*) FROM squad_entries").fetchone()[0]
