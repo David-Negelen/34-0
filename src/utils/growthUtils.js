@@ -1,5 +1,6 @@
+import { getAge } from './ageUtils';
+
 // Potential ceiling ranges: [minGap, maxGap] above current seasonRating.
-// Lower-rated players have higher variance — could be a gem or a dead end.
 const POT_RANGES = [
   [88, [0, 1]],
   [83, [1, 3]],
@@ -50,18 +51,30 @@ function perfScore(stats, slotType) {
   return clamp((stats.goals * 1.5 + stats.assists * 0.8) / games / 0.6, 0, 1);
 }
 
+// Probability of retirement per season based on age.
+// Falls back to seasonsInSquad-based chance when age is unknown.
+function retirementChance(age, seasons) {
+  if (age !== null) {
+    if (age < 32) return 0;
+    if (age < 34) return 0.08;
+    if (age < 36) return 0.20;
+    if (age < 38) return 0.40;
+    return 0.65;
+  }
+  // Fallback: no birth date data
+  if (seasons < 10) return 0;
+  return 1 / 6;
+}
 
 const ICON_MIN_SEASONS = 10;
-const ICON_CHANCE = 1 / 6; // expected promotion around season 15
-
-// Decline kicks in after this many seasons (proxy until birth dates are wired in)
-const DECLINE_START = 15;
 
 // Applies one season of growth/decline to all squad slots.
 // Returns { updatedSlots, growthLog, retirements } — does NOT mutate state.
-export function applyGrowth(slots, playerStats, careerStats = {}) {
+// retirements entries: { name, slotType, seasons, isIcon, oldRating, newRating, stats }
+// Non-Icon retirements have the slot cleared (player: null).
+export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = null) {
   const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.id ?? p.name, p]));
-  const growthLog = [];
+  const growthLog  = [];
   const retirements = [];
 
   const updatedSlots = slots.map(slot => {
@@ -71,30 +84,33 @@ export function applyGrowth(slots, playerStats, careerStats = {}) {
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
     p = { ...p, seasonsInSquad: newSeasons };
 
-    // Career end → Icon card. OVR = primeRating + 2–5 based on this season's performance.
-    if (!p.isIcon && newSeasons >= ICON_MIN_SEASONS && Math.random() < ICON_CHANCE) {
+    const age = getAge(p.id, currentYear);
+
+    // ── Retirement check ──────────────────────────────────────────────────────
+    const chance = retirementChance(age, newSeasons);
+    if (!p.isIcon && chance > 0 && Math.random() < chance) {
       const oldRating = p.displayRating;
-      const score = perfScore(statsMap[p.id ?? p.name], slot.type);
-      const perfBonus = 2 + Math.round(score * 3); // 2–5
-      const base = p.primeRating ?? p.displayRating;
-      const newRating = base + perfBonus;
-      const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
-      p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
-      retirements.push({
-        name: p.name,
-        slotType: slot.type,
-        seasons: newSeasons,
-        isIcon: true,
-        oldRating,
-        newRating,
-        stats: careerStats[p.id] ?? null,
-      });
-      return { ...slot, player: p };
+      if (newSeasons >= ICON_MIN_SEASONS) {
+        // Earned an Icon card — stays in squad
+        const score = perfScore(statsMap[p.id ?? p.name], slot.type);
+        const perfBonus = 2 + Math.round(score * 3); // 2–5
+        const newRating = (p.primeRating ?? p.displayRating) + perfBonus;
+        const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
+        p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
+        retirements.push({ name: p.name, slotType: slot.type, seasons: newSeasons, isIcon: true, oldRating, newRating, stats: careerStats[p.id] ?? null });
+        return { ...slot, player: p };
+      } else {
+        // Not enough seasons → leaves without an Icon card, slot clears
+        retirements.push({ name: p.name, slotType: slot.type, seasons: newSeasons, isIcon: false, oldRating, newRating: oldRating, stats: careerStats[p.id] ?? null });
+        return { ...slot, player: null };
+      }
     }
 
-    // Decline phase (replaced by age-based logic once birth dates are available)
-    if (!p.isIcon && newSeasons >= DECLINE_START) {
-      const rate = newSeasons >= 20 ? 2 : 1;
+    // ── Decline phase ─────────────────────────────────────────────────────────
+    // Age-based (32+); falls back to seasonsInSquad proxy (15+) without birth data
+    const inDecline = !p.isIcon && (age !== null ? age >= 32 : newSeasons >= 15);
+    if (inDecline) {
+      const rate  = (age !== null ? age >= 36 : newSeasons >= 20) ? 2 : 1;
       const floor = Math.max(60, (p.primeRating ?? p.seasonRating ?? 65) - 10);
       if (p.displayRating > floor) {
         const loss = Math.min(rate, p.displayRating - floor);
@@ -104,14 +120,14 @@ export function applyGrowth(slots, playerStats, careerStats = {}) {
       return { ...slot, player: p };
     }
 
-    // Normal growth
+    // ── Normal growth ─────────────────────────────────────────────────────────
     if (!p.potential || p.displayRating >= p.potential) return { ...slot, player: p };
 
-    const gap = p.potential - p.displayRating;
-    const score = perfScore(statsMap[p.id ?? p.name], slot.type);
+    const gap     = p.potential - p.displayRating;
+    const score   = perfScore(statsMap[p.id ?? p.name], slot.type);
     const rawGain = score * gap * 0.35 + Math.random() * 0.4;
     const gainCap = gap >= 20 ? 5 : gap >= 12 ? 4 : 3;
-    const gain = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
+    const gain    = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
 
     if (gain > 0) {
       growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + gain, gain });

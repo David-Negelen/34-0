@@ -10,6 +10,7 @@ import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerU
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
+import { generateIncomingBids, prizeMoney } from '../utils/careerUtils';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
@@ -161,14 +162,17 @@ export default function CareerScreen() {
           seasonNumber={state.seasonNumber}
           onContinue={() => {
             career.applyGrowth(entwicklungData.updatedSlots);
+            const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
             const divPlayers = getPlayers(newDivision);
             const filled = entwicklungData.updatedSlots.filter(s => s.player && s.type !== 'BENCH');
             const excludeIds = new Set(entwicklungData.updatedSlots.filter(s => s.player).map(s => s.player.id));
             const teamAvg = filled.length
               ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
               : null;
-            const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg);
-            career.beginTransfer(newDivision, offers, entwicklungData.retirements);
+            const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg, currentYear);
+            const prize = prizeMoney(state.result?.pos ?? 18, state.division);
+            const incomingBids = generateIncomingBids(entwicklungData.updatedSlots);
+            career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize, incomingBids);
             setEntwicklungData(null);
           }}
         />
@@ -181,7 +185,8 @@ export default function CareerScreen() {
         promoted={promoted}
         relegated={relegated}
         onContinue={() => {
-          const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats);
+          const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
+          const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear);
           setEntwicklungData({ updatedSlots, growthLog, retirements });
         }}
         onEnd={handleEndCareer}
@@ -198,6 +203,7 @@ export default function CareerScreen() {
           onSwap={career.swapOffer}
           onUndo={career.undoSwap}
           onSkip={career.skipOffer}
+          onSell={career.sellPlayer}
           onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
           onEnd={handleEndCareer}
           onHome={() => { career.reset(); navigate('/'); }}
@@ -573,8 +579,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, onHome }) {
-  const { slots, transferOffers, division, seasonNumber, seasonHistory, swapHistory } = state;
+function CareerTransfer({ state, onSwap, onUndo, onSkip, onSell, onStartSeason, onEnd }) {
+  const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0 } = state;
   const benchSlots = slots.filter(s => s.type === 'BENCH');
   const [activeOffer, setActiveOffer] = useState(null);
 
@@ -592,7 +598,6 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
   }
 
   function handleSwap(slotId) {
-    const slot = slots.find(s => s.id === slotId);
     onSwap(activeOffer, slotId);
     setActiveOffer(null);
   }
@@ -613,14 +618,15 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div className="career-budget-badge">€ {budget}M</div>
           <button className="btn btn-ghost btn-sm" onClick={onEnd}>Karriere beenden</button>
         </div>
       </header>
 
       <div className="career-transfer-layout">
 
-        {/* Left: formation + swap list */}
+        {/* Left: formation + bench + swap list */}
         <div className="career-transfer-left">
           <div className="result-section-label">Aktuelle Startelf</div>
           <FormationBoard slots={slots} showRatings league={division} />
@@ -697,8 +703,33 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
           )}
         </div>
 
-        {/* Right: offer cards */}
+        {/* Right: incoming bids + offer cards */}
         <div className="career-transfer-right">
+
+          {incomingBids.length > 0 && (
+            <div className="career-incoming-bids">
+              <div className="result-section-label" style={{ marginBottom: 8 }}>Kaufangebote</div>
+              {incomingBids.map((bid, i) => (
+                <div key={i} className="career-bid-row">
+                  <div className="career-bid-info">
+                    <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
+                    <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
+                    <span className="career-bid-name">{bid.playerName}</span>
+                  </div>
+                  <div className="career-bid-actions">
+                    <span className="career-bid-amount">€{bid.amount}M</span>
+                    <button
+                      className="btn btn-sm career-bid-accept"
+                      onClick={() => onSell(bid.playerId, bid.amount)}
+                    >
+                      Verkaufen
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <div className="result-section-label" style={{ marginBottom: 0 }}>
               Angebote — {usedCount} von {transferOffers.length} eingesetzt
@@ -714,6 +745,7 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
               offer={offer}
               division={division}
               isActive={activeOffer === i}
+              canAfford={budget >= (offer.price ?? 0)}
               onUse={() => handleUseOffer(i)}
             />
           ))}
@@ -738,9 +770,10 @@ function CareerTransfer({ state, onSwap, onUndo, onSkip, onStartSeason, onEnd, o
   );
 }
 
-function TransferOfferCard({ offer, division, isActive, onUse }) {
+function TransferOfferCard({ offer, division, isActive, canAfford = true, onUse }) {
   const rcls = ovrColorClass(offer.seasonRating);
   const tier = potentialTier(offer);
+  const price = offer.price ?? 0;
 
   if (offer.used) {
     return (
@@ -764,11 +797,12 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
     );
   }
 
-  const gemClass   = offer.isGem   ? ' career-offer-card--gem'   : '';
-  const activeClass = isActive ? ' career-offer-card--active' : '';
+  const gemClass    = offer.isGem ? ' career-offer-card--gem' : '';
+  const activeClass = isActive    ? ' career-offer-card--active' : '';
+  const frozenClass = !canAfford  ? ' career-offer-card--unaffordable' : '';
 
   return (
-    <div className={`career-offer-card${activeClass}${gemClass}`}>
+    <div className={`career-offer-card${activeClass}${gemClass}${frozenClass}`}>
       <div className="career-card-rating-wrap">
         <div className={`rating rating-sm ${rcls}`}>{offer.seasonRating}</div>
         {tier && <span className={`career-card-potential ${ovrColorClass(offer.potential)}`}>→{offer.potential}</span>}
@@ -791,7 +825,8 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
         </div>
       </div>
       <div className="career-offer-actions">
-        <button className="btn btn-primary btn-sm" onClick={onUse}>
+        <span className="career-offer-price">€{price}M</span>
+        <button className="btn btn-primary btn-sm" onClick={onUse} disabled={!canAfford && !isActive}>
           {isActive ? 'Abbrechen' : 'Einsetzen'}
         </button>
       </div>

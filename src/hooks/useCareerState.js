@@ -1,22 +1,25 @@
 import { useReducer, useEffect } from 'react';
 import { FORMATIONS } from '../data/formations';
 
-const STORAGE_KEY = 'karriere_v1';
+const STORAGE_KEY = 'karriere_v2';
 
 const defaultState = {
   phase: 'setup',
   formation: '4-3-3',
   division: '2bl',
   seasonNumber: 0,
+  careerStartYear: null,
   slots: [],
   draftPool: [],
   result: null,
   transferOffers: [],
+  incomingBids: [],
   seasonHistory: [],
   allPlayers: [],
   careerStats: {},
   swapHistory: [],
   retiredThisSeason: [],
+  budget: 0,
 };
 
 function mergeStats(careerStats, playerStats) {
@@ -58,15 +61,22 @@ function reducer(state, action) {
     case 'SET_FORMATION':
       return { ...state, formation: action.payload };
 
-    case 'BEGIN_DRAFT':
+    case 'BEGIN_DRAFT': {
+      const pool = action.payload;
+      const years = pool.map(p => parseInt(p.spunSeason)).filter(y => !isNaN(y));
+      const careerStartYear = years.length
+        ? Math.round(years.reduce((a, b) => a + b, 0) / years.length)
+        : 2000;
       return {
         ...defaultState,
         formation: state.formation,
         phase: 'draft',
         seasonNumber: 1,
+        careerStartYear,
         slots: buildSlots(state.formation),
-        draftPool: action.payload,
+        draftPool: pool,
       };
+    }
 
     case 'PLACE_PLAYER': {
       const { slotId, player, displayRating } = action.payload;
@@ -85,7 +95,7 @@ function reducer(state, action) {
       return { ...state, phase: 'result', result: action.payload, swapHistory: [] };
 
     case 'BEGIN_TRANSFER': {
-      const { newDivision, transferOffers, retiredThisSeason } = action.payload;
+      const { newDivision, transferOffers, retiredThisSeason, prize, incomingBids } = action.payload;
       const history = state.result
         ? [...state.seasonHistory, {
             season: state.seasonNumber,
@@ -102,8 +112,10 @@ function reducer(state, action) {
         division: newDivision,
         seasonNumber: state.seasonNumber + 1,
         transferOffers,
+        incomingBids: incomingBids ?? [],
         seasonHistory: history,
         careerStats: mergeStats(state.careerStats, state.result?.playerStats),
+        budget: (state.budget ?? 0) + (prize ?? 0),
         result: null,
         swapHistory: [],
         retiredThisSeason: retiredThisSeason ?? [],
@@ -114,11 +126,14 @@ function reducer(state, action) {
       const { offerIndex, slotId } = action.payload;
       const offer = state.transferOffers[offerIndex];
       if (!offer || offer.used || offer.skipped) return state;
+      const price = offer.price ?? 0;
+      if ((state.budget ?? 0) < price) return state;
       const swappedIn = { ...offer, displayRating: offer.seasonRating };
       const oldPlayer = state.slots.find(s => s.id === slotId)?.player ?? null;
       const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
       return {
         ...state,
+        budget: (state.budget ?? 0) - price,
         slots: state.slots.map(s =>
           s.id === slotId ? { ...s, player: swappedIn } : s
         ),
@@ -126,15 +141,16 @@ function reducer(state, action) {
           i === offerIndex ? { ...o, used: true } : o
         ),
         allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, swappedIn],
-        swapHistory: [...state.swapHistory, { slotId, oldPlayer, offerIndex }],
+        swapHistory: [...state.swapHistory, { slotId, oldPlayer, offerIndex, price }],
       };
     }
 
     case 'UNDO_SWAP': {
       if (!state.swapHistory.length) return state;
-      const { slotId, oldPlayer, offerIndex } = state.swapHistory[state.swapHistory.length - 1];
+      const { slotId, oldPlayer, offerIndex, price = 0 } = state.swapHistory[state.swapHistory.length - 1];
       return {
         ...state,
+        budget: (state.budget ?? 0) + price,
         slots: state.slots.map(s =>
           s.id === slotId ? { ...s, player: oldPlayer } : s
         ),
@@ -142,6 +158,18 @@ function reducer(state, action) {
           i === offerIndex ? { ...o, used: false } : o
         ),
         swapHistory: state.swapHistory.slice(0, -1),
+      };
+    }
+
+    case 'SELL_PLAYER': {
+      const { playerId, amount } = action.payload;
+      return {
+        ...state,
+        budget: (state.budget ?? 0) + amount,
+        slots: state.slots.map(s =>
+          s.player?.id === playerId ? { ...s, player: null } : s
+        ),
+        incomingBids: state.incomingBids.filter(b => b.playerId !== playerId),
       };
     }
 
@@ -203,16 +231,17 @@ export function useCareerState() {
 
   return {
     state,
-    setFormation:  f  => dispatch({ type: 'SET_FORMATION', payload: f }),
+    setFormation:  f => dispatch({ type: 'SET_FORMATION', payload: f }),
     beginDraft:    pool => dispatch({ type: 'BEGIN_DRAFT', payload: pool }),
     placePlayer:   (slotId, player, displayRating) =>
                      dispatch({ type: 'PLACE_PLAYER', payload: { slotId, player, displayRating } }),
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),
-    beginTransfer: (newDivision, offers, retiredThisSeason) =>
-                     dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason } }),
+    beginTransfer: (newDivision, offers, retiredThisSeason, prize, incomingBids) =>
+                     dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason, prize, incomingBids } }),
     swapOffer:     (offerIndex, slotId) =>
                      dispatch({ type: 'SWAP_OFFER', payload: { offerIndex, slotId } }),
     undoSwap:      () => dispatch({ type: 'UNDO_SWAP' }),
+    sellPlayer:    (playerId, amount) => dispatch({ type: 'SELL_PLAYER', payload: { playerId, amount } }),
     skipOffer:     i => dispatch({ type: 'SKIP_OFFER', payload: i }),
     removePlayer:  slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
     applyGrowth:   updatedSlots => dispatch({ type: 'APPLY_GROWTH', payload: { updatedSlots } }),

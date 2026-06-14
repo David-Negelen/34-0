@@ -1,5 +1,6 @@
 import { canPlayerFillSlot } from './playerUtils';
 import { assignPotential } from './growthUtils';
+import { getAge } from './ageUtils';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -15,7 +16,6 @@ function attachSeason(player) {
   return { ...player, seasonRating: s.rating, spunClub: s.club, spunSeason: s.season, displayRating: s.rating };
 }
 
-// Pick the season with rating closest to targetRating.
 function attachSeasonNear(player, targetRating) {
   const s = player.seasons.reduce((best, cur) =>
     Math.abs(cur.rating - targetRating) < Math.abs(best.rating - targetRating) ? cur : best
@@ -23,8 +23,6 @@ function attachSeasonNear(player, targetRating) {
   return { ...player, seasonRating: s.rating, spunClub: s.club, spunSeason: s.season, displayRating: s.rating };
 }
 
-// Pick a season using weighted random selection biased toward targetRating.
-// Seasons near the target are more likely but any season can win, giving natural spread.
 function attachSeasonWeighted(player, targetRating) {
   const { seasons } = player;
   const sigma = 10;
@@ -39,10 +37,37 @@ function attachSeasonWeighted(player, targetRating) {
   return { ...player, seasonRating: chosen.rating, spunClub: chosen.club, spunSeason: chosen.season, displayRating: chosen.rating };
 }
 
-// Generate a pool of `count` players for the initial career draft.
-// Guarantees at least (slotCount + 1) eligible players per slot type so the
-// user can never be stranded with no compatible player for an open slot.
-// Players are biased toward a rating of ~65 (2. Bundesliga starting level).
+// Transfer fee in millions. GEMs are undervalued (×0.55).
+function offerPrice(rating, isGem = false) {
+  let base;
+  if (rating >= 92)      base = 40 + Math.floor(Math.random() * 25);
+  else if (rating >= 87) base = 20 + Math.floor(Math.random() * 20);
+  else if (rating >= 82) base = 10 + Math.floor(Math.random() * 15);
+  else if (rating >= 77) base = 4  + Math.floor(Math.random() * 8);
+  else                   base = 1  + Math.floor(Math.random() * 4);
+  return isGem ? Math.max(1, Math.floor(base * 0.55)) : base;
+}
+
+// Prize money (€M) by final league position.
+export function prizeMoney(pos, division) {
+  if (division === 'bl') return Math.max(3, Math.round(52 - (pos - 1) * 2.8));
+  return Math.max(1, Math.round(20 - (pos - 1) * 1.1));
+}
+
+// Rival clubs want to buy 1–3 non-Icon formation players.
+export function generateIncomingBids(slots) {
+  const eligible = slots.filter(s => s.player && !s.player.isIcon && s.type !== 'BENCH');
+  if (!eligible.length) return [];
+  const count = 1 + Math.floor(Math.random() * Math.min(3, eligible.length));
+  return shuffle(eligible).slice(0, count).map(s => ({
+    playerId:   s.player.id,
+    playerName: s.player.name,
+    slotType:   s.type,
+    ovr:        s.player.displayRating,
+    amount:     offerPrice(s.player.displayRating) + 3 + Math.floor(Math.random() * 8),
+  }));
+}
+
 export function generateCareerDraftPool(players, formation, count = 30) {
   const DRAFT_TARGET = 65;
   const slotTypeCounts = {};
@@ -50,15 +75,13 @@ export function generateCareerDraftPool(players, formation, count = 30) {
     slotTypeCounts[s.type] = (slotTypeCounts[s.type] || 0) + 1;
   });
 
-  // Weighted random season selection biased toward 65 — gives natural spread rather than
-  // everyone landing at exactly 65.
   const shuffled = shuffle(players.filter(p => p.seasons?.length).map(p => attachSeasonWeighted(p, DRAFT_TARGET)));
 
   const chosen = [];
   const usedIds = new Set();
 
   for (const [slotType, needed] of Object.entries(slotTypeCounts)) {
-    const target = needed + 1; // one extra so the user always has a choice
+    const target = needed + 1;
     let added = 0;
     for (const e of shuffled) {
       if (usedIds.has(e.id)) continue;
@@ -83,9 +106,7 @@ export function generateCareerDraftPool(players, formation, count = 30) {
   return shuffle(chosen).slice(0, count);
 }
 
-// Generate transfer offers. Always includes 1 potential gem (lower OVR, high ceiling)
-// alongside normal/standout offers. All offers have potential assigned.
-export function generateTransferOffers(players, excludeIds, formation, count = 5, teamAvg = null) {
+export function generateTransferOffers(players, excludeIds, formation, count = 5, teamAvg = null, currentYear = null) {
   const slotTypes = formation.slots.map(s => s.type);
   const eligible = shuffle(
     players
@@ -96,13 +117,15 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   const withPot = p => assignPotential(p);
 
   if (!teamAvg || !eligible.length) {
-    return eligible.map(p => withPot(attachSeason(p))).slice(0, count);
+    return eligible.map(p => {
+      const offer = withPot(attachSeason(p));
+      return { ...offer, price: offerPrice(offer.seasonRating) };
+    }).slice(0, count);
   }
 
   const result = [];
   const usedIds = new Set();
 
-  // 1. Optional standout: significantly above team avg (20% chance)
   if (Math.random() < 0.2) {
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
@@ -115,7 +138,6 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     }
   }
 
-  // 2. Normal offers: OVR near team avg
   for (const p of eligible) {
     if (result.length >= count) break;
     if (usedIds.has(p.id)) continue;
@@ -126,7 +148,6 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     }
   }
 
-  // 3. Fallback: remaining players, still biased toward team avg
   for (const p of eligible) {
     if (result.length >= count) break;
     if (!usedIds.has(p.id)) {
@@ -137,16 +158,18 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
 
   const final = shuffle(result).slice(0, count);
 
-  // Gem: only in late game (teamAvg ≥ 90) AND only when no offer is a real upgrade.
-  // A gem is a low-OVR player with elite potential (97–99) — a consolation when the
-  // market has nothing worth buying. 5% chance normally, 7% for higher-rated players.
-  // Gem: late game only (teamAvg ≥ 90), only when the market has no real upgrades.
-  // ~40% chance per qualifying season → appears roughly every 2–3 such seasons.
+  // Late-game gem: low OVR, elite potential (97–99)
   const hasRealUpgrade = final.some(p => p.seasonRating >= teamAvg - 3);
   if (teamAvg >= 90 && !hasRealUpgrade && final.length && Math.random() < 0.4) {
     const idx = Math.floor(Math.random() * final.length);
     final[idx] = { ...final[idx], isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
   }
 
-  return final;
+  // Attach price tags and age-gated gem detection
+  return final.map(p => {
+    const age = getAge(p.id, currentYear);
+    const isYoungGem = age !== null && age <= 21 && (p.potential - p.seasonRating) >= 10;
+    const isGem = !!(p.isGem || isYoungGem);
+    return { ...p, isGem, price: offerPrice(p.seasonRating, isGem) };
+  });
 }
