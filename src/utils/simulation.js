@@ -1,4 +1,5 @@
 import { calcSquadRatings } from './ratingCalc';
+import { getOopPenalty } from './positionUtils';
 import { HISTORIC_TABLES } from '../data/historicTables';
 import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
 
@@ -330,7 +331,10 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   // Generate per-player events and aggregate season stats (bench excluded)
   const squad = slots
     .filter(s => s.player && s.type !== 'BENCH')
-    .map(s => ({ id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
+    .map(s => {
+      const base = s.player.displayRating ?? s.player.primeRating ?? 75;
+      return { id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label, rating: Math.max(1, base - getOopPenalty(s.player.positions, s.type)) };
+    });
 
   const statsMap = {};
   squad.forEach(p => { statsMap[p.id] = { id: p.id, name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0, cleanSheets: 0 }; });
@@ -498,11 +502,10 @@ export function drawPokalRound(teams, round, slots) {
     return Math.random() < 0.5 ? [b, a] : [a, b];
   });
 
-  const squad = slots.filter(s => s.player && s.type !== 'BENCH').map(s => ({
-    ...s.player,
-    slotType: s.type,
-    rating: s.player.displayRating ?? s.player.primeRating ?? 75,
-  }));
+  const squad = slots.filter(s => s.player && s.type !== 'BENCH').map(s => {
+    const base = s.player.displayRating ?? s.player.primeRating ?? 75;
+    return { ...s.player, slotType: s.type, rating: Math.max(1, base - getOopPenalty(s.player.positions, s.type)) };
+  });
 
   const matchups = [];
   const winners  = [];

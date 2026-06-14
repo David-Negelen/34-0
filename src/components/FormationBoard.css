@@ -169,6 +169,21 @@
 .slot-pot-pip.pot-high { background: #f59e0b; }
 .slot-pot-pip.pot-mid  { background: #94a3b8; }
 
+.slot-oop-badge {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(239, 68, 68, 0.85);
+  padding: 1px 3px;
+  border-radius: 4px;
+  line-height: 1;
+  pointer-events: none;
+}
+
 /* ── OVR summary bar ── */
 .board-ovr-bar {
   display: flex;

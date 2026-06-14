@@ -61,6 +61,34 @@ function reducer(state, action) {
     case 'SET_FORMATION':
       return { ...state, formation: action.payload };
 
+    case 'CHANGE_FORMATION': {
+      const newKey = action.payload;
+      if (newKey === state.formation) return state;
+      const newFormSlots = FORMATIONS[newKey].slots.map(s => ({ ...s, player: null }));
+      const benchSlots   = state.slots.filter(s => s.type === 'BENCH').map(s => ({ ...s }));
+      const toPlace      = state.slots.filter(s => s.type !== 'BENCH' && s.player).map(s => s.player);
+
+      // 1. Match players to slots by natural position
+      const placed = new Set();
+      for (const slot of newFormSlots) {
+        const match = toPlace.find(p => !placed.has(p.id) && p.positions?.includes(slot.type));
+        if (match) { slot.player = match; placed.add(match.id); }
+      }
+      // 2. Fill remaining empty slots with leftover players (out of position)
+      const leftover = toPlace.filter(p => !placed.has(p.id));
+      const emptyNew = newFormSlots.filter(s => !s.player);
+      leftover.forEach((p, i) => {
+        if (i < emptyNew.length) { emptyNew[i].player = p; placed.add(p.id); }
+      });
+      // 3. Any remaining go to bench; overflow bench → released
+      toPlace.filter(p => !placed.has(p.id)).forEach(p => {
+        const b = benchSlots.find(s => !s.player);
+        if (b) b.player = p;
+      });
+
+      return { ...state, formation: newKey, slots: [...newFormSlots, ...benchSlots] };
+    }
+
     case 'BEGIN_DRAFT': {
       const pool = action.payload;
       const years = pool.map(p => parseInt(p.spunSeason)).filter(y => !isNaN(y));
@@ -267,7 +295,8 @@ export function useCareerState() {
 
   return {
     state,
-    setFormation:  f => dispatch({ type: 'SET_FORMATION', payload: f }),
+    setFormation:    f => dispatch({ type: 'SET_FORMATION', payload: f }),
+    changeFormation: f => dispatch({ type: 'CHANGE_FORMATION', payload: f }),
     beginDraft:    pool => dispatch({ type: 'BEGIN_DRAFT', payload: pool }),
     placePlayer:   (slotId, player, displayRating) =>
                      dispatch({ type: 'PLACE_PLAYER', payload: { slotId, player, displayRating } }),

@@ -216,6 +216,7 @@ export default function CareerScreen() {
         onUndo={career.undoBuy}
         onMove={career.moveInSquad}
         onSell={handleSell}
+        onChangeFormation={career.changeFormation}
         onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
@@ -590,8 +591,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onStartSeason, onEnd }) {
-  const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0 } = state;
+function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormation, onStartSeason, onEnd }) {
+  const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0, formation } = state;
   const formationSlots = slots.filter(s => s.type !== 'BENCH');
   const benchSlots     = slots.filter(s => s.type === 'BENCH');
   const [selectedSlotId, setSelectedSlotId] = useState(null);
@@ -686,6 +687,16 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onStartSeason, o
             highlightSlotIds={highlightSlotIds}
             onSlotClick={handleFormationClick}
           />
+
+          <div className="career-formation-picker">
+            {FORMATION_KEYS.map(f => (
+              <button
+                key={f}
+                className={`career-formation-btn${f === formation ? ' career-formation-btn--active' : ''}`}
+                onClick={() => { onChangeFormation(f); setSelectedSlotId(null); }}
+              >{f}</button>
+            ))}
+          </div>
 
           <div className="career-bench">
             <div className="result-section-label" style={{ marginTop: 16 }}>Bank</div>

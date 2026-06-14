@@ -1,6 +1,7 @@
 import { tokenName, labelDE } from '../utils/playerUtils';
 import { ovrColorClass } from '../utils/growthUtils';
 import { calcSquadRatings } from '../utils/ratingCalc';
+import { getOopPenalty } from '../utils/positionUtils';
 import './FormationBoard.css';
 
 export default function FormationBoard({
@@ -41,8 +42,8 @@ export default function FormationBoard({
           const isSelected = slot.id === selectedSlotId;
           const isHighlighted = highlightSlotIds.includes(slot.id);
           const isEmpty = slot.player === null;
-          // draft mode: only empty slots clickable; transfer mode (no draftMode): all slots clickable
           const isClickable = !!onSlotClick && (draftMode !== 'position-first' || isEmpty);
+          const oopPenalty = !isEmpty ? getOopPenalty(slot.player.positions, slot.type) : 0;
 
           return (
             <button
@@ -73,6 +74,9 @@ export default function FormationBoard({
                     <span className="slot-rating">
                       {slot.player.displayRating}
                     </span>
+                  )}
+                  {oopPenalty > 0 && (
+                    <span className="slot-oop-badge">-{oopPenalty}</span>
                   )}
                 </>
               )}
