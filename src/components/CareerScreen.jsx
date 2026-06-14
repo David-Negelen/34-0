@@ -701,6 +701,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
             ))}
           </div>
 
+          {benchSlots.some(s => s.player) && (
           <div className="career-bench">
             <div className="result-section-label" style={{ marginTop: 16 }}>Bank</div>
             <div className="career-bench-row">
@@ -733,6 +734,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
               })}
             </div>
           </div>
+          )}
 
           {swapHistory.length > 0 && (
             <button className="btn btn-ghost btn-sm" style={{ marginTop: 12, width: '100%' }} onClick={onUndo}>
@@ -780,20 +782,23 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                     <button
                       className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
                       onClick={() => setPosFilter('')}
-                    >Alle</button>
-                    {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
-                      <button
-                        key={pos}
-                        className={[
-                          'career-filter-btn',
-                          posFilter === pos ? 'career-filter-btn-active' : '',
-                          emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
-                        ].filter(Boolean).join(' ')}
-                        onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
-                      >
-                        {labelDE(pos)}
-                      </button>
-                    ))}
+                    >Alle <span className="career-filter-count">{allAvailableOffers.length}</span></button>
+                    {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => {
+                      const count = allAvailableOffers.filter(o => o.slotType === pos).length;
+                      return (
+                        <button
+                          key={pos}
+                          className={[
+                            'career-filter-btn',
+                            posFilter === pos ? 'career-filter-btn-active' : '',
+                            emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
+                          ].filter(Boolean).join(' ')}
+                          onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
+                        >
+                          {labelDE(pos)} <span className="career-filter-count">{count}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                   {allAvailableOffers
                     .filter(o => !posFilter || o.slotType === posFilter)
@@ -978,6 +983,7 @@ function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
   return (
     <div className={[
       'career-offer-card',
+      rcls,
       offer.isGem ? 'career-offer-card--gem' : '',
       !canAfford  ? 'career-offer-card--unaffordable' : '',
     ].filter(Boolean).join(' ')}>
@@ -991,15 +997,11 @@ function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
           {offer.isGem && <span className="career-gem-badge">◆ GEM</span>}
         </div>
         <div className="career-offer-meta">
+          {offer.positions?.map(p => (
+            <span key={p} className={`player-pos-badge pos-${p}`}>{labelDE(p)}</span>
+          ))}
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>
-          <span>
-            {offer.positions?.map(p => (
-              <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 4 }}>
-                {labelDE(p)}
-              </span>
-            ))}
-          </span>
         </div>
       </div>
       <div className="career-offer-actions">
