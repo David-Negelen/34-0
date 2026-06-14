@@ -52,10 +52,12 @@ function perfScore(stats, slotType) {
 
 
 const ICON_MIN_SEASONS = 10;
-const ICON_CHANCE = 1 / 6; // (1-p)/p = 5 → expected promotion at season ~15
+const ICON_CHANCE = 1 / 6; // expected promotion around season 15
 
-// Applies one season of growth to all squad slots.
-// Increments seasonsInSquad, promotes eligible players to Icon (career retirement).
+// Decline kicks in after this many seasons (proxy until birth dates are wired in)
+const DECLINE_START = 15;
+
+// Applies one season of growth/decline to all squad slots.
 // Returns { updatedSlots, growthLog, retirements } — does NOT mutate state.
 export function applyGrowth(slots, playerStats, careerStats = {}) {
   const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.id ?? p.name, p]));
@@ -69,21 +71,36 @@ export function applyGrowth(slots, playerStats, careerStats = {}) {
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
     p = { ...p, seasonsInSquad: newSeasons };
 
-    // Career end: player becomes Icon (+5 OVR) if they've earned it
+    // Career end → Icon card. OVR = primeRating + 2–5 based on this season's performance.
     if (!p.isIcon && newSeasons >= ICON_MIN_SEASONS && Math.random() < ICON_CHANCE) {
       const oldRating = p.displayRating;
-      const newRating = oldRating + 5;
+      const score = perfScore(statsMap[p.id ?? p.name], slot.type);
+      const perfBonus = 2 + Math.round(score * 3); // 2–5
+      const base = p.primeRating ?? p.displayRating;
+      const newRating = base + perfBonus;
       const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
       p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
       retirements.push({
         name: p.name,
         slotType: slot.type,
         seasons: newSeasons,
-        isIcon: newSeasons >= ICON_MIN_SEASONS,
+        isIcon: true,
         oldRating,
         newRating,
         stats: careerStats[p.id] ?? null,
       });
+      return { ...slot, player: p };
+    }
+
+    // Decline phase (replaced by age-based logic once birth dates are available)
+    if (!p.isIcon && newSeasons >= DECLINE_START) {
+      const rate = newSeasons >= 20 ? 2 : 1;
+      const floor = Math.max(60, (p.primeRating ?? p.seasonRating ?? 65) - 10);
+      if (p.displayRating > floor) {
+        const loss = Math.min(rate, p.displayRating - floor);
+        growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating - loss, gain: -loss });
+        p = { ...p, displayRating: p.displayRating - loss };
+      }
       return { ...slot, player: p };
     }
 
@@ -97,13 +114,7 @@ export function applyGrowth(slots, playerStats, careerStats = {}) {
     const gain = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
 
     if (gain > 0) {
-      growthLog.push({
-        name: p.name,
-        slotType: slot.type,
-        oldRating: p.displayRating,
-        newRating: p.displayRating + gain,
-        gain,
-      });
+      growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + gain, gain });
       p = { ...p, displayRating: p.displayRating + gain };
     }
 

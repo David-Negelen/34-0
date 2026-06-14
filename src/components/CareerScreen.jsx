@@ -802,8 +802,9 @@ function TransferOfferCard({ offer, division, isActive, onUse }) {
 // ── Entwicklung ───────────────────────────────────────────────────────────────
 
 function CareerEntwicklung({ growthLog, retirements = [], seasonNumber, onContinue }) {
-  const sorted = [...growthLog].sort((a, b) => b.gain - a.gain);
-  const hasContent = sorted.length > 0 || retirements.length > 0;
+  const gains    = [...growthLog].filter(e => e.gain > 0).sort((a, b) => b.gain - a.gain);
+  const declines = [...growthLog].filter(e => e.gain < 0);
+  const hasContent = growthLog.length > 0 || retirements.length > 0;
 
   return (
     <div className="career-screen">
@@ -849,21 +850,41 @@ function CareerEntwicklung({ growthLog, retirements = [], seasonNumber, onContin
 
         {!hasContent ? (
           <div className="entw-empty">Keine Entwicklung diese Saison.</div>
-        ) : sorted.length > 0 && (
-          <div className="entw-list">
-            {sorted.map((entry, i) => (
-              <div key={i} className="entw-row">
-                <span className="entw-gain-badge">+{entry.gain}</span>
-                <span className="entw-pos">{labelDE(entry.slotType)}</span>
-                <span className="entw-name">{entry.name}</span>
-                <span className="entw-ratings">
-                  <span className="entw-old">{entry.oldRating}</span>
-                  <span className="entw-arrow">→</span>
-                  <span className="entw-new">{entry.newRating}</span>
-                </span>
+        ) : (
+          <>
+            {gains.length > 0 && (
+              <div className="entw-list">
+                {gains.map((entry, i) => (
+                  <div key={i} className="entw-row">
+                    <span className="entw-gain-badge">+{entry.gain}</span>
+                    <span className="entw-pos">{labelDE(entry.slotType)}</span>
+                    <span className="entw-name">{entry.name}</span>
+                    <span className="entw-ratings">
+                      <span className="entw-old">{entry.oldRating}</span>
+                      <span className="entw-arrow">→</span>
+                      <span className="entw-new">{entry.newRating}</span>
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+            {declines.length > 0 && (
+              <div className="entw-list entw-list--declines">
+                {declines.map((entry, i) => (
+                  <div key={i} className="entw-row entw-row--decline">
+                    <span className="entw-gain-badge entw-gain-badge--decline">{entry.gain}</span>
+                    <span className="entw-pos">{labelDE(entry.slotType)}</span>
+                    <span className="entw-name">{entry.name}</span>
+                    <span className="entw-ratings">
+                      <span className="entw-old">{entry.oldRating}</span>
+                      <span className="entw-arrow">→</span>
+                      <span className="entw-new entw-new--decline">{entry.newRating}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <button className="btn btn-primary entw-cta" onClick={onContinue}>
