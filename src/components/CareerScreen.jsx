@@ -775,23 +775,25 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
               {/* Transfer offers with position filter */}
               {allAvailableOffers.length > 0 ? (
                 <>
-                  <div className="career-transfer-filter-row">
-                    <span className="result-section-label" style={{ margin: 0 }}>Transferangebote</span>
-                    <div className="career-pos-filters career-pos-filters--inline">
+                  <div className="result-section-label">Transferangebote</div>
+                  <div className="career-pos-filters">
+                    <button
+                      className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
+                      onClick={() => setPosFilter('')}
+                    >Alle</button>
+                    {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
                       <button
-                        className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
-                        onClick={() => setPosFilter('')}
-                      >Alle</button>
-                      {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
-                        <button
-                          key={pos}
-                          className={`career-filter-btn${posFilter === pos ? ' career-filter-btn-active' : ''}${emptyFormationSlots.some(s => s.type === pos) ? ' career-filter-btn--missing' : ''}`}
-                          onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
-                        >
-                          {labelDE(pos)}
-                        </button>
-                      ))}
-                    </div>
+                        key={pos}
+                        className={[
+                          'career-filter-btn',
+                          posFilter === pos ? 'career-filter-btn-active' : '',
+                          emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
+                        ].filter(Boolean).join(' ')}
+                        onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
+                      >
+                        {labelDE(pos)}
+                      </button>
+                    ))}
                   </div>
                   {allAvailableOffers
                     .filter(o => !posFilter || o.slotType === posFilter)
