@@ -165,9 +165,6 @@ function reducer(state, action) {
       };
     }
 
-    case 'RESTORE':
-      return { ...defaultState, ...action.payload };
-
     case 'RESET':
       return defaultState;
 
@@ -206,7 +203,6 @@ export function useCareerState() {
     skipOffer:     i => dispatch({ type: 'SKIP_OFFER', payload: i }),
     removePlayer:  slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
     applyGrowth:   updatedSlots => dispatch({ type: 'APPLY_GROWTH', payload: { updatedSlots } }),
-    restoreState:  payload => dispatch({ type: 'RESTORE', payload }),
     reset:         () => dispatch({ type: 'RESET' }),
   };
 }
