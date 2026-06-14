@@ -16,6 +16,7 @@ export function getBirthYear(playerId) {
 
 export function getAge(playerId, currentYear) {
   const by = getBirthYear(playerId);
-  if (!by || !currentYear) return null;
+  if (!currentYear) return 25;
+  if (!by) return 25;
   return currentYear - by;
 }
