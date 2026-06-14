@@ -281,44 +281,24 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
   const [posFilter, setPosFilter] = useState('');
-  const [phase, setPhase] = useState('formation'); // 'formation' | 'bench'
 
   const formationSlots = slots.filter(s => s.type !== 'BENCH');
-  const benchSlots     = slots.filter(s => s.type === 'BENCH');
   const filledFormation = formationSlots.filter(s => s.player !== null).length;
-  const filledBench     = benchSlots.filter(s => s.player !== null).length;
 
   const placedIds     = new Set(slots.filter(s => s.player).map(s => s.player.id));
   const playerSlotMap = Object.fromEntries(slots.filter(s => s.player).map(s => [s.player.id, s.id]));
   const unplacedPool  = draftPool.filter(p => !placedIds.has(p.id));
 
-  // Formation phase: only non-bench open slots
   const openFormSlots = formationSlots.filter(s => s.player === null);
   const stuckSlots    = openFormSlots.filter(slot =>
     !unplacedPool.some(p => canPlayerFillSlot(p, slot.type))
   );
 
-  useEffect(() => {
-    if (phase === 'formation' && filledFormation === 11) setPhase('bench');
-  }, [filledFormation, phase]);
-
   function handleCardClick(player) {
     if (placedIds.has(player.id)) {
-      const slotId = playerSlotMap[player.id];
-      const slot = slots.find(s => s.id === slotId);
-      // Can only remove bench players during bench phase; formation players during formation phase
-      if (phase === 'bench' && slot?.type === 'BENCH') onRemove(slotId);
-      if (phase === 'formation') onRemove(slotId);
+      onRemove(playerSlotMap[player.id]);
       return;
     }
-
-    if (phase === 'bench') {
-      const emptyBench = benchSlots.find(s => !s.player);
-      if (emptyBench) onPlace(emptyBench.id, player, player.seasonRating);
-      return;
-    }
-
-    // Formation phase — only offer formation slots
     const compat = getCompatibleSlots(player, openFormSlots);
     if (compat.length) {
       if (compat.length === 1) { commit(compat[0].id, player); return; }
@@ -336,9 +316,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
     setSlotPickTarget(null);
   }
 
-  const poolForPhase = phase === 'bench'
-    ? draftPool.filter(p => !placedIds.has(p.id))
-    : draftPool.filter(p => !posFilter || p.positions.includes(posFilter));
+  const poolFiltered = draftPool.filter(p => !posFilter || p.positions.includes(posFilter));
 
   return (
     <div className="career-screen">
@@ -352,10 +330,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
           <span className="badge badge-muted">{FORMATIONS[formation].name}</span>
         </div>
         <div className="career-draft-header-right">
-          {phase === 'formation'
-            ? <span className="career-draft-progress">{filledFormation} / 11</span>
-            : <span className="career-draft-progress">Bank {filledBench} / 5</span>
-          }
+          <span className="career-draft-progress">{filledFormation} / 11</span>
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => window.confirm('Draft neu starten?') && onReset()}
@@ -366,75 +341,42 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
       <div className="career-draft-layout">
         <div className="career-draft-left">
           <FormationBoard slots={formationSlots} showRatings league="2bl" />
-
-          {phase === 'bench' && (
-            <div className="career-bench" style={{ marginTop: 16 }}>
-              <div className="result-section-label">Bank</div>
-              <div className="career-bench-row">
-                {benchSlots.map(s => (
-                  <div
-                    key={s.id}
-                    className={`career-bench-slot${s.player ? ' career-bench-slot--filled' : ''}`}
-                    onClick={() => s.player && onRemove(s.id)}
-                    style={{ cursor: s.player ? 'pointer' : 'default' }}
-                    title={s.player?.name}
-                  >
-                    {s.player ? (
-                      <>
-                        <span className="career-bench-name">{s.player.name.split(' ').pop()}</span>
-                        <span className="career-bench-rating">{s.player.displayRating}</span>
-                      </>
-                    ) : (
-                      <span className="career-bench-empty">—</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="career-draft-right">
-          {phase === 'formation' ? (
-            <>
-              <div className="career-pool-label">Wähle deine Startelf</div>
-              {stuckSlots.length > 0 && (
-                <div className="career-stuck-banner">
-                  Keine Spieler mehr für {stuckSlots.map(s => labelDE(s.label)).join(', ')} — wähle einen Ersatz
-                </div>
-              )}
-              <div className="career-pos-filters">
-                <button className={`career-filter-btn${posFilter === '' ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
-                {[...new Set(formationSlots.map(s => s.type))].filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
-                  <button key={p} className={`career-filter-btn${posFilter === p ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="career-pool-label">Wähle deine Bank <span style={{ color: 'var(--text-dim)', fontWeight: 400 }}>({filledBench}/5)</span></div>
-              <button className="btn btn-primary btn-lg career-draft-start-btn-top" onClick={() => onResult(slots)}>
-                Saison starten →
-              </button>
-            </>
+          <div className="career-pool-label">Wähle deine Startelf</div>
+          {stuckSlots.length > 0 && (
+            <div className="career-stuck-banner">
+              Keine Spieler mehr für {stuckSlots.map(s => labelDE(s.label)).join(', ')} — wähle einen Ersatz
+            </div>
           )}
+          {filledFormation === 11 && (
+            <button className="btn btn-primary btn-lg career-draft-start-btn-top" onClick={() => onResult(slots)}>
+              Saison starten →
+            </button>
+          )}
+          <div className="career-pos-filters">
+            <button className={`career-filter-btn${posFilter === '' ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
+            {[...new Set(formationSlots.map(s => s.type))].filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
+              <button key={p} className={`career-filter-btn${posFilter === p ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
+            ))}
+          </div>
 
           <div className="career-pool-grid">
-            {poolForPhase.map(player => {
+            {poolFiltered.map(player => {
               const picked = placedIds.has(player.id);
-              const compat = phase === 'bench' ? [] : getCompatibleSlots(player, openFormSlots);
-              const canOffRole = phase !== 'bench' && !picked && !compat.length && stuckSlots.length > 0;
-              const incompatible = phase !== 'bench' && !picked && !compat.length && !canOffRole;
-              const benchFull = phase === 'bench' && filledBench >= 5 && !picked;
+              const compat = getCompatibleSlots(player, openFormSlots);
+              const canOffRole = !picked && !compat.length && stuckSlots.length > 0;
+              const incompatible = !picked && !compat.length && !canOffRole;
               return (
                 <CareerCard
                   key={player.id}
                   player={player}
                   league="2bl"
                   picked={picked}
-                  incompatible={incompatible || benchFull}
+                  incompatible={incompatible}
                   offRole={canOffRole}
-                  onClick={() => !benchFull && handleCardClick(player)}
+                  onClick={() => handleCardClick(player)}
                 />
               );
             })}
@@ -442,10 +384,9 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
         </div>
       </div>
 
-      {phase === 'bench' && (
+      {filledFormation === 11 && (
         <div className="career-draft-sticky-bar">
           <div className="career-draft-sticky-inner">
-            <span className="career-draft-sticky-label">Bank: {filledBench}/5 gewählt</span>
             <button className="btn btn-primary btn-lg career-draft-sticky-btn" onClick={() => onResult(slots)}>
               Saison starten →
             </button>
@@ -528,7 +469,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
       <div className="career-result-body">
         <div className="career-result-left">
           <div className="result-section-label">Deine 11 — {state.formation}</div>
-          <FormationBoard slots={slots} showRatings league={division} />
+          <FormationBoard slots={slots.filter(s => s.type !== 'BENCH')} showRatings league={division} />
         </div>
 
         <div className="career-result-right">
@@ -1113,7 +1054,7 @@ function CareerCard({ player, league, picked, incompatible, offRole, onClick }) 
         </div>
       </div>
       {picked   && <span className="career-card-check">✓</span>}
-      {offRole  && <span className="career-card-offrole-badge">−5</span>}
+      {offRole  && <span className="career-card-offrole-badge">!</span>}
     </button>
   );
 }
@@ -1368,7 +1309,7 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
         {slots.some(s => s.player) && (
           <div className="career-history-card career-end-squad">
             <div className="result-section-label">Letzte Startelf</div>
-            <FormationBoard slots={slots} showRatings league={lastDivision} />
+            <FormationBoard slots={slots.filter(s => s.type !== 'BENCH')} showRatings league={lastDivision} />
           </div>
         )}
 
