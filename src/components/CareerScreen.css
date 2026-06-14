@@ -1081,22 +1081,6 @@
 .entw-cta { width: 100%; }
 
 /* ── Prime players ── */
-@keyframes prime-pulse {
-  0%   { box-shadow: 0 0 6px rgba(245, 158, 11, 0.25), inset 0 0 0 0 transparent; }
-  50%  { box-shadow: 0 0 18px rgba(245, 158, 11, 0.5), inset 0 0 0 0 transparent; }
-  100% { box-shadow: 0 0 6px rgba(245, 158, 11, 0.25), inset 0 0 0 0 transparent; }
-}
-
-.career-offer-card--prime {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.07) 0%, rgba(245, 158, 11, 0.02) 100%);
-  animation: prime-pulse 2.4s ease-in-out infinite;
-}
-
-.career-offer-card--prime.career-offer-card--done {
-  animation: none;
-  opacity: 0.5;
-}
 
 /* ── Icon badge (swap dialog inline) ── */
 .career-icon-badge {
@@ -1209,6 +1193,68 @@
   margin-top: 1px;
 }
 
+/* ── Retirement stats inside icon card ── */
+.entw-retirement-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  justify-content: center;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #8b7340;
+  border-top: 1px solid rgba(139, 115, 64, 0.25);
+  padding-top: 6px;
+}
+
+/* ── Bench row in transfer screen ── */
+.career-bench-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.career-bench-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  min-width: 52px;
+  cursor: default;
+}
+
+.career-bench-slot--empty {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.career-bench-slot--swappable {
+  border-color: rgba(99, 179, 237, 0.5);
+  cursor: pointer;
+}
+
+.career-bench-slot--swappable:hover {
+  background: rgba(99, 179, 237, 0.1);
+}
+
+.career-bench-name {
+  font-size: 10px;
+  color: #a0aec0;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.career-bench-empty-label {
+  font-size: 16px;
+  color: #4a5568;
+}
+
 /* ── Prime badge ── */
 @keyframes gem-pulse {
   0%   { box-shadow: 0 0 6px rgba(16, 185, 129, 0.25); }
@@ -1242,20 +1288,6 @@
   vertical-align: middle;
 }
 
-.career-prime-badge {
-  display: inline-block;
-  margin-left: 7px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 4px;
-  padding: 1px 5px;
-  vertical-align: middle;
-}
 
 /* ── Transfer sticky start bar (mobile only) ── */
 .career-transfer-sticky-bar {

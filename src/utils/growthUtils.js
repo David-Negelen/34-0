@@ -50,49 +50,40 @@ function perfScore(stats, slotType) {
   return clamp((stats.goals * 1.5 + stats.assists * 0.8) / games / 0.6, 0, 1);
 }
 
-// Marks a transfer offer as "prime" if the player is being offered at their
-// career peak season. 15% chance when seasonRating >= primeRating - 1 and the
-// player is already high quality (>=82). Boosts seasonRating, displayRating,
-// and potential each by +2.
-export function markPrime(player) {
-  if (!player.primeRating) return player;
-  const atPeak      = player.seasonRating >= player.primeRating - 1;
-  const highQuality = player.seasonRating >= 82;
-  if (!atPeak || !highQuality || Math.random() >= 0.15) return player;
-  return {
-    ...player,
-    isPrime:      true,
-    seasonRating: player.seasonRating + 3,
-    displayRating: (player.displayRating ?? player.seasonRating) + 3,
-    potential:    (player.potential    ?? player.seasonRating) + 3,
-  };
-}
 
 const ICON_MIN_SEASONS = 10;
 const ICON_CHANCE = 1 / 6; // (1-p)/p = 5 → expected promotion at season ~15
 
 // Applies one season of growth to all squad slots.
-// Also increments seasonsInSquad and promotes players who reach ICON_SEASONS.
-// Returns { updatedSlots, growthLog, iconLog } — does NOT mutate state.
-export function applyGrowth(slots, playerStats) {
+// Increments seasonsInSquad, promotes eligible players to Icon (career retirement).
+// Returns { updatedSlots, growthLog, retirements } — does NOT mutate state.
+export function applyGrowth(slots, playerStats, careerStats = {}) {
   const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.id ?? p.name, p]));
   const growthLog = [];
-  const iconLog = [];
+  const retirements = [];
 
   const updatedSlots = slots.map(slot => {
     if (!slot.player) return slot;
     let p = slot.player;
 
-    // Track time in squad
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
     p = { ...p, seasonsInSquad: newSeasons };
 
-    // Icon promotion: one-time +5 boost, skip normal growth this season
+    // Career end: player becomes Icon (+5 OVR) if they've earned it
     if (!p.isIcon && newSeasons >= ICON_MIN_SEASONS && Math.random() < ICON_CHANCE) {
-      const newRating = p.displayRating + 5;
-      const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8)); // 90–97, floored at new OVR
+      const oldRating = p.displayRating;
+      const newRating = oldRating + 5;
+      const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
       p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
-      iconLog.push({ name: p.name, slotType: slot.type, oldRating: newRating - 5, newRating, seasons: newSeasons });
+      retirements.push({
+        name: p.name,
+        slotType: slot.type,
+        seasons: newSeasons,
+        isIcon: newSeasons >= ICON_MIN_SEASONS,
+        oldRating,
+        newRating,
+        stats: careerStats[p.id] ?? null,
+      });
       return { ...slot, player: p };
     }
 
@@ -119,5 +110,5 @@ export function applyGrowth(slots, playerStats) {
     return { ...slot, player: p };
   });
 
-  return { updatedSlots, growthLog, iconLog };
+  return { updatedSlots, growthLog, retirements };
 }

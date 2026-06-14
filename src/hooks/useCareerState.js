@@ -16,6 +16,7 @@ const defaultState = {
   allPlayers: [],
   careerStats: {},
   swapHistory: [],
+  retiredThisSeason: [],
 };
 
 function mergeStats(careerStats, playerStats) {
@@ -38,8 +39,17 @@ function mergeStats(careerStats, playerStats) {
   return next;
 }
 
+const BENCH_COUNT = 5;
+
 function buildSlots(formationKey) {
-  return FORMATIONS[formationKey].slots.map(s => ({ ...s, player: null }));
+  const formation = FORMATIONS[formationKey].slots.map(s => ({ ...s, player: null }));
+  const bench = Array.from({ length: BENCH_COUNT }, (_, i) => ({
+    id: `bench_${i + 1}`,
+    type: 'BENCH',
+    label: 'Bank',
+    player: null,
+  }));
+  return [...formation, ...bench];
 }
 
 function reducer(state, action) {
@@ -75,7 +85,7 @@ function reducer(state, action) {
       return { ...state, phase: 'result', result: action.payload, swapHistory: [] };
 
     case 'BEGIN_TRANSFER': {
-      const { newDivision, transferOffers } = action.payload;
+      const { newDivision, transferOffers, retiredThisSeason } = action.payload;
       const history = state.result
         ? [...state.seasonHistory, {
             season: state.seasonNumber,
@@ -96,6 +106,7 @@ function reducer(state, action) {
         careerStats: mergeStats(state.careerStats, state.result?.playerStats),
         result: null,
         swapHistory: [],
+        retiredThisSeason: retiredThisSeason ?? [],
       };
     }
 
@@ -197,8 +208,8 @@ export function useCareerState() {
     placePlayer:   (slotId, player, displayRating) =>
                      dispatch({ type: 'PLACE_PLAYER', payload: { slotId, player, displayRating } }),
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),
-    beginTransfer: (newDivision, offers) =>
-                     dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers } }),
+    beginTransfer: (newDivision, offers, retiredThisSeason) =>
+                     dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason } }),
     swapOffer:     (offerIndex, slotId) =>
                      dispatch({ type: 'SWAP_OFFER', payload: { offerIndex, slotId } }),
     undoSwap:      () => dispatch({ type: 'UNDO_SWAP' }),

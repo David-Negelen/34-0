@@ -327,9 +327,9 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
 
   playerMatches.forEach((m, i) => { m.day = i + 1; });
 
-  // Generate per-player events and aggregate season stats
+  // Generate per-player events and aggregate season stats (bench excluded)
   const squad = slots
-    .filter(s => s.player)
+    .filter(s => s.player && s.type !== 'BENCH')
     .map(s => ({ id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
 
   const statsMap = {};
@@ -498,7 +498,7 @@ export function drawPokalRound(teams, round, slots) {
     return Math.random() < 0.5 ? [b, a] : [a, b];
   });
 
-  const squad = slots.filter(s => s.player).map(s => ({
+  const squad = slots.filter(s => s.player && s.type !== 'BENCH').map(s => ({
     ...s.player,
     slotType: s.type,
     rating: s.player.displayRating ?? s.player.primeRating ?? 75,

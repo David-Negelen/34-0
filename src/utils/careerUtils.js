@@ -1,5 +1,5 @@
 import { canPlayerFillSlot } from './playerUtils';
-import { assignPotential, markPrime } from './growthUtils';
+import { assignPotential } from './growthUtils';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -93,7 +93,7 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
       .filter(p => slotTypes.some(type => canPlayerFillSlot(p, type)))
   );
 
-  const withPot = p => markPrime(assignPotential(p));
+  const withPot = p => assignPotential(p);
 
   if (!teamAvg || !eligible.length) {
     return eligible.map(p => withPot(attachSeason(p))).slice(0, count);
