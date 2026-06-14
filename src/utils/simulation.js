@@ -244,6 +244,13 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   const attStr = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
   const defStr = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
 
+  // Late-game boost: for 90+ OVR squads, effective strength can exceed 99 in lambda
+  // calculations, making 34-0-0 achievable. 95 OVR → +7.5, 100 OVR → +15.
+  const lateBoost = overall > 90 ? (overall - 90) * 1.5 : 0;
+
+  // Bad season: 12% chance of underperforming — makes finishing 2nd or lower possible.
+  const formPenalty = Math.random() < 0.12 ? -(8 + Math.floor(Math.random() * 6)) : 0;
+
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
   const historicOpponents = buildHistoricOpponents(league, allPlayers);
@@ -260,7 +267,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
         : [];
       return { ...t, att: eff, def: eff, scorerPool };
     }),
-    { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true, scorerPool: [] },
+    { name: 'Deine 11', att: attStr + lateBoost + formPenalty, def: defStr + lateBoost + formPenalty, isPlayer: true, scorerPool: [] },
   ];
   const n = teams.length; // 18
   const playerIdx = n - 1;
