@@ -83,7 +83,7 @@ export function generateIncomingBids(slots, currentYear = null) {
       playerName: s.player.name,
       slotType:   s.type,
       ovr:        s.player.displayRating,
-      amount:     base + 3 + Math.floor(Math.random() * 8),
+      amount:     Math.max(1, base + Math.floor(Math.random() * 3)),
     };
   });
 }

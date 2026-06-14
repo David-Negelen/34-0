@@ -836,7 +836,6 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                         onClick={() => setPosFilter('')}
                       >Alle</button>
                       {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => {
-                        const count = allAvailableOffers.filter(o => o.slotType === pos).length;
                         return (
                           <button
                             key={pos}
@@ -847,7 +846,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                             ].filter(Boolean).join(' ')}
                             onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
                           >
-                            {labelDE(pos)} <span className="career-filter-count">{count}</span>
+                            {labelDE(pos)}
                           </button>
                         );
                       })}
