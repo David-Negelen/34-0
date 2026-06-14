@@ -37,15 +37,27 @@ function attachSeasonWeighted(player, targetRating) {
   return { ...player, seasonRating: chosen.rating, spunClub: chosen.club, spunSeason: chosen.season, displayRating: chosen.rating };
 }
 
-// Transfer fee in millions. GEMs are undervalued (×0.55).
-function offerPrice(rating, isGem = false) {
+// Age multiplier: younger = premium, older = discount.
+function ageFactor(age) {
+  if (age === null)  return 1.0;
+  if (age <= 20)     return 1.8;
+  if (age <= 23)     return 1.4;
+  if (age <= 27)     return 1.0;
+  if (age <= 30)     return 0.72;
+  if (age <= 33)     return 0.45;
+  return 0.25;
+}
+
+// Transfer fee in millions. Adjusted by age and GEM status.
+function offerPrice(rating, isGem = false, age = null) {
   let base;
   if (rating >= 92)      base = 40 + Math.floor(Math.random() * 25);
   else if (rating >= 87) base = 20 + Math.floor(Math.random() * 20);
   else if (rating >= 82) base = 10 + Math.floor(Math.random() * 15);
   else if (rating >= 77) base = 4  + Math.floor(Math.random() * 8);
   else                   base = 1  + Math.floor(Math.random() * 4);
-  return isGem ? Math.max(1, Math.floor(base * 0.55)) : base;
+  const aged = Math.round(base * ageFactor(age));
+  return Math.max(1, isGem ? Math.floor(aged * 0.55) : aged);
 }
 
 // Prize money (€M) by final league position.
@@ -54,18 +66,26 @@ export function prizeMoney(pos, division) {
   return Math.max(1, Math.round(20 - (pos - 1) * 1.1));
 }
 
-// Rival clubs want to buy 1–3 non-Icon formation players.
-export function generateIncomingBids(slots) {
-  const eligible = slots.filter(s => s.player && !s.player.isIcon && s.type !== 'BENCH');
+// Rival clubs want to buy 1–3 non-Icon formation players under 34.
+export function generateIncomingBids(slots, currentYear = null) {
+  const eligible = slots.filter(s => {
+    if (!s.player || s.player.isIcon || s.type === 'BENCH') return false;
+    const age = getAge(s.player.id, currentYear);
+    return age === null || age < 34; // no market for 34+ players
+  });
   if (!eligible.length) return [];
   const count = 1 + Math.floor(Math.random() * Math.min(3, eligible.length));
-  return shuffle(eligible).slice(0, count).map(s => ({
-    playerId:   s.player.id,
-    playerName: s.player.name,
-    slotType:   s.type,
-    ovr:        s.player.displayRating,
-    amount:     offerPrice(s.player.displayRating) + 3 + Math.floor(Math.random() * 8),
-  }));
+  return shuffle(eligible).slice(0, count).map(s => {
+    const age = getAge(s.player.id, currentYear);
+    const base = offerPrice(s.player.displayRating, false, age);
+    return {
+      playerId:   s.player.id,
+      playerName: s.player.name,
+      slotType:   s.type,
+      ovr:        s.player.displayRating,
+      amount:     base + 3 + Math.floor(Math.random() * 8),
+    };
+  });
 }
 
 export function generateCareerDraftPool(players, formation, count = 30) {
@@ -119,7 +139,8 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
   if (!teamAvg || !eligible.length) {
     return eligible.map(p => {
       const offer = withPot(attachSeason(p));
-      return { ...offer, price: offerPrice(offer.seasonRating) };
+      const age = getAge(offer.id, currentYear);
+      return { ...offer, price: offerPrice(offer.seasonRating, false, age) };
     }).slice(0, count);
   }
 
@@ -165,11 +186,11 @@ export function generateTransferOffers(players, excludeIds, formation, count = 5
     final[idx] = { ...final[idx], isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
   }
 
-  // Attach price tags and age-gated gem detection
+  // Attach price tags (age-adjusted) and age-gated gem detection
   return final.map(p => {
     const age = getAge(p.id, currentYear);
     const isYoungGem = age !== null && age <= 21 && (p.potential - p.seasonRating) >= 10;
     const isGem = !!(p.isGem || isYoungGem);
-    return { ...p, isGem, price: offerPrice(p.seasonRating, isGem) };
+    return { ...p, isGem, price: offerPrice(p.seasonRating, isGem, age) };
   });
 }

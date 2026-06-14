@@ -171,7 +171,7 @@ export default function CareerScreen() {
               : null;
             const offers = generateTransferOffers(divPlayers, excludeIds, FORMATIONS[state.formation], 5, teamAvg, currentYear);
             const prize = prizeMoney(state.result?.pos ?? 18, state.division);
-            const incomingBids = generateIncomingBids(entwicklungData.updatedSlots);
+            const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear);
             career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize, incomingBids);
             setEntwicklungData(null);
           }}
