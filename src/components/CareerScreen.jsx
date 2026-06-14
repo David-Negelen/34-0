@@ -651,9 +651,12 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
 
   // Sell from incoming bid: auto-select the now-empty slot so the market opens for that position
   function handleBidSell(bid) {
-    const soldSlot = formationSlots.find(s => s.player?.id === bid.playerId);
+    const soldSlot = formationSlots.find(s => s.player?.id === bid.playerId)
+      ?? formationSlots.find(s => s.type === bid.slotType);
     onSell(bid.playerId, bid.amount);
     if (soldSlot) setSelectedSlotId(soldSlot.id);
+    setActiveBidIdx(null);
+    setPosFilter('');
   }
 
   // Buy from overview: auto-place in empty matching slot, else select that slot for user to choose
@@ -802,7 +805,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                         <span className="career-bid-amount">€{bid.amount}M</span>
                         <button
                           className="career-bid-accept"
-                          onClick={e => { e.stopPropagation(); handleBidSell(bid); setActiveBidIdx(null); }}
+                          onClick={e => { e.stopPropagation(); handleBidSell(bid); }}
                         >
                           Verkaufen
                         </button>
