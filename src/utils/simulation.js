@@ -120,6 +120,26 @@ const ZWEITE_LIGA_TEAMS = [
   { name: 'Preußen Münster',            strength: 56 },
 ];
 
+const DRITTE_LIGA_TEAMS = [
+  { name: '1. FC Saarbrücken',          strength: 62 },
+  { name: 'Dynamo Dresden',             strength: 61 },
+  { name: 'TSV 1860 München',           strength: 61 },
+  { name: 'FC Ingolstadt 04',           strength: 60 },
+  { name: 'MSV Duisburg',               strength: 60 },
+  { name: 'FC Hansa Rostock',           strength: 59 },
+  { name: 'Preußen Münster',            strength: 59 },
+  { name: 'SpVgg Unterhaching',         strength: 58 },
+  { name: 'Hallescher FC',              strength: 58 },
+  { name: 'SV Wehen Wiesbaden',         strength: 57 },
+  { name: 'VfL Osnabrück',              strength: 57 },
+  { name: 'FC Erzgebirge Aue',          strength: 56 },
+  { name: 'Rot-Weiß Erfurt',            strength: 56 },
+  { name: 'FC Viktoria Köln',           strength: 55 },
+  { name: 'SV Waldhof Mannheim',        strength: 55 },
+  { name: 'FSV Zwickau',                strength: 54 },
+  { name: 'FC Carl Zeiss Jena',         strength: 53 },
+];
+
 // ── Historic opponent generation ──────────────────────────────────────────────
 
 function shuffleArr(arr) {
@@ -132,9 +152,10 @@ function shuffleArr(arr) {
 }
 
 // Map final-table points to simulation strength range.
-// BL:  [16, 91] pts → [55, 92]; 2BL: [19, 76] pts → [54, 71]
+// BL:  [16, 91] pts → [55, 92]; 2BL: [19, 76] pts → [54, 71]; 3L: [19, 76] pts → [50, 64]
 function ptsToStrength(pts, league) {
   if (league === '2bl') return Math.round(Math.min(71, Math.max(54, 54 + (pts - 19) / 57 * 17)));
+  if (league === '3l')  return Math.round(Math.min(64, Math.max(50, 50 + (pts - 19) / 57 * 14)));
   return Math.round(Math.min(92, Math.max(55, 55 + (pts - 16) / 75 * 37)));
 }
 
@@ -257,7 +278,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   const historicOpponents = buildHistoricOpponents(league, allPlayers);
   const LEAGUE_TEAMS = historicOpponents.length === 17
     ? historicOpponents
-    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
+    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : league === '3l' ? DRITTE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
@@ -625,11 +646,20 @@ export function getAchievements(result, slots = [], league = 'bl') {
   const { W, D, L, GF, GA, pts, pos = 18, gkGoal = false } = result;
   const achievements = [];
   const is2bl = league === '2bl';
+  const is3l  = league === '3l';
 
   if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfekte Saison',      desc: '34-0-0 – Eine Legende des deutschen Fußballs.' });
   else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',          desc: 'Die gesamte Saison unbesiegt.' });
 
-  if (is2bl) {
+  if (is3l) {
+    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 3. Liga!',  desc: 'Direkter Aufstieg in die 2. Bundesliga.' });
+    else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',          desc: 'Direkter Aufstieg in die 2. Bundesliga.' });
+    else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation Aufstieg',    desc: 'Platz 3 – Aufstiegsspiel gegen die 2. Bundesliga.' });
+    else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',      desc: 'Solide Saison in der oberen Tabellenhälfte.' });
+    else if (pos <= 15)   achievements.push({ key: 'midtable',   label: 'Gerettet',               desc: 'Klassenerhalt gesichert.' });
+    else if (pos === 16)  achievements.push({ key: 'relegpl',    label: 'Relegation Abstieg',     desc: 'Platz 16 – Abstiegsspiel.' });
+    else                  achievements.push({ key: 'relegated',  label: 'Platz im Tabellenkeller', desc: 'Schwierige Saison in der 3. Liga.' });
+  } else if (is2bl) {
     if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!',  desc: 'Direkter Aufstieg in die Bundesliga.' });
     else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',          desc: 'Direkter Aufstieg – zurück im Fußballoberhaus.' });
     else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation Aufstieg',    desc: 'Platz 3 – Aufstiegsspiel gegen einen Bundesligisten.' });

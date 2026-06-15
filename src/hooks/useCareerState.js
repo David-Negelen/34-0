@@ -6,6 +6,7 @@ const STORAGE_KEY = 'karriere_v3';
 const defaultState = {
   phase: 'setup',
   formation: '4-3-3',
+  startingDivision: '2bl',
   division: '2bl',
   seasonNumber: 0,
   careerStartYear: null,
@@ -61,6 +62,9 @@ function reducer(state, action) {
     case 'SET_FORMATION':
       return { ...state, formation: action.payload };
 
+    case 'SET_STARTING_DIVISION':
+      return { ...state, startingDivision: action.payload };
+
     case 'CHANGE_FORMATION': {
       const newKey = action.payload;
       if (newKey === state.formation) return state;
@@ -90,14 +94,17 @@ function reducer(state, action) {
     }
 
     case 'BEGIN_DRAFT': {
-      const pool = action.payload;
+      const { pool, division: startDiv } = action.payload;
       const years = pool.map(p => parseInt(p.spunSeason)).filter(y => !isNaN(y));
       const careerStartYear = years.length
         ? Math.round(years.reduce((a, b) => a + b, 0) / years.length)
         : 2000;
+      const div = startDiv ?? state.startingDivision ?? '2bl';
       return {
         ...defaultState,
         formation: state.formation,
+        startingDivision: div,
+        division: div,
         phase: 'draft',
         seasonNumber: 1,
         careerStartYear,
@@ -282,9 +289,10 @@ export function useCareerState() {
 
   return {
     state,
-    setFormation:    f => dispatch({ type: 'SET_FORMATION', payload: f }),
+    setFormation:          f => dispatch({ type: 'SET_FORMATION', payload: f }),
+    setStartingDivision:   d => dispatch({ type: 'SET_STARTING_DIVISION', payload: d }),
     changeFormation: f => dispatch({ type: 'CHANGE_FORMATION', payload: f }),
-    beginDraft:    pool => dispatch({ type: 'BEGIN_DRAFT', payload: pool }),
+    beginDraft:    (pool, division) => dispatch({ type: 'BEGIN_DRAFT', payload: { pool, division } }),
     placePlayer:   (slotId, player, displayRating) =>
                      dispatch({ type: 'PLACE_PLAYER', payload: { slotId, player, displayRating } }),
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),

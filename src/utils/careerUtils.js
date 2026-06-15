@@ -62,8 +62,9 @@ function offerPrice(rating, isGem = false, age = null) {
 
 // Prize money (€M) by final league position.
 export function prizeMoney(pos, division) {
-  if (division === 'bl') return Math.max(3, Math.round(52 - (pos - 1) * 2.8));
-  return Math.max(1, Math.round(20 - (pos - 1) * 1.1));
+  if (division === 'bl')  return Math.max(3, Math.round(52 - (pos - 1) * 2.8));
+  if (division === '2bl') return Math.max(1, Math.round(20 - (pos - 1) * 1.1));
+  return Math.max(0, Math.round(8 - (pos - 1) * 0.4));  // 3. Liga
 }
 
 // Rival clubs want to buy 1–3 non-Icon formation players under 34.
@@ -88,8 +89,8 @@ export function generateIncomingBids(slots, currentYear = null) {
   });
 }
 
-export function generateCareerDraftPool(players, formation, count = 30) {
-  const DRAFT_TARGET = 65;
+export function generateCareerDraftPool(players, formation, count = 30, division = '2bl') {
+  const DRAFT_TARGET = division === '3l' ? 58 : 65;
   const slotTypeCounts = {};
   formation.slots.forEach(s => {
     slotTypeCounts[s.type] = (slotTypeCounts[s.type] || 0) + 1;

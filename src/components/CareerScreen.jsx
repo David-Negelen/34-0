@@ -9,16 +9,19 @@ import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
+import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import './CareerScreen.css';
 
-const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
+const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
 
 const PLAYOFF_OPPONENTS = {
-  bl:  ['Hamburger SV', 'FC Schalke 04', 'Hannover 96', '1. FC Köln', 'Hertha BSC',
-        'VfB Stuttgart', 'Werder Bremen', 'FC Augsburg', 'Fortuna Düsseldorf', 'Eintracht Braunschweig'],
+  bl:   ['Hamburger SV', 'FC Schalke 04', 'Hannover 96', '1. FC Köln', 'Hertha BSC',
+         'VfB Stuttgart', 'Werder Bremen', 'FC Augsburg', 'Fortuna Düsseldorf', 'Eintracht Braunschweig'],
   '2bl': ['Greuther Fürth', 'FC Heidenheim', 'SV Darmstadt 98', '1. FC Nürnberg',
           'Karlsruher SC', 'FC Hansa Rostock', '1. FC Kaiserslautern', 'SV Sandhausen', 'FC Erzgebirge Aue'],
+  '3l': ['1. FC Saarbrücken', 'Dynamo Dresden', 'TSV 1860 München', 'Hallescher FC',
+         'FC Viktoria Köln', 'SV Waldhof Mannheim', 'VfL Osnabrück', 'SpVgg Unterhaching'],
 };
 
 function randGoals() {
@@ -32,7 +35,8 @@ function randGoals() {
 }
 
 function generatePlayoff(myDivision) {
-  const oppDivision = myDivision === '2bl' ? 'bl' : '2bl';
+  // Playoff opponent comes from the division above (for promotion) or is in same pool
+  const oppDivision = myDivision === '3l' ? '2bl' : myDivision === '2bl' ? 'bl' : '2bl';
   const pool = PLAYOFF_OPPONENTS[oppDivision];
   const opponent = pool[Math.floor(Math.random() * pool.length)];
   const leg1 = { own: randGoals(), opp: randGoals() };
@@ -52,7 +56,9 @@ function shortSeason(s) {
 }
 
 function getPlayers(div) {
-  return div === 'bl' ? BL_PLAYERS : BL2_PLAYERS;
+  if (div === 'bl')  return BL_PLAYERS;
+  if (div === '3l')  return BL3_PLAYERS;
+  return BL2_PLAYERS;
 }
 
 export default function CareerScreen() {
@@ -65,8 +71,9 @@ export default function CareerScreen() {
     const players = getPlayers(division);
     const { result, table, playerMatches, playerStats, tableHistory } =
       simulateFullLeague(slots, division, players);
-    const needsPlayoff = (result.pos === 3 && division === '2bl') ||
-                         (result.pos === 16 && division === 'bl');
+    const needsPlayoff =
+      (result.pos === 3  && (division === '2bl' || division === '3l')) ||
+      (result.pos === 16 && (division === 'bl'  || division === '2bl'));
     const playoff = needsPlayoff ? generatePlayoff(division) : null;
     career.setResult({
       ...result,
@@ -119,10 +126,13 @@ export default function CareerScreen() {
     return (
       <CareerSetup
         formation={state.formation}
+        startingDivision={state.startingDivision ?? '2bl'}
         onSetFormation={career.setFormation}
+        onSetStartingDivision={career.setStartingDivision}
         onStart={() => {
-          const pool = generateCareerDraftPool(getPlayers('2bl'), FORMATIONS[state.formation]);
-          career.beginDraft(pool);
+          const div = state.startingDivision ?? '2bl';
+          const pool = generateCareerDraftPool(getPlayers(div), FORMATIONS[state.formation], 30, div);
+          career.beginDraft(pool, div);
         }}
         onBack={() => navigate('/')}
       />
@@ -130,12 +140,13 @@ export default function CareerScreen() {
   }
 
   if (state.phase === 'draft') {
+    const draftDiv = state.division ?? '2bl';
     return (
       <CareerDraft
         state={state}
         onPlace={career.placePlayer}
         onRemove={career.removePlayer}
-        onResult={(slots) => runSeason(slots, '2bl', state.seasonNumber)}
+        onResult={(slots) => runSeason(slots, draftDiv, state.seasonNumber)}
         onReset={() => career.reset()}
         onHome={() => { career.reset(); navigate('/'); }}
       />
@@ -145,13 +156,31 @@ export default function CareerScreen() {
   if (state.phase === 'result') {
     const pos      = state.result?.pos ?? 18;
     const playoff  = state.result?.playoff ?? null;
-    const directPromoted  = state.division === '2bl' && pos <= 2;
-    const directRelegated = state.division === 'bl'  && pos >= 17;
-    const playoffPromoted  = state.division === '2bl' && pos === 3  && playoff?.won === true;
-    const playoffRelegated = state.division === 'bl'  && pos === 16 && playoff?.won === false;
-    const promoted  = directPromoted  || playoffPromoted;
+    const div      = state.division;
+
+    // Promotion
+    const directPromoted =
+      (div === '3l'  && pos <= 2) ||
+      (div === '2bl' && pos <= 2);
+    const playoffPromoted =
+      (div === '3l'  && pos === 3 && playoff?.won === true) ||
+      (div === '2bl' && pos === 3 && playoff?.won === true);
+    const promoted = directPromoted || playoffPromoted;
+
+    // Relegation
+    const directRelegated =
+      (div === 'bl'  && pos >= 17) ||
+      (div === '2bl' && pos >= 17);
+    const playoffRelegated =
+      (div === 'bl'  && pos === 16 && playoff?.won === false) ||
+      (div === '2bl' && pos === 16 && playoff?.won === false);
     const relegated = directRelegated || playoffRelegated;
-    const newDivision = promoted ? 'bl' : relegated ? '2bl' : state.division;
+
+    const newDivision = promoted
+      ? (div === '3l' ? '2bl' : 'bl')
+      : relegated
+        ? (div === 'bl' ? '2bl' : '3l')
+        : div;
 
     if (entwicklungData) {
       return (
@@ -230,7 +259,14 @@ export default function CareerScreen() {
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
-function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
+const DIV_INFO = {
+  '3l':  { label: '3. Liga',       sub: 'Aufstieg in die 2. Bundesliga möglich' },
+  '2bl': { label: '2. Bundesliga', sub: 'Aufstieg in die Bundesliga möglich' },
+  'bl':  { label: 'Bundesliga',    sub: 'Höchste Spielklasse — Kampf um den Meistertitel' },
+};
+
+function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartingDivision, onStart, onBack }) {
+  const divInfo = DIV_INFO[startingDivision] ?? DIV_INFO['2bl'];
   return (
     <div className="career-screen">
       <header className="career-header">
@@ -238,12 +274,27 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
         <div className="career-header-title">
           <span className="career-eyebrow">34-0</span>
           <h1 className="career-main-title">KARRIERE</h1>
-          <p className="career-main-sub">Starte in der 2. Bundesliga und kämpfe um den Aufstieg</p>
+          <p className="career-main-sub">{divInfo.sub}</p>
         </div>
         <div />
       </header>
 
       <div className="career-setup-body">
+        <section className="setup-section">
+          <h3 className="setup-label">Startliga</h3>
+          <div className="formation-btns">
+            {Object.entries(DIV_INFO).map(([key, info]) => (
+              <button
+                key={key}
+                className={`formation-btn ${startingDivision === key ? 'selected' : ''}`}
+                onClick={() => onSetStartingDivision(key)}
+              >
+                {info.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <section className="setup-section">
           <h3 className="setup-label">Formation</h3>
           <div className="formation-btns">
@@ -262,9 +313,9 @@ function CareerSetup({ formation, onSetFormation, onStart, onBack }) {
         </section>
 
         <div className="career-setup-info">
-          <div className="career-info-row">Wähle deine Startelf aus 30 zufälligen 2.-Liga-Spielern</div>
-          <div className="career-info-row">Platz 1 oder 2: Aufstieg in die Bundesliga</div>
-          <div className="career-info-row">Nach jeder Saison: 5 neue Spielerangebote</div>
+          <div className="career-info-row">Wähle deine Startelf aus 30 zufälligen {divInfo.label}-Spielern</div>
+          <div className="career-info-row">Platz 1 oder 2: direkter Aufstieg</div>
+          <div className="career-info-row">Nach jeder Saison: Transfermarkt mit Budget</div>
         </div>
 
         <button className="start-btn" onClick={onStart}>
@@ -327,7 +378,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
             className="btn btn-ghost btn-sm draft-nav-btn"
             onClick={() => window.confirm('Draft abbrechen und zum Menü?') && onHome()}
           >← <span className="draft-nav-label">Menü</span></button>
-          <span className="career-draft-title">KARRIERE — SAISON 1 — 2. BUNDESLIGA</span>
+          <span className="career-draft-title">KARRIERE — SAISON 1 — {DIV_LABEL[state.division ?? '2bl'].toUpperCase()}</span>
           <span className="badge badge-muted">{FORMATIONS[formation].name}</span>
         </div>
         <div className="career-draft-header-right">
@@ -341,7 +392,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
 
       <div className="career-draft-layout">
         <div className="career-draft-left">
-          <FormationBoard slots={formationSlots} showRatings league="2bl" />
+          <FormationBoard slots={formationSlots} showRatings league={state.division ?? '2bl'} />
         </div>
 
         <div className="career-draft-right">
@@ -373,7 +424,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
                 <CareerCard
                   key={player.id}
                   player={player}
-                  league="2bl"
+                  league={state.division ?? '2bl'}
                   picked={picked}
                   incompatible={incompatible}
                   offRole={canOffRole}
@@ -488,8 +539,8 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
               {!playoff && (promoted || relegated) && (
                 <div className={`career-banner ${promoted ? 'career-banner--up' : 'career-banner--down'}`}>
                   {promoted
-                    ? `⬆️  Aufstieg! Nächste Saison spielst du in der Bundesliga.`
-                    : `⬇️  Abstieg. Nächste Saison in der 2. Bundesliga.`}
+                    ? `⬆️  Aufstieg! Nächste Saison in der ${DIV_LABEL[newDivision]}.`
+                    : `⬇️  Abstieg. Nächste Saison in der ${DIV_LABEL[newDivision]}.`}
                 </div>
               )}
 
@@ -522,7 +573,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
                   </div>
                   <div className="lp-key">
                     <span className="lp-key-item relegation">Abstieg</span>
-                    <span className="lp-key-item europe">{division === '2bl' ? 'Aufstieg' : 'Europa'}</span>
+                    <span className="lp-key-item europe">{division !== 'bl' ? 'Aufstieg' : 'Europa'}</span>
                     <span className="lp-key-item title">Meister</span>
                   </div>
                 </div>
@@ -582,9 +633,10 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
   const [posFilter, setPosFilter] = useState('');
   const [activeBidIdx, setActiveBidIdx] = useState(null);
 
+  const DIV_RANK = { '3l': 0, '2bl': 1, 'bl': 2 };
   const prevDivision  = seasonHistory[seasonHistory.length - 1]?.division;
-  const justPromoted  = prevDivision === '2bl' && division === 'bl';
-  const justRelegated = prevDivision === 'bl'  && division === '2bl';
+  const justPromoted  = prevDivision && DIV_RANK[division] > DIV_RANK[prevDivision];
+  const justRelegated = prevDivision && DIV_RANK[division] < DIV_RANK[prevDivision];
 
   const filledFormation     = formationSlots.filter(s => s.player !== null).length;
   const emptyFormationSlots = formationSlots.filter(s => !s.player);
@@ -658,7 +710,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
           </h1>
           {(justPromoted || justRelegated) && (
             <div className={`career-banner career-banner--sm ${justPromoted ? 'career-banner--up' : 'career-banner--down'}`}>
-              {justPromoted ? '⬆️  Aufstieg in die Bundesliga!' : '⬇️  Abstieg in die 2. Bundesliga'}
+              {justPromoted ? `⬆️  Aufstieg in die ${DIV_LABEL[division]}!` : `⬇️  Abstieg in die ${DIV_LABEL[division]}`}
             </div>
           )}
         </div>
@@ -1251,6 +1303,13 @@ function CareerTable({ table, league }) {
 }
 
 function tableZone(pos, league) {
+  if (league === '3l') {
+    if (pos <= 2)   return 'ucl';
+    if (pos === 3)  return 'playoff-up';
+    if (pos === 16) return 'playoff';
+    if (pos >= 17)  return 'relegated';
+    return 'mid';
+  }
   if (league === '2bl') {
     if (pos <= 2)   return 'ucl';
     if (pos === 3)  return 'playoff-up';
