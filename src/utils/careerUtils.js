@@ -195,9 +195,13 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
 
   return final.map(p => {
     const age = getAge(p.id, currentYear);
-    const isYoungGem = age !== null && age <= 21 && (p.potential - p.seasonRating) >= 10;
+    const gap = p.potential - p.seasonRating;
+    const isYoungGem = age !== null && age <= 19 && gap >= 13;
     const isGem = !!(p.isGem || isYoungGem);
-    return { ...p, isGem, slotType, price: offerPrice(p.seasonRating, isGem, age) };
+    const potential = isYoungGem
+      ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))  // 85–93
+      : p.potential;
+    return { ...p, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age) };
   });
 }
 
