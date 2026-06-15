@@ -672,7 +672,6 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [selectedKaderId, setSelectedKaderId] = useState(null);
   const [posFilter, setPosFilter] = useState('');
-  const [activeBidIdx, setActiveBidIdx] = useState(null);
 
   const DIV_RANK = { '3l': 0, '2bl': 1, 'bl': 2 };
   const prevDivision  = seasonHistory[seasonHistory.length - 1]?.division;
@@ -688,12 +687,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
 
   const byOvr = (a, b) => b.seasonRating - a.seasonRating;
   const allAvailableOffers = transferOffers.filter(o => !o.used && !o.skipped).sort(byOvr);
-
-  const activeBid       = activeBidIdx !== null ? (incomingBids[activeBidIdx] ?? null) : null;
-  const effectiveBudget = activeBid ? budget + activeBid.amount : budget;
-  const overviewOffers  = activeBid
-    ? allAvailableOffers.filter(o => o.slotType === activeBid.slotType)
-    : allAvailableOffers.filter(o => !posFilter || o.slotType === posFilter);
+  const overviewOffers = allAvailableOffers.filter(o => !posFilter || o.slotType === posFilter);
 
   const marketOffers = selectedSlot
     ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type).sort(byOvr)
@@ -727,13 +721,10 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
 
   function handleBidSell(bid) {
     onSell(bid.playerId, bid.amount);
-    setActiveBidIdx(null);
-    setPosFilter('');
   }
 
   function handleBuyFromOverview(offerIndex) {
     onBuy(offerIndex);
-    setActiveBidIdx(null);
   }
 
   return (
@@ -848,11 +839,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                       {bid.buyingClub && (
                         <div className="career-bid-club-header">{bid.buyingClub} möchte kaufen:</div>
                       )}
-                      <div
-                        className={`career-bid-row${activeBidIdx === i ? ' career-bid-row--active' : ''}`}
-                        onClick={() => setActiveBidIdx(prev => prev === i ? null : i)}
-                        style={{ cursor: 'pointer' }}
-                      >
+                      <div className="career-bid-row">
                         <div className="career-bid-info">
                           <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
                           <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
@@ -861,10 +848,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                         </div>
                         <div className="career-bid-actions">
                           <span className="career-bid-amount">€{bid.amount}M</span>
-                          <button
-                            className="career-bid-accept"
-                            onClick={e => { e.stopPropagation(); handleBidSell(bid); }}
-                          >
+                          <button className="career-bid-accept" onClick={() => handleBidSell(bid)}>
                             Verkaufen
                           </button>
                         </div>
@@ -874,58 +858,40 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 </div>
               )}
 
-              {activeBid && (
-                <div className="career-sell-context">
-                  <div className="career-sell-context-info">
-                    <span className="career-sell-context-label">Nach Verkauf von {activeBid.playerName}</span>
-                    <span className="career-sell-context-budget">Budget: €{budget}M + €{activeBid.amount}M = <strong>€{effectiveBudget}M</strong></span>
-                  </div>
-                  <button className="career-sell-context-close" onClick={() => setActiveBidIdx(null)}>✕</button>
-                </div>
-              )}
-
               {allAvailableOffers.length > 0 ? (
                 <>
-                  <div className="result-section-label">
-                    {activeBid ? `Ersatz für ${labelDE(activeBid.slotType)}` : 'Transfermarkt'}
-                  </div>
-                  {!activeBid && (
-                    <div className="career-pos-filters">
+                  <div className="result-section-label">Transfermarkt</div>
+                  <div className="career-pos-filters">
+                    <button
+                      className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
+                      onClick={() => setPosFilter('')}
+                    >Alle</button>
+                    {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
                       <button
-                        className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
-                        onClick={() => setPosFilter('')}
-                      >Alle</button>
-                      {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
-                        <button
-                          key={pos}
-                          className={[
-                            'career-filter-btn',
-                            posFilter === pos ? 'career-filter-btn-active' : '',
-                            emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
-                          ].filter(Boolean).join(' ')}
-                          onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
-                        >
-                          {labelDE(pos)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {overviewOffers.length === 0 ? (
-                    <div className="career-swap-empty">Keine Ersatz-Angebote für {labelDE(activeBid?.slotType)}.</div>
-                  ) : (
-                    overviewOffers.map(offer => {
-                      const idx = transferOffers.indexOf(offer);
-                      return (
-                        <TransferOfferCard
-                          key={`${offer.id}-${idx}`}
-                          offer={offer}
-                          division={division}
-                          canAfford={effectiveBudget >= (offer.price ?? 0)}
-                          onBuy={() => { setActiveBidIdx(null); handleBuyFromOverview(idx); }}
-                        />
-                      );
-                    })
-                  )}
+                        key={pos}
+                        className={[
+                          'career-filter-btn',
+                          posFilter === pos ? 'career-filter-btn-active' : '',
+                          emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
+                        ].filter(Boolean).join(' ')}
+                        onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
+                      >
+                        {labelDE(pos)}
+                      </button>
+                    ))}
+                  </div>
+                  {overviewOffers.map(offer => {
+                    const idx = transferOffers.indexOf(offer);
+                    return (
+                      <TransferOfferCard
+                        key={`${offer.id}-${idx}`}
+                        offer={offer}
+                        division={division}
+                        canAfford={budget >= (offer.price ?? 0)}
+                        onBuy={() => handleBuyFromOverview(idx)}
+                      />
+                    );
+                  })}
                 </>
               ) : (
                 <div className="career-market-hint">Keine Transferangebote verfügbar.</div>
