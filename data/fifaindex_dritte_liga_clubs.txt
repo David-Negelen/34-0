@@ -1,0 +1,45 @@
+# 3. Liga clubs — fifaindex.com team IDs
+# Format: {id}-{slug}   (one per line, # = comment)
+# Find the ID+slug from the URL at https://fifaindex.com/teams/
+# Example: https://fifaindex.com/teams/503-dynamo-dresden/fc26/ → 503-dynamo-dresden
+# Replace ??? with the real ID once found. Reserve clubs (II) likely absent from FIFA.
+
+# ── Known IDs (verified via BL/2BL/Pokal files) ──
+29-1-fc-kaiserslautern
+110588-1-fc-magdeburg
+523-1-fc-saarbrucken
+1826-alemannia-aachen
+159-arminia-bielefeld
+507-chemnitzer-fc
+503-dynamo-dresden
+110500-eintracht-braunschweig
+110591-fc-carl-zeiss-jena
+162-energie-cottbus
+506-erzgebirge-aue
+27-hansa-rostock
+111239-fc-ingolstadt-04
+110645-viktoria-koln
+110592-fsv-zwickau
+110482-hallescher-fc
+1825-msv-duisburg
+531-preu-en-munster
+100424-rot-wei-erfurt
+172-spvgg-unterhaching
+543-jahn-regensburg
+110597-sv-meppen
+110532-sv-waldhof-mannheim
+492-sv-wehen-wiesbaden
+33-tsv-1860-munchen
+487-vfl-osnabruck
+550-vfr-aalen
+110197-wurzburger-kickers
+
+# ── Unknown / needs lookup ──
+???-sv-wacker-burghausen
+???-sg-sonnenhof-gro-aspach
+
+# ── Reserve teams (II) — likely absent from FIFA ──
+???-borussia-dortmund-ii
+???-fc-bayern-munchen-ii
+???-vfb-stuttgart-ii
+???-werder-bremen-ii

@@ -87,8 +87,9 @@ export default function CareerClassicScreen() {
   function mergeStats(base, playerStats) {
     const next = { ...base };
     for (const p of (playerStats ?? [])) {
-      const prev = next[p.name] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
-      next[p.name] = {
+      const key = p.id ?? p.name;
+      const prev = next[key] ?? { games: 0, goals: 0, assists: 0, cleanSheets: 0, slotLabel: p.slotLabel, slotType: p.slotType };
+      next[key] = {
         ...prev,
         name:        p.name,
         games:       prev.games       + (p.games       ?? 34),
