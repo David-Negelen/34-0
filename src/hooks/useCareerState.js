@@ -21,6 +21,8 @@ const defaultState = {
   swapHistory: [],
   retiredThisSeason: [],
   budget: 0,
+  kader: [],     // unlimited reserves: [{...player, inactiveSeasons: 0}]
+  kaderLeft: [], // players auto-released last window (for display message)
 };
 
 function mergeStats(careerStats, playerStats) {
@@ -43,17 +45,8 @@ function mergeStats(careerStats, playerStats) {
   return next;
 }
 
-const BENCH_COUNT = 5;
-
 function buildSlots(formationKey) {
-  const formation = FORMATIONS[formationKey].slots.map(s => ({ ...s, player: null }));
-  const bench = Array.from({ length: BENCH_COUNT }, (_, i) => ({
-    id: `bench_${i + 1}`,
-    type: 'BENCH',
-    label: 'Bank',
-    player: null,
-  }));
-  return [...formation, ...bench];
+  return FORMATIONS[formationKey].slots.map(s => ({ ...s, player: null }));
 }
 
 function reducer(state, action) {
@@ -69,28 +62,21 @@ function reducer(state, action) {
       const newKey = action.payload;
       if (newKey === state.formation) return state;
       const newFormSlots = FORMATIONS[newKey].slots.map(s => ({ ...s, player: null }));
-      const benchSlots   = state.slots.filter(s => s.type === 'BENCH').map(s => ({ ...s }));
-      const toPlace      = state.slots.filter(s => s.type !== 'BENCH' && s.player).map(s => s.player);
+      const toPlace = state.slots.filter(s => s.player).map(s => s.player);
 
-      // 1. Match players to slots by natural position
       const placed = new Set();
       for (const slot of newFormSlots) {
         const match = toPlace.find(p => !placed.has(p.id) && p.positions?.includes(slot.type));
         if (match) { slot.player = match; placed.add(match.id); }
       }
-      // 2. Fill remaining empty slots with leftover players (out of position)
       const leftover = toPlace.filter(p => !placed.has(p.id));
       const emptyNew = newFormSlots.filter(s => !s.player);
       leftover.forEach((p, i) => {
         if (i < emptyNew.length) { emptyNew[i].player = p; placed.add(p.id); }
       });
-      // 3. Any remaining go to bench; overflow bench → released
-      toPlace.filter(p => !placed.has(p.id)).forEach(p => {
-        const b = benchSlots.find(s => !s.player);
-        if (b) b.player = p;
-      });
+      const overflow = toPlace.filter(p => !placed.has(p.id)).map(p => ({ ...p, inactiveSeasons: 0 }));
 
-      return { ...state, formation: newKey, slots: [...newFormSlots, ...benchSlots] };
+      return { ...state, formation: newKey, slots: newFormSlots, kader: [...state.kader, ...overflow] };
     }
 
     case 'BEGIN_DRAFT': {
@@ -110,6 +96,8 @@ function reducer(state, action) {
         careerStartYear,
         slots: buildSlots(state.formation),
         draftPool: pool,
+        kader: [],
+        kaderLeft: [],
       };
     }
 
@@ -141,6 +129,12 @@ function reducer(state, action) {
             GA: state.result.GA ?? 0,
           }]
         : state.seasonHistory;
+
+      const KADER_MAX_IDLE = 2;
+      const kaderNext = (state.kader ?? []).map(p => ({ ...p, inactiveSeasons: (p.inactiveSeasons ?? 0) + 1 }));
+      const kaderLeft = kaderNext.filter(p => p.inactiveSeasons >= KADER_MAX_IDLE);
+      const kader     = kaderNext.filter(p => p.inactiveSeasons < KADER_MAX_IDLE);
+
       return {
         ...state,
         phase: 'transfer',
@@ -154,10 +148,12 @@ function reducer(state, action) {
         result: null,
         swapHistory: [],
         retiredThisSeason: retiredThisSeason ?? [],
+        kader,
+        kaderLeft,
       };
     }
 
-    // Buy a player — always lands on the bench first (bench must have a free slot).
+    // Buy a player — lands in the Kader (unlimited reserves).
     case 'BUY_OFFER': {
       const { offerIndex } = action.payload;
       const offer = state.transferOffers[offerIndex];
@@ -165,39 +161,54 @@ function reducer(state, action) {
       const price = offer.price ?? 0;
       if ((state.budget ?? 0) < price) return state;
 
-      const emptyBench = state.slots.find(s => s.type === 'BENCH' && !s.player);
-      if (!emptyBench) return state; // bench full — caller should guard
-
-      const swappedIn = { ...offer, displayRating: offer.seasonRating };
+      const kaderPlayer = { ...offer, displayRating: offer.seasonRating, inactiveSeasons: 0 };
       const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
 
       return {
         ...state,
         budget: (state.budget ?? 0) - price,
-        slots: state.slots.map(s =>
-          s.id === emptyBench.id ? { ...s, player: swappedIn } : s
-        ),
+        kader: [...(state.kader ?? []), kaderPlayer],
         transferOffers: state.transferOffers.map((o, i) =>
           i === offerIndex ? { ...o, used: true } : o
         ),
-        allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, swappedIn],
-        swapHistory: [...state.swapHistory, { benchSlotId: emptyBench.id, offerIndex, price }],
+        allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, kaderPlayer],
+        swapHistory: [...state.swapHistory, { offerIndex, price }],
       };
     }
 
     case 'UNDO_BUY': {
       if (!state.swapHistory.length) return state;
-      const { benchSlotId, offerIndex, price = 0 } = state.swapHistory[state.swapHistory.length - 1];
+      const { offerIndex, price = 0 } = state.swapHistory[state.swapHistory.length - 1];
+      const offer = state.transferOffers[offerIndex];
       return {
         ...state,
         budget: (state.budget ?? 0) + price,
+        kader: (state.kader ?? []).filter(p => p.id !== offer?.id),
         slots: state.slots.map(s =>
-          s.id === benchSlotId ? { ...s, player: null } : s
+          s.player?.id === offer?.id ? { ...s, player: null } : s
         ),
         transferOffers: state.transferOffers.map((o, i) =>
           i === offerIndex ? { ...o, used: false } : o
         ),
         swapHistory: state.swapHistory.slice(0, -1),
+      };
+    }
+
+    // Move a Kader player into a formation slot. The displaced slot player goes to Kader.
+    case 'MOVE_FROM_KADER': {
+      const { playerId, slotId } = action.payload;
+      const player = (state.kader ?? []).find(p => p.id === playerId);
+      if (!player) return state;
+      const targetSlot = state.slots.find(s => s.id === slotId);
+      const evicted = targetSlot?.player ?? null;
+      const { inactiveSeasons: _i, ...playerForSlot } = player;
+      return {
+        ...state,
+        kader: [
+          ...(state.kader ?? []).filter(p => p.id !== playerId),
+          ...(evicted ? [{ ...evicted, inactiveSeasons: 0 }] : []),
+        ],
+        slots: state.slots.map(s => s.id === slotId ? { ...s, player: playerForSlot } : s),
       };
     }
 
@@ -225,9 +236,10 @@ function reducer(state, action) {
         slots: state.slots.map(s =>
           s.player?.id === playerId ? { ...s, player: null } : s
         ),
+        kader: (state.kader ?? []).filter(p => p.id !== playerId),
         incomingBids: state.incomingBids.filter(b => b.playerId !== playerId),
         transferOffers: [...state.transferOffers, ...newOffers],
-        swapHistory: [], // sells can't be undone; clear so undo doesn't revert an older buy
+        swapHistory: [],
       };
     }
 
@@ -258,6 +270,9 @@ function reducer(state, action) {
       return {
         ...state,
         slots: updatedSlots,
+        kader: (state.kader ?? []).map(p =>
+          playerUpdates[p.id] != null ? { ...p, ...playerUpdates[p.id] } : p
+        ),
         allPlayers: state.allPlayers.map(p =>
           playerUpdates[p.id] != null ? { ...p, ...playerUpdates[p.id] } : p
         ),
@@ -298,16 +313,18 @@ export function useCareerState() {
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),
     beginTransfer: (newDivision, offers, retiredThisSeason, prize, incomingBids) =>
                      dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason, prize, incomingBids } }),
-    buyOffer:      (offerIndex) =>
-                     dispatch({ type: 'BUY_OFFER', payload: { offerIndex } }),
-    undoBuy:       () => dispatch({ type: 'UNDO_BUY' }),
-    moveInSquad:   (fromSlotId, toSlotId) =>
-                     dispatch({ type: 'MOVE_IN_SQUAD', payload: { fromSlotId, toSlotId } }),
-    sellPlayer:    (playerId, amount, newOffers = []) =>
-                     dispatch({ type: 'SELL_PLAYER', payload: { playerId, amount, newOffers } }),
-    skipOffer:     i => dispatch({ type: 'SKIP_OFFER', payload: i }),
-    removePlayer:  slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
-    applyGrowth:   updatedSlots => dispatch({ type: 'APPLY_GROWTH', payload: { updatedSlots } }),
-    reset:         () => dispatch({ type: 'RESET' }),
+    buyOffer:        (offerIndex) =>
+                       dispatch({ type: 'BUY_OFFER', payload: { offerIndex } }),
+    undoBuy:         () => dispatch({ type: 'UNDO_BUY' }),
+    moveInSquad:     (fromSlotId, toSlotId) =>
+                       dispatch({ type: 'MOVE_IN_SQUAD', payload: { fromSlotId, toSlotId } }),
+    moveFromKader:   (playerId, slotId) =>
+                       dispatch({ type: 'MOVE_FROM_KADER', payload: { playerId, slotId } }),
+    sellPlayer:      (playerId, amount, newOffers = []) =>
+                       dispatch({ type: 'SELL_PLAYER', payload: { playerId, amount, newOffers } }),
+    skipOffer:       i => dispatch({ type: 'SKIP_OFFER', payload: i }),
+    removePlayer:    slotId => dispatch({ type: 'REMOVE_PLAYER', payload: slotId }),
+    applyGrowth:     updatedSlots => dispatch({ type: 'APPLY_GROWTH', payload: { updatedSlots } }),
+    reset:           () => dispatch({ type: 'RESET' }),
   };
 }

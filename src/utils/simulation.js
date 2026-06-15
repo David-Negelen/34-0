@@ -121,23 +121,23 @@ const ZWEITE_LIGA_TEAMS = [
 ];
 
 const DRITTE_LIGA_TEAMS = [
-  { name: '1. FC Saarbrücken',          strength: 62 },
-  { name: 'Dynamo Dresden',             strength: 61 },
-  { name: 'TSV 1860 München',           strength: 61 },
-  { name: 'FC Ingolstadt 04',           strength: 60 },
-  { name: 'MSV Duisburg',               strength: 60 },
-  { name: 'FC Hansa Rostock',           strength: 59 },
-  { name: 'Preußen Münster',            strength: 59 },
-  { name: 'SpVgg Unterhaching',         strength: 58 },
-  { name: 'Hallescher FC',              strength: 58 },
-  { name: 'SV Wehen Wiesbaden',         strength: 57 },
-  { name: 'VfL Osnabrück',              strength: 57 },
-  { name: 'FC Erzgebirge Aue',          strength: 56 },
-  { name: 'Rot-Weiß Erfurt',            strength: 56 },
-  { name: 'FC Viktoria Köln',           strength: 55 },
-  { name: 'SV Waldhof Mannheim',        strength: 55 },
-  { name: 'FSV Zwickau',                strength: 54 },
-  { name: 'FC Carl Zeiss Jena',         strength: 53 },
+  { name: '1. FC Saarbrücken',          club: '1. FC Saarbrücken',   strength: 62 },
+  { name: 'Dynamo Dresden',             club: 'Dynamo Dresden',       strength: 61 },
+  { name: 'TSV 1860 München',           club: 'TSV 1860 München',     strength: 61 },
+  { name: 'FC Ingolstadt 04',           club: 'FC Ingolstadt 04',     strength: 60 },
+  { name: 'MSV Duisburg',               club: 'MSV Duisburg',         strength: 60 },
+  { name: 'FC Hansa Rostock',           club: 'FC Hansa Rostock',     strength: 59 },
+  { name: 'Preußen Münster',            club: 'Preußen Münster',      strength: 59 },
+  { name: 'SpVgg Unterhaching',         club: 'SpVgg Unterhaching',   strength: 58 },
+  { name: 'Hallescher FC',              club: 'Hallescher FC',        strength: 58 },
+  { name: 'SV Wehen Wiesbaden',         club: 'SV Wehen Wiesbaden',   strength: 57 },
+  { name: 'VfL Osnabrück',              club: 'VfL Osnabrück',        strength: 57 },
+  { name: 'FC Erzgebirge Aue',          club: 'FC Erzgebirge Aue',    strength: 56 },
+  { name: 'Rot-Weiß Erfurt',            club: 'Rot-Weiß Erfurt',      strength: 56 },
+  { name: 'FC Viktoria Köln',           club: 'FC Viktoria Köln',     strength: 55 },
+  { name: 'SV Waldhof Mannheim',        club: 'SV Waldhof Mannheim',  strength: 55 },
+  { name: 'FSV Zwickau',                club: 'FSV Zwickau',          strength: 54 },
+  { name: 'FC Carl Zeiss Jena',         club: 'FC Carl Zeiss Jena',   strength: 53 },
 ];
 
 // ── Historic opponent generation ──────────────────────────────────────────────
@@ -279,14 +279,30 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   const LEAGUE_TEAMS = historicOpponents.length === 17
     ? historicOpponents
     : (league === '2bl' ? ZWEITE_LIGA_TEAMS : league === '3l' ? DRITTE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
+  const STRIKER_POS = new Set(['ST', 'LF', 'RF', 'AM', 'SS']);
+
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
-      // Build scorer pool from real player data for this club+season
-      const seasonKey = t.season ? seasonLabelToKey(t.season) : null;
-      const scorerPool = seasonKey && allPlayers.length
-        ? allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey))
-        : [];
+      let scorerPool = [];
+      if (t.season && allPlayers.length) {
+        // Historic opponent: exact season, all positions
+        const seasonKey = seasonLabelToKey(t.season);
+        scorerPool = allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey));
+      } else if (t.club && allPlayers.length) {
+        // Static 3L team: pick a random season from data, strikers only
+        const clubStrikers = allPlayers.filter(p =>
+          p.positions?.some(pos => STRIKER_POS.has(pos)) &&
+          p.seasons.some(s => s.club === t.club)
+        );
+        if (clubStrikers.length) {
+          const seasons = [...new Set(
+            clubStrikers.flatMap(p => p.seasons.filter(s => s.club === t.club).map(s => s.season))
+          )];
+          const picked = seasons[Math.floor(Math.random() * seasons.length)];
+          scorerPool = clubStrikers.filter(p => p.seasons.some(s => s.club === t.club && s.season === picked));
+        }
+      }
       return { ...t, att: eff, def: eff, scorerPool };
     }),
     { name: 'Deine 11', att: attStr + lateBoost + formPenalty, def: defStr + lateBoost + formPenalty, isPlayer: true, scorerPool: [] },

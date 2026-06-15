@@ -196,8 +196,11 @@ export default function CareerScreen() {
             career.applyGrowth(entwicklungData.updatedSlots);
             const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
             const divPlayers = getPlayers(newDivision);
-            const filled = entwicklungData.updatedSlots.filter(s => s.player && s.type !== 'BENCH');
-            const excludeIds = new Set(entwicklungData.updatedSlots.filter(s => s.player).map(s => s.player.id));
+            const filled = entwicklungData.updatedSlots.filter(s => s.player);
+            const excludeIds = new Set([
+              ...entwicklungData.updatedSlots.filter(s => s.player).map(s => s.player.id),
+              ...(state.kader ?? []).map(p => p.id),
+            ]);
             const teamAvg = filled.length
               ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
               : null;
@@ -233,11 +236,14 @@ export default function CareerScreen() {
       const slotType = bid?.slotType;
       const divPlayers = getPlayers(state.division);
       const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
-      const filled = state.slots.filter(s => s.player && s.type !== 'BENCH' && s.player.id !== playerId);
+      const filled = state.slots.filter(s => s.player && s.player.id !== playerId);
       const teamAvg = filled.length
         ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
         : null;
-      const excludeIds = new Set(state.slots.filter(s => s.player && s.player.id !== playerId).map(s => s.player.id));
+      const excludeIds = new Set([
+        ...state.slots.filter(s => s.player && s.player.id !== playerId).map(s => s.player.id),
+        ...(state.kader ?? []).filter(p => p.id !== playerId).map(p => p.id),
+      ]);
       const newOffers = slotType ? generateOffersForType(divPlayers, excludeIds, slotType, teamAvg, currentYear) : [];
       career.sellPlayer(playerId, amount, newOffers);
     }
@@ -248,8 +254,8 @@ export default function CareerScreen() {
         onBuy={career.buyOffer}
         onUndo={career.undoBuy}
         onMove={career.moveInSquad}
+        onMoveFromKader={career.moveFromKader}
         onSell={handleSell}
-        onRelease={career.removePlayer}
         onChangeFormation={career.changeFormation}
         onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
         onEnd={handleEndCareer}
@@ -657,11 +663,12 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onChangeFormation, onStartSeason, onEnd }) {
-  const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0, formation } = state;
-  const formationSlots  = slots.filter(s => s.type !== 'BENCH');
-  const benchSlots      = slots.filter(s => s.type === 'BENCH');
+function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell, onChangeFormation, onStartSeason, onEnd }) {
+  const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory,
+          budget = 0, formation, kader = [], kaderLeft = [] } = state;
+  const formationSlots  = slots;
   const [selectedSlotId, setSelectedSlotId] = useState(null);
+  const [selectedKaderId, setSelectedKaderId] = useState(null);
   const [posFilter, setPosFilter] = useState('');
   const [activeBidIdx, setActiveBidIdx] = useState(null);
 
@@ -673,54 +680,49 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
   const filledFormation     = formationSlots.filter(s => s.player !== null).length;
   const emptyFormationSlots = formationSlots.filter(s => !s.player);
   const canStart            = filledFormation === 11;
-  const benchFull           = benchSlots.filter(s => s.player).length >= 5;
 
-  const selectedSlot    = selectedSlotId ? slots.find(s => s.id === selectedSlotId) : null;
-  const isBenchSelected = selectedSlot?.type === 'BENCH';
+  const selectedSlot      = selectedSlotId ? slots.find(s => s.id === selectedSlotId) : null;
+  const selectedKaderPlayer = selectedKaderId ? kader.find(p => p.id === selectedKaderId) : null;
 
   const allAvailableOffers = transferOffers.filter(o => !o.used && !o.skipped);
 
-  // Active bid: clicking a bid row shows replacements + affordability based on post-sale budget
-  const activeBid         = activeBidIdx !== null ? (incomingBids[activeBidIdx] ?? null) : null;
-  const effectiveBudget   = activeBid ? budget + activeBid.amount : budget;
-  const overviewOffers    = activeBid
+  const activeBid       = activeBidIdx !== null ? (incomingBids[activeBidIdx] ?? null) : null;
+  const effectiveBudget = activeBid ? budget + activeBid.amount : budget;
+  const overviewOffers  = activeBid
     ? allAvailableOffers.filter(o => o.slotType === activeBid.slotType)
     : allAvailableOffers.filter(o => !posFilter || o.slotType === posFilter);
 
-  // Market offers for the selected formation slot's position type
-  const marketOffers = !isBenchSelected && selectedSlot
+  const marketOffers = selectedSlot
     ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type)
     : [];
 
-  // Formation slots the selected bench player can fill
-  const formationTargets = isBenchSelected && selectedSlot?.player
-    ? formationSlots.filter(s => canPlayerFillSlot(selectedSlot.player, s.type))
+  // Formation slots the selected kader player can fill (highlighted green)
+  const kaderFormationTargets = selectedKaderPlayer
+    ? formationSlots.filter(s => canPlayerFillSlot(selectedKaderPlayer, s.type))
     : [];
-
-  const highlightSlotIds = formationTargets.map(s => s.id);
+  const highlightSlotIds = kaderFormationTargets.map(s => s.id);
 
   function handleFormationClick(slotId) {
-    if (isBenchSelected && selectedSlot?.player && formationTargets.some(s => s.id === slotId)) {
-      onMove(selectedSlotId, slotId);
-      setSelectedSlotId(null);
+    if (selectedKaderId && kaderFormationTargets.some(s => s.id === slotId)) {
+      onMoveFromKader(selectedKaderId, slotId);
+      setSelectedKaderId(null);
     } else {
       setSelectedSlotId(prev => prev === slotId ? null : slotId);
+      setSelectedKaderId(null);
     }
   }
 
-  function handleBenchClick(slotId) {
-    setSelectedSlotId(prev => prev === slotId ? null : slotId);
+  function handleKaderClick(playerId) {
+    setSelectedKaderId(prev => prev === playerId ? null : playerId);
+    setSelectedSlotId(null);
   }
 
   function handleBuyOffer(offerIndex) {
     onBuy(offerIndex);
-    setSelectedSlotId(null);
   }
 
-  // Sell from incoming bid: auto-select the now-empty slot so the market opens for that position
   function handleBidSell(bid) {
-    const soldSlot = formationSlots.find(s => s.player?.id === bid.playerId)
-      ?? formationSlots.find(s => s.type === bid.slotType);
+    const soldSlot = formationSlots.find(s => s.player?.id === bid.playerId);
     onSell(bid.playerId, bid.amount);
     if (soldSlot) setSelectedSlotId(soldSlot.id);
     setActiveBidIdx(null);
@@ -768,43 +770,29 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
               <button
                 key={f}
                 className={`career-formation-btn${f === formation ? ' career-formation-btn--active' : ''}`}
-                onClick={() => { onChangeFormation(f); setSelectedSlotId(null); }}
+                onClick={() => { onChangeFormation(f); setSelectedSlotId(null); setSelectedKaderId(null); }}
               >{f}</button>
             ))}
           </div>
 
-          {benchSlots.some(s => s.player) && (
-          <div className="career-bench">
-            <div className="result-section-label" style={{ marginTop: 16 }}>Bank</div>
-            <div className="career-bench-row">
-              {benchSlots.map(s => {
-                const isSelected = s.id === selectedSlotId;
-                return (
+          {kader.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <div className="result-section-label">Kader</div>
+              <div className="career-bench-row">
+                {kader.map(p => (
                   <div
-                    key={s.id}
-                    className={[
-                      'career-bench-slot',
-                      !s.player  ? 'career-bench-slot--empty'   : '',
-                      isSelected ? 'career-bench-slot--selected' : '',
-                    ].filter(Boolean).join(' ')}
-                    onClick={() => s.player ? handleBenchClick(s.id) : null}
-                    style={{ cursor: s.player ? 'pointer' : 'default' }}
+                    key={p.id}
+                    className={['career-bench-slot', p.id === selectedKaderId ? 'career-bench-slot--selected' : ''].filter(Boolean).join(' ')}
+                    onClick={() => handleKaderClick(p.id)}
                   >
-                    {s.player ? (
-                      <>
-                        <span className={`career-bench-ovr rating rating-sm ${s.player.isIcon ? 'rating-icon' : ovrColorClass(s.player.displayRating)}`}>
-                          {s.player.displayRating}
-                        </span>
-                        <span className="career-bench-name">{s.player.name.split(' ').pop()}</span>
-                      </>
-                    ) : (
-                      <span className="career-bench-empty-label">—</span>
-                    )}
+                    <span className={`career-bench-ovr rating rating-sm ${p.isIcon ? 'rating-icon' : ovrColorClass(p.displayRating)}`}>
+                      {p.displayRating}
+                    </span>
+                    <span className="career-bench-name">{p.name.split(' ').pop()}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
           )}
 
           {swapHistory.length > 0 && (
@@ -817,15 +805,20 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
         {/* Right: context panel */}
         <div className="career-transfer-right">
 
-          {/* No slot selected — overview */}
-          {!selectedSlot && (
+          {/* No slot/kader selected — overview */}
+          {!selectedSlot && !selectedKaderPlayer && (
             <>
               <div className="career-budget-display">
                 <span className="career-budget-label">Budget</span>
                 <span className="career-budget-value">€ {budget}M</span>
               </div>
 
-              {/* Missing players prompt */}
+              {kaderLeft.length > 0 && (
+                <div className="career-kader-left-msg">
+                  {kaderLeft.map(p => p.name.split(' ').pop()).join(', ')} {kaderLeft.length === 1 ? 'hat' : 'haben'} den Verein verlassen
+                </div>
+              )}
+
               {emptyFormationSlots.length > 0 && (
                 <div className="career-missing-banner">
                   <span className="career-missing-label">
@@ -845,7 +838,6 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
                 </div>
               )}
 
-              {/* Incoming bids — selectable to preview replacements */}
               {incomingBids.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
                   <div className="result-section-label" style={{ marginBottom: 6 }}>Kaufangebote</div>
@@ -875,7 +867,6 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
                 </div>
               )}
 
-              {/* Context banner when a bid is selected */}
               {activeBid && (
                 <div className="career-sell-context">
                   <div className="career-sell-context-info">
@@ -886,16 +877,10 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
                 </div>
               )}
 
-              {/* Transfer offers */}
-              {benchFull && (
-                <div className="career-start-warning" style={{ marginBottom: 8 }}>
-                  Bank ist voll — setze einen Bankspieler in die Startelf ein oder gib ihn frei.
-                </div>
-              )}
               {allAvailableOffers.length > 0 ? (
                 <>
                   <div className="result-section-label">
-                    {activeBid ? `Ersatz für ${labelDE(activeBid.slotType)}` : 'Transferangebote'}
+                    {activeBid ? `Ersatz für ${labelDE(activeBid.slotType)}` : 'Transfermarkt'}
                   </div>
                   {!activeBid && (
                     <div className="career-pos-filters">
@@ -903,21 +888,19 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
                         className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
                         onClick={() => setPosFilter('')}
                       >Alle</button>
-                      {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => {
-                        return (
-                          <button
-                            key={pos}
-                            className={[
-                              'career-filter-btn',
-                              posFilter === pos ? 'career-filter-btn-active' : '',
-                              emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
-                            ].filter(Boolean).join(' ')}
-                            onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
-                          >
-                            {labelDE(pos)}
-                          </button>
-                        );
-                      })}
+                      {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
+                        <button
+                          key={pos}
+                          className={[
+                            'career-filter-btn',
+                            posFilter === pos ? 'career-filter-btn-active' : '',
+                            emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
+                          ].filter(Boolean).join(' ')}
+                          onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
+                        >
+                          {labelDE(pos)}
+                        </button>
+                      ))}
                     </div>
                   )}
                   {overviewOffers.length === 0 ? (
@@ -931,7 +914,6 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
                           offer={offer}
                           division={division}
                           canAfford={effectiveBudget >= (offer.price ?? 0)}
-                          benchFull={benchFull}
                           onBuy={() => { setActiveBidIdx(null); handleBuyFromOverview(idx); }}
                         />
                       );
@@ -961,7 +943,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
           )}
 
           {/* Formation slot selected */}
-          {selectedSlot && !isBenchSelected && (
+          {selectedSlot && (
             <div className="career-market-panel fade-in">
               <div className="career-market-header">
                 <div>
@@ -972,57 +954,56 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
               </div>
-              {selectedSlot.player ? (
-                <button
-                  className="btn btn-ghost btn-sm career-release-btn"
-                  onClick={() => { onRelease(selectedSlotId); setSelectedSlotId(null); }}
-                >
-                  {selectedSlot.player.name.split(' ').pop()} freigeben
-                </button>
-              ) : (
+              {!selectedSlot.player && (
                 <div className="career-swap-empty">Position leer — kaufe einen Spieler über den Markt.</div>
+              )}
+              {marketOffers.length > 0 && (
+                <>
+                  <div className="result-section-label" style={{ marginTop: 12, marginBottom: 8 }}>Transfermarkt</div>
+                  {marketOffers.map(offer => {
+                    const idx = transferOffers.indexOf(offer);
+                    return (
+                      <TransferOfferCard
+                        key={`${offer.id}-${idx}`}
+                        offer={offer}
+                        division={division}
+                        canAfford={effectiveBudget >= (offer.price ?? 0)}
+                        onBuy={() => handleBuyOffer(idx)}
+                      />
+                    );
+                  })}
+                </>
               )}
             </div>
           )}
 
-          {/* Bench slot selected */}
-          {selectedSlot && isBenchSelected && (
+          {/* Kader player selected */}
+          {selectedKaderPlayer && (
             <div className="career-market-panel fade-in">
               <div className="career-market-header">
                 <div>
-                  <span className="career-market-pos">Bank</span>
-                  {selectedSlot.player && (
-                    <span className="career-market-current">{selectedSlot.player.name}</span>
-                  )}
+                  <span className="career-market-pos">Kader</span>
+                  <span className="career-market-current">{selectedKaderPlayer.name}</span>
                 </div>
-                <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setSelectedKaderId(null)}>✕</button>
               </div>
-              {selectedSlot.player ? (
-                <>
-                  {formationTargets.length > 0 && (
-                    <div className="career-from-bench">
-                      <div className="career-from-bench-label">In die Startelf:</div>
-                      {formationTargets.map(s => (
-                        <button key={s.id} className="career-bench-pick-row" onClick={() => { onMove(selectedSlotId, s.id); setSelectedSlotId(null); }}>
-                          <span className="career-market-pos">{labelDE(s.type)}</span>
-                          <span className="career-bench-pick-name">{s.player?.name ?? '— leer —'}</span>
-                          <span className="career-bench-pick-tag">einsetzen →</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {formationTargets.length === 0 && (
-                    <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
-                  )}
-                  <button
-                    className="btn btn-ghost btn-sm career-release-btn"
-                    onClick={() => { onRelease(selectedSlotId); setSelectedSlotId(null); }}
-                  >
-                    {selectedSlot.player.name.split(' ').pop()} freigeben
-                  </button>
-                </>
+              {kaderFormationTargets.length > 0 ? (
+                <div className="career-from-bench">
+                  <div className="career-from-bench-label">In die Startelf:</div>
+                  {kaderFormationTargets.map(s => (
+                    <button
+                      key={s.id}
+                      className="career-bench-pick-row"
+                      onClick={() => { onMoveFromKader(selectedKaderId, s.id); setSelectedKaderId(null); }}
+                    >
+                      <span className="career-market-pos">{labelDE(s.type)}</span>
+                      <span className="career-bench-pick-name">{s.player?.name ?? '— leer —'}</span>
+                      <span className="career-bench-pick-tag">einsetzen →</span>
+                    </button>
+                  ))}
+                </div>
               ) : (
-                <div className="career-swap-empty">Leerer Bankplatz.</div>
+                <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
               )}
             </div>
           )}
@@ -1049,11 +1030,11 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onCha
   );
 }
 
-function TransferOfferCard({ offer, division, canAfford = true, benchFull = false, onBuy }) {
+function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
   const rcls = ovrColorClass(offer.seasonRating);
   const tier = potentialTier(offer);
   const price = offer.price ?? 0;
-  const canBuy = canAfford && !benchFull;
+  const canBuy = canAfford;
 
   return (
     <div className={[
@@ -1081,7 +1062,7 @@ function TransferOfferCard({ offer, division, canAfford = true, benchFull = fals
       </div>
       <div className="career-offer-actions">
         <span className="career-offer-price">€{price}M</span>
-        <button className="btn btn-primary btn-sm" onClick={onBuy} disabled={!canBuy} title={benchFull ? 'Bank ist voll' : undefined}>
+        <button className="btn btn-primary btn-sm" onClick={onBuy} disabled={!canBuy}>
           Verpflichten
         </button>
       </div>
