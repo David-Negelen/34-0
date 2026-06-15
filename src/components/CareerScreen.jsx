@@ -216,6 +216,7 @@ export default function CareerScreen() {
         onUndo={career.undoBuy}
         onMove={career.moveInSquad}
         onSell={handleSell}
+        onRelease={career.removePlayer}
         onChangeFormation={career.changeFormation}
         onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
         onEnd={handleEndCareer}
@@ -573,7 +574,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormation, onStartSeason, onEnd }) {
+function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onRelease, onChangeFormation, onStartSeason, onEnd }) {
   const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory, budget = 0, formation } = state;
   const formationSlots  = slots.filter(s => s.type !== 'BENCH');
   const benchSlots      = slots.filter(s => s.type === 'BENCH');
@@ -588,6 +589,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
   const filledFormation     = formationSlots.filter(s => s.player !== null).length;
   const emptyFormationSlots = formationSlots.filter(s => !s.player);
   const canStart            = filledFormation === 11;
+  const benchFull           = benchSlots.filter(s => s.player).length >= 5;
 
   const selectedSlot    = selectedSlotId ? slots.find(s => s.id === selectedSlotId) : null;
   const isBenchSelected = selectedSlot?.type === 'BENCH';
@@ -606,18 +608,12 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
     ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type)
     : [];
 
-  // Bench players eligible for the selected formation slot
-  const eligibleBenchIds = !isBenchSelected && selectedSlot
-    ? new Set(benchSlots.filter(s => s.player && canPlayerFillSlot(s.player, selectedSlot.type)).map(s => s.id))
-    : new Set();
-
   // Formation slots the selected bench player can fill
   const formationTargets = isBenchSelected && selectedSlot?.player
     ? formationSlots.filter(s => canPlayerFillSlot(selectedSlot.player, s.type))
     : [];
 
   const highlightSlotIds = formationTargets.map(s => s.id);
-  const emptyBenchSlot   = slots.find(s => s.type === 'BENCH' && !s.player);
 
   function handleFormationClick(slotId) {
     if (isBenchSelected && selectedSlot?.player && formationTargets.some(s => s.id === slotId)) {
@@ -629,23 +625,11 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
   }
 
   function handleBenchClick(slotId) {
-    if (!isBenchSelected && selectedSlot && eligibleBenchIds.has(slotId)) {
-      onMove(slotId, selectedSlotId);
-      setSelectedSlotId(null);
-    } else {
-      setSelectedSlotId(prev => prev === slotId ? null : slotId);
-    }
-  }
-
-  function handleMoveToBench() {
-    if (!selectedSlot?.player || !emptyBenchSlot) return;
-    onMove(selectedSlotId, emptyBenchSlot.id);
-    setSelectedSlotId(null);
+    setSelectedSlotId(prev => prev === slotId ? null : slotId);
   }
 
   function handleBuyOffer(offerIndex) {
-    if (!selectedSlotId) return;
-    onBuy(offerIndex, selectedSlotId);
+    onBuy(offerIndex);
     setSelectedSlotId(null);
   }
 
@@ -659,16 +643,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
     setPosFilter('');
   }
 
-  // Buy from overview: auto-place in empty matching slot, else select that slot for user to choose
   function handleBuyFromOverview(offerIndex) {
-    const offer = transferOffers[offerIndex];
-    const emptyMatch = formationSlots.find(s => s.type === offer.slotType && !s.player);
-    if (emptyMatch) {
-      onBuy(offerIndex, emptyMatch.id);
-      return;
-    }
-    const anyMatch = formationSlots.find(s => s.type === offer.slotType);
-    if (anyMatch) setSelectedSlotId(anyMatch.id);
+    onBuy(offerIndex);
+    setActiveBidIdx(null);
   }
 
   return (
@@ -718,17 +695,16 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
             <div className="career-bench-row">
               {benchSlots.map(s => {
                 const isSelected = s.id === selectedSlotId;
-                const isEligible = eligibleBenchIds.has(s.id);
                 return (
                   <div
                     key={s.id}
                     className={[
                       'career-bench-slot',
-                      !s.player  ? 'career-bench-slot--empty'    : '',
-                      isSelected ? 'career-bench-slot--selected'  : '',
-                      isEligible ? 'career-bench-slot--eligible'  : '',
+                      !s.player  ? 'career-bench-slot--empty'   : '',
+                      isSelected ? 'career-bench-slot--selected' : '',
                     ].filter(Boolean).join(' ')}
-                    onClick={() => handleBenchClick(s.id)}
+                    onClick={() => s.player ? handleBenchClick(s.id) : null}
+                    style={{ cursor: s.player ? 'pointer' : 'default' }}
                   >
                     {s.player ? (
                       <>
@@ -827,6 +803,11 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
               )}
 
               {/* Transfer offers */}
+              {benchFull && (
+                <div className="career-start-warning" style={{ marginBottom: 8 }}>
+                  Bank ist voll — setze einen Bankspieler in die Startelf ein oder gib ihn frei.
+                </div>
+              )}
               {allAvailableOffers.length > 0 ? (
                 <>
                   <div className="result-section-label">
@@ -866,6 +847,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                           offer={offer}
                           division={division}
                           canAfford={effectiveBudget >= (offer.price ?? 0)}
+                          benchFull={benchFull}
                           onBuy={() => { setActiveBidIdx(null); handleBuyFromOverview(idx); }}
                         />
                       );
@@ -906,48 +888,15 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
               </div>
-
-              {eligibleBenchIds.size > 0 && (
-                <div className="career-from-bench">
-                  <div className="career-from-bench-label">Von der Bank (kostenlos):</div>
-                  {benchSlots.filter(s => eligibleBenchIds.has(s.id)).map(s => (
-                    <button key={s.id} className="career-bench-pick-row" onClick={() => { onMove(s.id, selectedSlotId); setSelectedSlotId(null); }}>
-                      <span className={`rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>{s.player.displayRating}</span>
-                      <span className="career-bench-pick-name">{s.player.name}</span>
-                      <span className="career-bench-pick-tag">kostenlos →</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {selectedSlot.player && emptyBenchSlot && (
-                <button className="btn btn-ghost btn-sm career-to-bench-btn" onClick={handleMoveToBench}>
-                  {selectedSlot.player.name.split(' ').pop()} → Bank
+              {selectedSlot.player ? (
+                <button
+                  className="btn btn-ghost btn-sm career-release-btn"
+                  onClick={() => { onRelease(selectedSlotId); setSelectedSlotId(null); }}
+                >
+                  {selectedSlot.player.name.split(' ').pop()} freigeben
                 </button>
-              )}
-
-              <div className="result-section-label" style={{ marginTop: 16, marginBottom: 4 }}>
-                Markt — {labelDE(selectedSlot.type)}
-                {selectedSlot.player && !emptyBenchSlot && (
-                  <span className="career-bank-full-note"> (Bank voll — alter Spieler verlässt den Kader)</span>
-                )}
-              </div>
-
-              {marketOffers.length === 0 ? (
-                <div className="career-swap-empty">Keine Angebote für diese Position.</div>
               ) : (
-                marketOffers.map(offer => {
-                  const idx = transferOffers.indexOf(offer);
-                  return (
-                    <TransferOfferCard
-                      key={`${offer.id}-${idx}`}
-                      offer={offer}
-                      division={division}
-                      canAfford={budget >= (offer.price ?? 0)}
-                      onBuy={() => handleBuyOffer(idx)}
-                    />
-                  );
-                })
+                <div className="career-swap-empty">Position leer — kaufe einen Spieler über den Markt.</div>
               )}
             </div>
           )}
@@ -964,24 +913,31 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
               </div>
-
-              {selectedSlot.player && formationTargets.length > 0 && (
-                <div className="career-from-bench">
-                  <div className="career-from-bench-label">In die Startelf (kostenlos):</div>
-                  {formationTargets.map(s => (
-                    <button key={s.id} className="career-bench-pick-row" onClick={() => { onMove(selectedSlotId, s.id); setSelectedSlotId(null); }}>
-                      <span className="career-market-pos">{labelDE(s.type)}</span>
-                      <span className="career-bench-pick-name">{s.player?.name ?? '— leer —'}</span>
-                      <span className="career-bench-pick-tag">tauschen →</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {selectedSlot.player && formationTargets.length === 0 && (
-                <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
-              )}
-              {!selectedSlot.player && (
+              {selectedSlot.player ? (
+                <>
+                  {formationTargets.length > 0 && (
+                    <div className="career-from-bench">
+                      <div className="career-from-bench-label">In die Startelf:</div>
+                      {formationTargets.map(s => (
+                        <button key={s.id} className="career-bench-pick-row" onClick={() => { onMove(selectedSlotId, s.id); setSelectedSlotId(null); }}>
+                          <span className="career-market-pos">{labelDE(s.type)}</span>
+                          <span className="career-bench-pick-name">{s.player?.name ?? '— leer —'}</span>
+                          <span className="career-bench-pick-tag">einsetzen →</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {formationTargets.length === 0 && (
+                    <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
+                  )}
+                  <button
+                    className="btn btn-ghost btn-sm career-release-btn"
+                    onClick={() => { onRelease(selectedSlotId); setSelectedSlotId(null); }}
+                  >
+                    {selectedSlot.player.name.split(' ').pop()} freigeben
+                  </button>
+                </>
+              ) : (
                 <div className="career-swap-empty">Leerer Bankplatz.</div>
               )}
             </div>
@@ -1009,10 +965,11 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onSell, onChangeFormatio
   );
 }
 
-function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
+function TransferOfferCard({ offer, division, canAfford = true, benchFull = false, onBuy }) {
   const rcls = ovrColorClass(offer.seasonRating);
   const tier = potentialTier(offer);
   const price = offer.price ?? 0;
+  const canBuy = canAfford && !benchFull;
 
   return (
     <div className={[
@@ -1040,7 +997,7 @@ function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
       </div>
       <div className="career-offer-actions">
         <span className="career-offer-price">€{price}M</span>
-        <button className="btn btn-primary btn-sm" onClick={onBuy} disabled={!canAfford}>
+        <button className="btn btn-primary btn-sm" onClick={onBuy} disabled={!canBuy} title={benchFull ? 'Bank ist voll' : undefined}>
           Verpflichten
         </button>
       </div>

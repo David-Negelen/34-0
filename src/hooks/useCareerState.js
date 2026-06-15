@@ -150,20 +150,16 @@ function reducer(state, action) {
       };
     }
 
-    // Buy a player from the market into a squad slot.
-    // The displaced player auto-moves to the first empty bench slot (if one exists).
+    // Buy a player — always lands on the bench first (bench must have a free slot).
     case 'BUY_OFFER': {
-      const { offerIndex, targetSlotId } = action.payload;
+      const { offerIndex } = action.payload;
       const offer = state.transferOffers[offerIndex];
       if (!offer || offer.used || offer.skipped) return state;
       const price = offer.price ?? 0;
       if ((state.budget ?? 0) < price) return state;
 
-      const targetSlot = state.slots.find(s => s.id === targetSlotId);
-      const oldPlayer = targetSlot?.player ?? null;
-      const emptyBench = oldPlayer
-        ? state.slots.find(s => s.type === 'BENCH' && !s.player)
-        : null;
+      const emptyBench = state.slots.find(s => s.type === 'BENCH' && !s.player);
+      if (!emptyBench) return state; // bench full — caller should guard
 
       const swappedIn = { ...offer, displayRating: offer.seasonRating };
       const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
@@ -171,36 +167,26 @@ function reducer(state, action) {
       return {
         ...state,
         budget: (state.budget ?? 0) - price,
-        slots: state.slots.map(s => {
-          if (s.id === targetSlotId) return { ...s, player: swappedIn };
-          if (emptyBench && s.id === emptyBench.id) return { ...s, player: oldPlayer };
-          return s;
-        }),
+        slots: state.slots.map(s =>
+          s.id === emptyBench.id ? { ...s, player: swappedIn } : s
+        ),
         transferOffers: state.transferOffers.map((o, i) =>
           i === offerIndex ? { ...o, used: true } : o
         ),
         allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, swappedIn],
-        swapHistory: [...state.swapHistory, {
-          targetSlotId,
-          oldPlayer,
-          benchSlotId: emptyBench?.id ?? null,
-          offerIndex,
-          price,
-        }],
+        swapHistory: [...state.swapHistory, { benchSlotId: emptyBench.id, offerIndex, price }],
       };
     }
 
     case 'UNDO_BUY': {
       if (!state.swapHistory.length) return state;
-      const { targetSlotId, oldPlayer, benchSlotId, offerIndex, price = 0 } = state.swapHistory[state.swapHistory.length - 1];
+      const { benchSlotId, offerIndex, price = 0 } = state.swapHistory[state.swapHistory.length - 1];
       return {
         ...state,
         budget: (state.budget ?? 0) + price,
-        slots: state.slots.map(s => {
-          if (s.id === targetSlotId) return { ...s, player: oldPlayer };
-          if (benchSlotId && s.id === benchSlotId) return { ...s, player: null };
-          return s;
-        }),
+        slots: state.slots.map(s =>
+          s.id === benchSlotId ? { ...s, player: null } : s
+        ),
         transferOffers: state.transferOffers.map((o, i) =>
           i === offerIndex ? { ...o, used: false } : o
         ),
@@ -304,8 +290,8 @@ export function useCareerState() {
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),
     beginTransfer: (newDivision, offers, retiredThisSeason, prize, incomingBids) =>
                      dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason, prize, incomingBids } }),
-    buyOffer:      (offerIndex, targetSlotId) =>
-                     dispatch({ type: 'BUY_OFFER', payload: { offerIndex, targetSlotId } }),
+    buyOffer:      (offerIndex) =>
+                     dispatch({ type: 'BUY_OFFER', payload: { offerIndex } }),
     undoBuy:       () => dispatch({ type: 'UNDO_BUY' }),
     moveInSquad:   (fromSlotId, toSlotId) =>
                      dispatch({ type: 'MOVE_IN_SQUAD', payload: { fromSlotId, toSlotId } }),

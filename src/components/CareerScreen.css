@@ -1636,6 +1636,17 @@
   color: var(--text-muted);
 }
 
+.career-release-btn {
+  align-self: flex-start;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--red);
+  opacity: 0.75;
+}
+.career-release-btn:hover {
+  opacity: 1;
+}
+
 .career-bank-full-note {
   font-size: 10px;
   color: var(--red);
