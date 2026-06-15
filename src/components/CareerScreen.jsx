@@ -34,9 +34,11 @@ function randGoals() {
   return 5;
 }
 
-function generatePlayoff(myDivision) {
-  // Playoff opponent comes from the division above (for promotion) or is in same pool
-  const oppDivision = myDivision === '3l' ? '2bl' : myDivision === '2bl' ? 'bl' : '2bl';
+function generatePlayoff(myDivision, pos) {
+  const isPromotion = pos === 3;
+  const oppDivision = isPromotion
+    ? (myDivision === '3l' ? '2bl' : 'bl')
+    : '2bl';
   const pool = PLAYOFF_OPPONENTS[oppDivision];
   const opponent = pool[Math.floor(Math.random() * pool.length)];
   const leg1 = { own: randGoals(), opp: randGoals() };
@@ -45,7 +47,7 @@ function generatePlayoff(myDivision) {
   const totalOpp = leg1.opp + leg2.opp;
   const penalties = totalOwn === totalOpp;
   const won = penalties ? Math.random() < 0.5 : totalOwn > totalOpp;
-  return { opponent, leg1, leg2, totalOwn, totalOpp, penalties, won };
+  return { opponent, leg1, leg2, totalOwn, totalOpp, penalties, won, isPromotion };
 }
 
 function shortSeason(s) {
@@ -74,7 +76,7 @@ export default function CareerScreen() {
     const needsPlayoff =
       (result.pos === 3  && (division === '2bl' || division === '3l')) ||
       (result.pos === 16 && (division === 'bl'  || division === '2bl'));
-    const playoff = needsPlayoff ? generatePlayoff(division) : null;
+    const playoff = needsPlayoff ? generatePlayoff(division, result.pos) : null;
     career.setResult({
       ...result,
       achievements: getAchievements(result, slots, division),
@@ -633,7 +635,7 @@ function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome })
 
               <PlayerStats stats={playerStats} />
 
-              {playoff && <CareerPlayoffCard playoff={playoff} division={division} />}
+              {playoff && <CareerPlayoffCard playoff={playoff} />}
 
               {seasonHistory.length > 0 && (
                 <div className="career-history-card">
@@ -1374,23 +1376,18 @@ function PitchMini({ slots }) {
 
 // ── Playoff card ─────────────────────────────────────────────────────────────
 
-function CareerPlayoffCard({ playoff, division }) {
-  const { opponent, leg1, leg2, totalOwn, totalOpp, penalties, won } = playoff;
-  const isPromotion = division === '2bl';
+function CareerPlayoffCard({ playoff }) {
+  const { opponent, leg1, leg2, totalOwn, totalOpp, penalties, won, isPromotion } = playoff;
 
-  let outcomeText, outcomeClass;
-  if (isPromotion) {
-    outcomeText = won ? 'Aufstieg!' : 'Kein Aufstieg';
-    outcomeClass = won ? 'career-playoff-outcome--won' : 'career-playoff-outcome--lost';
-  } else {
-    outcomeText = won ? 'Klassenerhalt!' : 'Abstieg';
-    outcomeClass = won ? 'career-playoff-outcome--won' : 'career-playoff-outcome--lost';
-  }
+  const outcomeText = isPromotion
+    ? (won ? 'Aufstieg!' : 'Aufstieg verpasst')
+    : (won ? 'Klassenerhalt!' : 'Abstieg');
+  const outcomeClass = won ? 'career-playoff-outcome--won' : 'career-playoff-outcome--lost';
 
   return (
     <div className={`career-playoff-card ${won ? 'career-playoff--won' : 'career-playoff--lost'}`}>
       <div className="career-playoff-header">
-        <span className="career-playoff-label">Relegation</span>
+        <span className="career-playoff-label">{isPromotion ? 'Aufstiegsrelegation' : 'Relegation'}</span>
         <span className="career-playoff-opponent">{opponent}</span>
       </div>
       <div className="career-playoff-legs">
