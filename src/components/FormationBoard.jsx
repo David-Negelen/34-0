@@ -75,6 +75,11 @@ export default function FormationBoard({
                       {slot.player.displayRating}
                     </span>
                   )}
+                  {showRatings && slot.player.potential > slot.player.displayRating && (
+                    <span className={`slot-pot-label ${ovrColorClass(slot.player.potential)}`}>
+                      →{slot.player.potential}
+                    </span>
+                  )}
                   {oopPenalty > 0 && (
                     <span className="slot-oop-badge">-{oopPenalty}</span>
                   )}
