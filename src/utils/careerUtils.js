@@ -67,24 +67,38 @@ export function prizeMoney(pos, division) {
   return Math.max(0, Math.round(8 - (pos - 1) * 0.4));  // 3. Liga
 }
 
+const BID_CLUBS = {
+  bl:  ['FC Bayern München', 'Borussia Dortmund', 'Bayer 04 Leverkusen', 'VfB Stuttgart', 'Eintracht Frankfurt', 'SC Freiburg', 'Borussia Mönchengladbach', 'Werder Bremen', 'VfL Wolfsburg'],
+  '2bl': ['FC Schalke 04', 'Hannover 96', 'Fortuna Düsseldorf', 'Hertha BSC', '1. FC Kaiserslautern', 'Arminia Bielefeld', '1. FC Nürnberg', 'SpVgg Greuther Fürth', 'Karlsruher SC'],
+  '3l': ['TSV 1860 München', 'Dynamo Dresden', 'FC Hansa Rostock', 'SV Wehen Wiesbaden', 'VfL Osnabrück', 'Hallescher FC', 'FC Ingolstadt 04', 'MSV Duisburg', 'SpVgg Unterhaching'],
+};
+
 // Rival clubs want to buy 1–3 non-Icon formation players under 34.
-export function generateIncomingBids(slots, currentYear = null) {
+export function generateIncomingBids(slots, currentYear = null, division = '2bl') {
   const eligible = slots.filter(s => {
     if (!s.player || s.player.isIcon || s.type === 'BENCH') return false;
     const age = getAge(s.player.id, currentYear);
     return age === null || age < 34; // no market for 34+ players
   });
   if (!eligible.length) return [];
+  // Buying clubs are from the same division or one above
+  const clubPool = division === '3l'
+    ? [...BID_CLUBS['2bl'], ...BID_CLUBS['3l']]
+    : division === '2bl'
+    ? [...BID_CLUBS['bl'], ...BID_CLUBS['2bl']]
+    : BID_CLUBS['bl'];
+  const shuffledClubs = shuffle(clubPool);
   const count = 1 + Math.floor(Math.random() * Math.min(3, eligible.length));
-  return shuffle(eligible).slice(0, count).map(s => {
+  return shuffle(eligible).slice(0, count).map((s, i) => {
     const age = getAge(s.player.id, currentYear);
     const base = offerPrice(s.player.displayRating, false, age);
     return {
-      playerId:   s.player.id,
-      playerName: s.player.name,
-      slotType:   s.type,
-      ovr:        s.player.displayRating,
-      amount:     Math.max(1, base + Math.floor(Math.random() * 3)),
+      playerId:    s.player.id,
+      playerName:  s.player.name,
+      slotType:    s.type,
+      ovr:         s.player.displayRating,
+      amount:      Math.max(1, base + Math.floor(Math.random() * 3)),
+      buyingClub:  shuffledClubs[i % shuffledClubs.length],
     };
   });
 }

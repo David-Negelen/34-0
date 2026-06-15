@@ -208,7 +208,7 @@ export default function CareerScreen() {
               : null;
             const offers = generateTransferMarket(divPlayers, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear);
             const prize = prizeMoney(state.result?.pos ?? 18, state.division);
-            const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear);
+            const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear, state.division);
             career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize, incomingBids);
             setEntwicklungData(null);
           }}
@@ -844,25 +844,29 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 <div style={{ marginBottom: 20 }}>
                   <div className="result-section-label" style={{ marginBottom: 6 }}>Kaufangebote</div>
                   {incomingBids.map((bid, i) => (
-                    <div
-                      key={i}
-                      className={`career-bid-row${activeBidIdx === i ? ' career-bid-row--active' : ''}`}
-                      onClick={() => setActiveBidIdx(prev => prev === i ? null : i)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className="career-bid-info">
-                        <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
-                        <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
-                        <span className="career-bid-name">{bid.playerName}</span>
-                      </div>
-                      <div className="career-bid-actions">
-                        <span className="career-bid-amount">€{bid.amount}M</span>
-                        <button
-                          className="career-bid-accept"
-                          onClick={e => { e.stopPropagation(); handleBidSell(bid); }}
-                        >
-                          Verkaufen
-                        </button>
+                    <div key={i} className="career-bid-block">
+                      {bid.buyingClub && (
+                        <div className="career-bid-club-header">{bid.buyingClub} möchte kaufen:</div>
+                      )}
+                      <div
+                        className={`career-bid-row${activeBidIdx === i ? ' career-bid-row--active' : ''}`}
+                        onClick={() => setActiveBidIdx(prev => prev === i ? null : i)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="career-bid-info">
+                          <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
+                          <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
+                          <span className="career-bid-name">{bid.playerName}</span>
+                        </div>
+                        <div className="career-bid-actions">
+                          <span className="career-bid-amount">€{bid.amount}M</span>
+                          <button
+                            className="career-bid-accept"
+                            onClick={e => { e.stopPropagation(); handleBidSell(bid); }}
+                          >
+                            Verkaufen
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
