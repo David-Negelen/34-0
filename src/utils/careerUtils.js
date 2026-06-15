@@ -132,7 +132,7 @@ export function generateCareerDraftPool(players, formation, count = 30, division
     for (const e of shuffled) {
       if (usedIds.has(e.id)) continue;
       if (canPlayerFillSlot(e, slotType)) {
-        chosen.push(assignPotential(e));
+        chosen.push(assignPotential(e, getAge(e.id, e.spunSeason)));
         usedIds.add(e.id);
         if (++added >= target) break;
       }
@@ -144,7 +144,7 @@ export function generateCareerDraftPool(players, formation, count = 30, division
     if (chosen.length >= count) break;
     if (!usedIds.has(e.id)) {
       if (canPlayerFillSlot(e, 'GK') && chosen.filter(p => canPlayerFillSlot(p, 'GK')).length >= GK_MAX) continue;
-      chosen.push(assignPotential(e));
+      chosen.push(assignPotential(e, getAge(e.id, e.spunSeason)));
       usedIds.add(e.id);
     }
   }
@@ -161,12 +161,12 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
       .filter(p => canPlayerFillSlot(p, slotType))
   );
 
-  const withPot = p => assignPotential(p);
+  const withPot = p => assignPotential(p, getAge(p.id, currentYear));
 
   if (!teamAvg || !eligible.length) {
     return eligible.slice(0, count).map(p => {
-      const offer = withPot(attachSeason(p));
-      const age = getAge(offer.id, currentYear);
+      const age = getAge(p.id, currentYear);
+      const offer = assignPotential(attachSeason(p), age);
       return { ...offer, age, slotType, price: offerPrice(offer.seasonRating, false, age, offer.potential) };
     });
   }

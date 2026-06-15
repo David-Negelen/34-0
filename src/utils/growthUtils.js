@@ -10,10 +10,21 @@ const POT_RANGES = [
   [0,  [7, 14]],
 ];
 
-export function assignPotential(player) {
+// How much of the raw gap an older player can still realize.
+function ageGapScale(age) {
+  if (age <= 21) return 1.0;
+  if (age <= 23) return 0.65;
+  if (age <= 25) return 0.35;
+  if (age <= 28) return 0.12;
+  if (age <= 31) return 0.03;
+  return 0.0;
+}
+
+export function assignPotential(player, age = null) {
   const ovr = player.seasonRating;
   const [min, max] = POT_RANGES.find(([threshold]) => ovr >= threshold)[1];
-  const gap = min + Math.floor(Math.random() * (max - min + 1));
+  const rawGap = min + Math.floor(Math.random() * (max - min + 1));
+  const gap = age !== null ? Math.round(rawGap * ageGapScale(age)) : rawGap;
   return { ...player, potential: ovr + gap };
 }
 
