@@ -5,7 +5,8 @@
 # Lines starting with # are ignored. Replace ??? with the ID.
 # Note: Regionalliga / amateur clubs may not appear in FIFA at all.
 
-# ── 3. Liga / DFL clubs (likely in FIFA 21+) ──
+# ── 3. Liga / DFL clubs (FIFA 18+) ──
+583-1-fc-schweinfurt-05           # FC26 only
 110482-hallescher-fc
 110501-sc-verl
 110532-sv-waldhof-mannheim
@@ -22,7 +23,7 @@
 110597-sv-meppen
 110591-fc-carl-zeiss-jena
 ???-bfc-dynamo
-???-turkgucu-munchen
+114398-turkgucu-munchen
 167-kfc-uerdingen-05
 100424-rot-wei-erfurt
 1829-vfb-lubeck
@@ -48,7 +49,7 @@
 ???-1-fc-neubrandenburg-04
 ???-1-fc-phonix-lubeck
 ???-1-fc-rielasingen-arlen
-???-1-fc-schweinfurt-05
+583-1-fc-schweinfurt-05
 ???-bfc-preussen
 ???-bsc-hastedt
 ???-bsg-chemie-leipzig
@@ -72,7 +73,7 @@
 ???-fc-schonberg-95
 ???-fc-teningen
 ???-fc-teutonia-05-ottensen
-???-fc-viktoria-1889-berlin
+115820-fc-viktoria-1889-berlin
 ???-fc-astoria-walldorf
 ???-fk-pirmasens
 ???-fsv-optik-rathenow
@@ -102,7 +103,7 @@
 ???-sc-wiedenbruck
 ???-sf-baumberg
 ???-sg-aumund-vegesack
-???-sg-sonnenhof-grossaspach
+111379-sg-sonnenhof-gro-aspach
 ???-sg-wattenscheid-09
 ???-ssv-jeddeloh-ii
 ???-ssv-reutlingen-05
@@ -126,7 +127,7 @@
 ???-tsg-pfeddersheim
 ???-tsv-1860-rosenheim
 ???-tsv-germania-windeck
-???-tsv-havelse
+110678-tsv-havelse
 ???-tsv-schott-mainz
 ???-tus-bersenb-ruck
 ???-tus-dassendorf
@@ -135,7 +136,7 @@
 ???-usc-paloma-hamburg
 ???-vsg-altglienicke
 ???-vfb-eichstatt
-???-vfb-oldenburg
+110587-vfb-oldenburg
 ???-vfl-oldenburg
 ???-vfr-neumunster
 ???-vfr-wormatia-worms

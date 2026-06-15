@@ -31,8 +31,11 @@ BASE         = "https://fifaindex.com"
 DELAY       = 1.5
 RETRY_DELAY = 30.0
 
-# Only FIFA editions that include 3. Liga (added in FIFA 21)
+# 3. Liga was added to FIFA in FIFA 18 (2017-18 season)
 GAME_SLUG_TO_YEAR = {
+    "fifa18": 2017,
+    "fifa19": 2018,
+    "fifa20": 2019,
     "fifa21": 2020,
     "fifa22": 2021,
     "fifa23": 2022,
