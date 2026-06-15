@@ -724,7 +724,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   }
 
   function handleBuyFromOverview(offerIndex) {
-    onBuy(offerIndex);
+    const offer = transferOffers[offerIndex];
+    const targetSlot = formationSlots.find(s => !s.player && s.type === offer?.slotType);
+    onBuy(offerIndex, targetSlot?.id ?? null);
   }
 
   return (
@@ -806,6 +808,15 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 <span className="career-budget-value">€ {budget}M</span>
               </div>
 
+              <button
+                className="btn btn-primary btn-lg career-transfer-inline-btn"
+                style={{ width: '100%', marginBottom: 16 }}
+                onClick={onStartSeason}
+                disabled={!canStart}
+              >
+                {canStart ? `Saison ${seasonNumber} starten →` : `${filledFormation}/11 Positionen besetzt`}
+              </button>
+
               {kaderLeft.length > 0 && (
                 <div className="career-kader-left-msg">
                   {kaderLeft.map(p => p.name.split(' ').pop()).join(', ')} {kaderLeft.length === 1 ? 'hat' : 'haben'} den Verein verlassen
@@ -822,7 +833,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                       <button
                         key={s.id}
                         className="career-missing-slot-btn"
-                        onClick={() => { setSelectedSlotId(s.id); setPosFilter(''); setActiveBidIdx(null); }}
+                        onClick={() => { setSelectedSlotId(s.id); setPosFilter(''); }}
                       >
                         {labelDE(s.type)}
                       </button>
@@ -897,19 +908,14 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 <div className="career-market-hint">Keine Transferangebote verfügbar.</div>
               )}
 
-              <div style={{ marginTop: 24 }}>
-                {!canStart && (
-                  <div className="career-start-warning">
-                    Alle 11 Positionen müssen besetzt sein ({filledFormation}/11)
-                  </div>
-                )}
+              <div style={{ marginTop: 24, marginBottom: 8 }}>
                 <button
                   className="btn btn-primary btn-lg career-transfer-inline-btn"
                   style={{ width: '100%' }}
                   onClick={onStartSeason}
                   disabled={!canStart}
                 >
-                  Saison {seasonNumber} starten →
+                  {canStart ? `Saison ${seasonNumber} starten →` : `${filledFormation}/11 Positionen besetzt`}
                 </button>
               </div>
             </>
