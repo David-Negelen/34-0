@@ -862,6 +862,12 @@
   text-overflow: ellipsis;
 }
 
+.career-bid-age {
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
 .career-bid-actions {
   display: flex;
   align-items: center;

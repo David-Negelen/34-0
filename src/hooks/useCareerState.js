@@ -153,26 +153,41 @@ function reducer(state, action) {
       };
     }
 
-    // Buy a player — lands in the Kader (unlimited reserves).
+    // Buy a player — places directly in a slot if slotId given, otherwise lands in Kader.
     case 'BUY_OFFER': {
-      const { offerIndex } = action.payload;
+      const { offerIndex, slotId } = action.payload;
       const offer = state.transferOffers[offerIndex];
       if (!offer || offer.used || offer.skipped) return state;
       const price = offer.price ?? 0;
       if ((state.budget ?? 0) < price) return state;
 
-      const kaderPlayer = { ...offer, displayRating: offer.seasonRating, inactiveSeasons: 0 };
       const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
+      const basePlayer = { ...offer, displayRating: offer.seasonRating };
+      const common = {
+        budget: (state.budget ?? 0) - price,
+        transferOffers: state.transferOffers.map((o, i) => i === offerIndex ? { ...o, used: true } : o),
+        swapHistory: [...state.swapHistory, { offerIndex, price }],
+      };
 
+      if (slotId) {
+        const targetSlot = state.slots.find(s => s.id === slotId);
+        const evicted = targetSlot?.player ?? null;
+        const { inactiveSeasons: _i, ...playerForSlot } = basePlayer;
+        return {
+          ...state,
+          ...common,
+          slots: state.slots.map(s => s.id === slotId ? { ...s, player: playerForSlot } : s),
+          kader: [...(state.kader ?? []), ...(evicted ? [{ ...evicted, inactiveSeasons: 0 }] : [])],
+          allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, playerForSlot],
+        };
+      }
+
+      const kaderPlayer = { ...basePlayer, inactiveSeasons: 0 };
       return {
         ...state,
-        budget: (state.budget ?? 0) - price,
+        ...common,
         kader: [...(state.kader ?? []), kaderPlayer],
-        transferOffers: state.transferOffers.map((o, i) =>
-          i === offerIndex ? { ...o, used: true } : o
-        ),
         allPlayers: alreadyTracked ? state.allPlayers : [...state.allPlayers, kaderPlayer],
-        swapHistory: [...state.swapHistory, { offerIndex, price }],
       };
     }
 
@@ -313,8 +328,8 @@ export function useCareerState() {
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),
     beginTransfer: (newDivision, offers, retiredThisSeason, prize, incomingBids) =>
                      dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason, prize, incomingBids } }),
-    buyOffer:        (offerIndex) =>
-                       dispatch({ type: 'BUY_OFFER', payload: { offerIndex } }),
+    buyOffer:        (offerIndex, slotId = null) =>
+                       dispatch({ type: 'BUY_OFFER', payload: { offerIndex, slotId } }),
     undoBuy:         () => dispatch({ type: 'UNDO_BUY' }),
     moveInSquad:     (fromSlotId, toSlotId) =>
                        dispatch({ type: 'MOVE_IN_SQUAD', payload: { fromSlotId, toSlotId } }),

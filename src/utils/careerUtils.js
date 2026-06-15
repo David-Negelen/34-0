@@ -107,6 +107,7 @@ export function generateIncomingBids(slots, currentYear = null, division = '2bl'
       playerName:  s.player.name,
       slotType:    s.type,
       ovr:         s.player.displayRating,
+      age:         age,
       amount:      Math.max(1, base + Math.floor(Math.random() * 5)),
       buyingClub:  shuffledClubs[i % shuffledClubs.length],
     };

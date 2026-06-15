@@ -721,7 +721,8 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   }
 
   function handleBuyOffer(offerIndex) {
-    onBuy(offerIndex);
+    onBuy(offerIndex, selectedSlotId ?? null);
+    setSelectedSlotId(null);
   }
 
   function handleBidSell(bid) {
@@ -856,6 +857,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                           <span className={`career-bid-ovr rating rating-sm ${ovrColorClass(bid.ovr)}`}>{bid.ovr}</span>
                           <span className="career-bid-pos">{labelDE(bid.slotType)}</span>
                           <span className="career-bid-name">{bid.playerName}</span>
+                          {bid.age != null && <span className="career-bid-age">{bid.age} J.</span>}
                         </div>
                         <div className="career-bid-actions">
                           <span className="career-bid-amount">€{bid.amount}M</span>
