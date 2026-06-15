@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCareerStateClassic } from '../hooks/useCareerStateClassic';
 import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
@@ -57,10 +57,19 @@ function getPlayers(div) {
 
 export default function CareerClassicScreen() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const career = useCareerStateClassic();
   const { state } = career;
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
+
+  const presetFormation = searchParams.get('formation');
+  useEffect(() => {
+    if (state.phase === 'setup' && presetFormation && FORMATION_KEYS.includes(presetFormation)) {
+      const pool = generateCareerDraftPool(getPlayers('2bl'), FORMATIONS[presetFormation]);
+      career.beginDraft(pool, presetFormation);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function runSeason(slots, division) {
     const players = getPlayers(division);

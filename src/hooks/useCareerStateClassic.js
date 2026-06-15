@@ -47,15 +47,17 @@ function reducer(state, action) {
     case 'SET_FORMATION':
       return { ...state, formation: action.payload };
 
-    case 'BEGIN_DRAFT':
+    case 'BEGIN_DRAFT': {
+      const formation = action.formation ?? state.formation;
       return {
         ...defaultState,
-        formation: state.formation,
+        formation,
         phase: 'draft',
         seasonNumber: 1,
-        slots: buildSlots(state.formation),
+        slots: buildSlots(formation),
         draftPool: action.payload,
       };
+    }
 
     case 'PLACE_PLAYER': {
       const { slotId, player, displayRating } = action.payload;
@@ -192,7 +194,7 @@ export function useCareerStateClassic() {
   return {
     state,
     setFormation:  f    => dispatch({ type: 'SET_FORMATION', payload: f }),
-    beginDraft:    pool => dispatch({ type: 'BEGIN_DRAFT', payload: pool }),
+    beginDraft:    (pool, formation) => dispatch({ type: 'BEGIN_DRAFT', payload: pool, formation }),
     placePlayer:   (slotId, player, displayRating) =>
                      dispatch({ type: 'PLACE_PLAYER', payload: { slotId, player, displayRating } }),
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),

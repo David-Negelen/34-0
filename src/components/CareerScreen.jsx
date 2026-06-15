@@ -129,7 +129,11 @@ export default function CareerScreen() {
         startingDivision={state.startingDivision ?? '2bl'}
         onSetFormation={career.setFormation}
         onSetStartingDivision={career.setStartingDivision}
-        onStart={() => {
+        onStart={(mode) => {
+          if (mode === 'klassik') {
+            navigate(`/karriere-klassik?formation=${state.formation}`);
+            return;
+          }
           const div = state.startingDivision ?? '2bl';
           const pool = generateCareerDraftPool(getPlayers(div), FORMATIONS[state.formation], 30, div);
           career.beginDraft(pool, div);
@@ -266,7 +270,8 @@ const DIV_INFO = {
 };
 
 function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartingDivision, onStart, onBack }) {
-  const divInfo = DIV_INFO[startingDivision] ?? DIV_INFO['2bl'];
+  const [mode, setMode] = useState('standard');
+  const divInfo = mode === 'klassik' ? DIV_INFO['2bl'] : (DIV_INFO[startingDivision] ?? DIV_INFO['2bl']);
   return (
     <div className="career-screen">
       <header className="career-header">
@@ -281,19 +286,42 @@ function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartin
 
       <div className="career-setup-body">
         <section className="setup-section">
-          <h3 className="setup-label">Startliga</h3>
+          <h3 className="setup-label">Modus</h3>
           <div className="formation-btns">
-            {Object.entries(DIV_INFO).map(([key, info]) => (
-              <button
-                key={key}
-                className={`formation-btn ${startingDivision === key ? 'selected' : ''}`}
-                onClick={() => onSetStartingDivision(key)}
-              >
-                {info.label}
-              </button>
-            ))}
+            <button
+              className={`formation-btn ${mode === 'standard' ? 'selected' : ''}`}
+              onClick={() => setMode('standard')}
+            >
+              Transfermarkt
+            </button>
+            <button
+              className={`formation-btn ${mode === 'klassik' ? 'selected' : ''}`}
+              onClick={() => setMode('klassik')}
+            >
+              Klassik
+            </button>
           </div>
+          {mode === 'klassik' && (
+            <p className="formation-desc">Start in der 2. Bundesliga · Direkte Transfers · kein Budget</p>
+          )}
         </section>
+
+        {mode !== 'klassik' && (
+          <section className="setup-section">
+            <h3 className="setup-label">Startliga</h3>
+            <div className="formation-btns">
+              {Object.entries(DIV_INFO).map(([key, info]) => (
+                <button
+                  key={key}
+                  className={`formation-btn ${startingDivision === key ? 'selected' : ''}`}
+                  onClick={() => onSetStartingDivision(key)}
+                >
+                  {info.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="setup-section">
           <h3 className="setup-label">Formation</h3>
@@ -315,10 +343,14 @@ function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartin
         <div className="career-setup-info">
           <div className="career-info-row">Wähle deine Startelf aus 30 zufälligen {divInfo.label}-Spielern</div>
           <div className="career-info-row">Platz 1 oder 2: direkter Aufstieg</div>
-          <div className="career-info-row">Nach jeder Saison: Transfermarkt mit Budget</div>
+          <div className="career-info-row">
+            {mode === 'klassik'
+              ? 'Nach jeder Saison: direkter Spielertausch'
+              : 'Nach jeder Saison: Transfermarkt mit Budget'}
+          </div>
         </div>
 
-        <button className="start-btn" onClick={onStart}>
+        <button className="start-btn" onClick={() => onStart(mode)}>
           Karriere starten →
         </button>
       </div>

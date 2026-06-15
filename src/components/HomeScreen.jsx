@@ -48,12 +48,6 @@ export default function HomeScreen() {
             <span className="league-card-sub">3. Liga bis Bundesliga · Budget · Transfermarkt</span>
           </button>
         </div>
-        <div className="league-group">
-          <button className="league-card league-card--karriere-klassik" onClick={() => navigate('/karriere-klassik')}>
-            <span className="league-card-name">Karriere Klassik</span>
-            <span className="league-card-sub">Start in der 2. Liga · Direkte Transfers</span>
-          </button>
-        </div>
       </div>
       </div>
 
