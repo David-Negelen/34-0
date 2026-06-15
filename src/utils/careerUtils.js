@@ -1,6 +1,6 @@
 import { canPlayerFillSlot } from './playerUtils';
 import { assignPotential } from './growthUtils';
-import { getAge } from './ageUtils';
+import { getAge, seasonToYear } from './ageUtils';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -132,7 +132,7 @@ export function generateCareerDraftPool(players, formation, count = 30, division
     for (const e of shuffled) {
       if (usedIds.has(e.id)) continue;
       if (canPlayerFillSlot(e, slotType)) {
-        chosen.push(assignPotential(e, getAge(e.id, e.spunSeason)));
+        chosen.push(assignPotential(e, getAge(e.id, seasonToYear(e.spunSeason))));
         usedIds.add(e.id);
         if (++added >= target) break;
       }
@@ -144,7 +144,7 @@ export function generateCareerDraftPool(players, formation, count = 30, division
     if (chosen.length >= count) break;
     if (!usedIds.has(e.id)) {
       if (canPlayerFillSlot(e, 'GK') && chosen.filter(p => canPlayerFillSlot(p, 'GK')).length >= GK_MAX) continue;
-      chosen.push(assignPotential(e, getAge(e.id, e.spunSeason)));
+      chosen.push(assignPotential(e, getAge(e.id, seasonToYear(e.spunSeason))));
       usedIds.add(e.id);
     }
   }
@@ -167,7 +167,8 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     return eligible.slice(0, count).map(p => {
       const age = getAge(p.id, currentYear);
       const offer = assignPotential(attachSeason(p), age);
-      return { ...offer, age, slotType, price: offerPrice(offer.seasonRating, false, age, offer.potential) };
+      const displayAge = getAge(offer.id, seasonToYear(offer.spunSeason));
+      return { ...offer, age: displayAge, slotType, price: offerPrice(offer.seasonRating, false, age, offer.potential) };
     });
   }
 
@@ -206,13 +207,14 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
 
   return final.map(p => {
     const age = getAge(p.id, currentYear);
+    const displayAge = getAge(p.id, seasonToYear(p.spunSeason));
     const gap = p.potential - p.seasonRating;
     const isYoungGem = age !== null && age <= 19 && gap >= 13;
     const isGem = !!(p.isGem || isYoungGem);
     const potential = isYoungGem
       ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))
       : p.potential;
-    return { ...p, age, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential) };
+    return { ...p, age: displayAge, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential) };
   });
 }
 

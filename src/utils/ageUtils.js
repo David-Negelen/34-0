@@ -14,6 +14,12 @@ export function getBirthYear(playerId) {
   return parseInt(d.slice(0, 4), 10);
 }
 
+export function seasonToYear(season) {
+  if (!season) return null;
+  const m = String(season).match(/^(\d{4})/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 export function getAge(playerId, currentYear) {
   const by = getBirthYear(playerId);
   if (!currentYear) return 25;
