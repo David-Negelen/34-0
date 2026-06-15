@@ -726,7 +726,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
 
   function handleBuyFromOverview(offerIndex) {
     const offer = transferOffers[offerIndex];
-    const targetSlot = formationSlots.find(s => !s.player && s.type === offer?.slotType);
+    const emptySlot = formationSlots.find(s => !s.player && s.type === offer?.slotType);
+    const anySlot   = formationSlots.find(s => s.type === offer?.slotType);
+    const targetSlot = emptySlot ?? anySlot ?? null;
     onBuy(offerIndex, targetSlot?.id ?? null);
   }
 
@@ -947,7 +949,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                         key={`${offer.id}-${idx}`}
                         offer={offer}
                         division={division}
-                        canAfford={effectiveBudget >= (offer.price ?? 0)}
+                        canAfford={budget >= (offer.price ?? 0)}
                         onBuy={() => handleBuyOffer(idx)}
                       />
                     );
