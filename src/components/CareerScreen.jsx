@@ -1255,6 +1255,9 @@ function CareerMatchLog({ matches, onDone, done }) {
     <div className="match-log">
       <div className="ml-header">
         <span className="ml-matchday">Spieltag {visible} / {matches.length}</span>
+        {visible < matches.length && (
+          <button className="ml-skip-btn" onClick={() => setVisible(matches.length)}>Überspringen</button>
+        )}
       </div>
       <div className="ml-list" ref={listRef}>
         {matches.slice(0, visible).map((m, i) => {
