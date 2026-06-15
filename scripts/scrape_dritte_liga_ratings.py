@@ -258,17 +258,16 @@ def run(con: sqlite3.Connection):
 
     SCOPED_THRESHOLD = 0.80
 
-    def find_tm_id(scraped_name: str, scoped_pool=None) -> tuple[int | None, float, int | None, str | None]:
-        """Returns (matched_id, score, prompt_candidate_id, prompt_candidate_name).
-        Only matches within scoped_pool (same club, same season). Returns no match if pool is empty."""
+    def find_tm_id(scraped_name: str, scoped_pool: list | None) -> int | None:
+        """Returns tm_id if a confident match is found within scoped_pool, else None."""
         if not scoped_pool:
-            return None, 0.0, None, None
+            return None
 
         key = normalize(scraped_name)
 
-        for raw, tid, nk in scoped_pool:
+        for _, tid, nk in scoped_pool:
             if nk == key:
-                return tid, 1.0, None, None
+                return tid
 
         tokens = key.split()
         if len(tokens) >= 2 and len(tokens[0]) == 1:
@@ -276,22 +275,18 @@ def run(con: sqlite3.Connection):
             cands = [(tid, nk) for _, tid, nk in scoped_pool if nk.split()[-1] == last]
             hits  = [(tid, nk) for tid, nk in cands if nk.split()[0][0] == tokens[0]]
             if len(hits) == 1:
-                return hits[0][0], 0.90, None, None
+                return hits[0][0]
             if len(cands) == 1 and cands[0][1].split()[0][0] == tokens[0]:
-                return cands[0][0], 0.90, None, None
+                return cands[0][0]
 
-        best_id, best_name, best_score = None, None, 0.0
+        best_id, best_score = None, 0.0
         for raw_name, tm_id, _ in scoped_pool:
             s = name_score(scraped_name, raw_name)
             if s > best_score:
                 best_score = s
                 best_id = tm_id
-                best_name = raw_name
 
-        if best_score >= SCOPED_THRESHOLD:
-            return best_id, best_score, None, None
-
-        return None, best_score, best_id, best_name
+        return best_id if best_score >= SCOPED_THRESHOLD else None
 
     games = list(GAME_SLUG_TO_YEAR.items())
 
@@ -353,9 +348,19 @@ def run(con: sqlite3.Connection):
                 ).fetchall()
                 if rows:
                     scoped_pool = [(name, tm_id, normalize(name)) for name, tm_id in rows]
+
+            if scoped_pool is None:
+                print(f"{len(squad)} players scraped, club not in 3L this season — skipped")
+                con.execute(
+                    "INSERT OR IGNORE INTO fi_team_scraped (fi_club_id, game_slug) VALUES (?, ?)",
+                    (fi_club_id, game_slug)
+                )
+                con.commit()
+                continue
+
             matched = unmatched = 0
             for p in squad:
-                tm_id, score, best_id, best_name = find_tm_id(p["name"], scoped_pool)
+                tm_id = find_tm_id(p["name"], scoped_pool)
                 if tm_id:
                     con.execute(
                         "INSERT OR REPLACE INTO player_ratings "
@@ -363,24 +368,8 @@ def run(con: sqlite3.Connection):
                         (tm_id, season_year, p["ovr"])
                     )
                     matched += 1
-                    if DEBUG and score < SCOPED_THRESHOLD:
-                        print(f"    ~ close match: {p['name']!r} (score={score:.2f})")
-                elif best_id is not None:
-                    print(f"\n    ? {p['name']!r}  →  {best_name!r}  OVR={p['ovr']}  (score={score:.2f})")
-                    ans = input("      y=accept  n=skip: ").strip().lower()
-                    if ans == 'y':
-                        con.execute(
-                            "INSERT OR REPLACE INTO player_ratings "
-                            "(player_id, season_year, rating) VALUES (?, ?, ?)",
-                            (best_id, season_year, p["ovr"])
-                        )
-                        matched += 1
-                    else:
-                        unmatched += 1
                 else:
                     unmatched += 1
-                    if DEBUG:
-                        print(f"    ✗ no match: {p['name']!r} (best score={score:.2f})")
 
             con.execute(
                 "INSERT OR IGNORE INTO fi_team_scraped (fi_club_id, game_slug) VALUES (?, ?)",
