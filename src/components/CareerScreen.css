@@ -660,6 +660,11 @@
   color: var(--text-muted);
 }
 
+.career-offer-age {
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
 .career-offer-actions {
   display: flex;
   flex-direction: column;

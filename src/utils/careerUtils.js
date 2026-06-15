@@ -43,21 +43,31 @@ function ageFactor(age) {
   if (age <= 20)     return 1.8;
   if (age <= 23)     return 1.4;
   if (age <= 27)     return 1.0;
-  if (age <= 30)     return 0.72;
-  if (age <= 33)     return 0.45;
-  return 0.25;
+  if (age <= 30)     return 0.7;
+  if (age <= 33)     return 0.4;
+  return 0.2;
 }
 
-// Transfer fee in millions. Adjusted by age and GEM status.
-function offerPrice(rating, isGem = false, age = null) {
+// Potential ceiling bonus: high upside drives up price.
+function potentialMultiplier(potential) {
+  if (!potential)      return 1.0;
+  if (potential >= 93) return 2.2;
+  if (potential >= 88) return 1.7;
+  if (potential >= 83) return 1.3;
+  if (potential >= 78) return 1.1;
+  return 1.0;
+}
+
+// Transfer fee in millions. Adjusted by age and potential.
+function offerPrice(rating, _isGem = false, age = null, potential = null) {
   let base;
-  if (rating >= 92)      base = 40 + Math.floor(Math.random() * 25);
-  else if (rating >= 87) base = 20 + Math.floor(Math.random() * 20);
-  else if (rating >= 82) base = 10 + Math.floor(Math.random() * 15);
-  else if (rating >= 77) base = 4  + Math.floor(Math.random() * 8);
-  else                   base = 1  + Math.floor(Math.random() * 4);
-  const aged = Math.round(base * ageFactor(age));
-  return Math.max(1, isGem ? Math.floor(aged * 0.55) : aged);
+  if (rating >= 92)      base = 70 + Math.floor(Math.random() * 40);
+  else if (rating >= 87) base = 35 + Math.floor(Math.random() * 30);
+  else if (rating >= 82) base = 15 + Math.floor(Math.random() * 18);
+  else if (rating >= 77) base = 6  + Math.floor(Math.random() * 10);
+  else if (rating >= 72) base = 2  + Math.floor(Math.random() * 5);
+  else                   base = 1  + Math.floor(Math.random() * 2);
+  return Math.max(1, Math.round(base * ageFactor(age) * potentialMultiplier(potential)));
 }
 
 // Prize money (€M) by final league position.
@@ -91,13 +101,13 @@ export function generateIncomingBids(slots, currentYear = null, division = '2bl'
   const count = 1 + Math.floor(Math.random() * Math.min(3, eligible.length));
   return shuffle(eligible).slice(0, count).map((s, i) => {
     const age = getAge(s.player.id, currentYear);
-    const base = offerPrice(s.player.displayRating, false, age);
+    const base = offerPrice(s.player.displayRating, false, age, s.player.potential);
     return {
       playerId:    s.player.id,
       playerName:  s.player.name,
       slotType:    s.type,
       ovr:         s.player.displayRating,
-      amount:      Math.max(1, base + Math.floor(Math.random() * 3)),
+      amount:      Math.max(1, base + Math.floor(Math.random() * 5)),
       buyingClub:  shuffledClubs[i % shuffledClubs.length],
     };
   });
@@ -156,7 +166,7 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     return eligible.slice(0, count).map(p => {
       const offer = withPot(attachSeason(p));
       const age = getAge(offer.id, currentYear);
-      return { ...offer, slotType, price: offerPrice(offer.seasonRating, false, age) };
+      return { ...offer, age, slotType, price: offerPrice(offer.seasonRating, false, age, offer.potential) };
     });
   }
 
@@ -199,9 +209,9 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     const isYoungGem = age !== null && age <= 19 && gap >= 13;
     const isGem = !!(p.isGem || isYoungGem);
     const potential = isYoungGem
-      ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))  // 85–93
+      ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))
       : p.potential;
-    return { ...p, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age) };
+    return { ...p, age, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential) };
   });
 }
 

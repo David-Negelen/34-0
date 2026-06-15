@@ -1060,6 +1060,7 @@ function TransferOfferCard({ offer, division, canAfford = true, onBuy }) {
           {offer.positions?.map(p => (
             <span key={p} className={`player-pos-badge pos-${p}`}>{labelDE(p)}</span>
           ))}
+          {offer.age != null && <span className="career-offer-age">{offer.age} J.</span>}
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>
         </div>

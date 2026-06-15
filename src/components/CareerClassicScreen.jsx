@@ -653,7 +653,7 @@ function ClassicOfferCard({ offer, division, isActive, onUse }) {
         </div>
         <div className="career-offer-info">
           <div className="career-offer-name">{offer.name}{offer.isGem && <span className="career-gem-badge">◆ GEM</span>}</div>
-          <div className="career-offer-meta"><span>{offer.spunClub}</span><span>{shortSeason(offer.spunSeason)}</span></div>
+          <div className="career-offer-meta">{offer.age != null && <span className="career-offer-age">{offer.age} J.</span>}<span>{offer.spunClub}</span><span>{shortSeason(offer.spunSeason)}</span></div>
         </div>
         <span className="career-offer-status career-offer-status--used">✓</span>
       </div>
@@ -669,6 +669,7 @@ function ClassicOfferCard({ offer, division, isActive, onUse }) {
       <div className="career-offer-info">
         <div className="career-offer-name">{offer.name}{offer.isGem && <span className="career-gem-badge">◆ GEM</span>}</div>
         <div className="career-offer-meta">
+          {offer.age != null && <span className="career-offer-age">{offer.age} J.</span>}
           <span>{offer.spunClub}</span>
           <span>{shortSeason(offer.spunSeason)}</span>
           <span>{offer.positions.map(p => <span key={p} className={`player-pos-badge pos-${p}`} style={{ marginLeft: 4 }}>{labelDE(p)}</span>)}</span>
