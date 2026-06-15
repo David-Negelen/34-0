@@ -724,9 +724,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   }
 
   function handleBidSell(bid) {
-    const soldSlot = formationSlots.find(s => s.player?.id === bid.playerId);
     onSell(bid.playerId, bid.amount);
-    if (soldSlot) setSelectedSlotId(soldSlot.id);
     setActiveBidIdx(null);
     setPosFilter('');
   }
