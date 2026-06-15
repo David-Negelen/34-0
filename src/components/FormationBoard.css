@@ -159,15 +159,12 @@
 .slot-pot-label {
   font-size: 8px;
   font-weight: 800;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 4px;
+  border-radius: 6px;
   line-height: 1;
-  opacity: 0.9;
 }
-
-.slot-pot-label.ovr-red    { color: #ef4444; }
-.slot-pot-label.ovr-orange { color: #f97316; }
-.slot-pot-label.ovr-yellow { color: #eab308; }
-.slot-pot-label.ovr-green  { color: #22c55e; }
-.slot-pot-label.ovr-blue   { color: #2563eb; }
 
 .slot-pot-pip {
   position: absolute;
