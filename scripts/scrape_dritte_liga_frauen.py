@@ -45,12 +45,6 @@ LEAGUES = [
         "db_path":  ROOT / "dritte_liga_draft.db",
         "seasons":  list(range(2024, 2007, -1)),  # 2024/25 → 2008/09 (first season)
     },
-    {
-        "id":       "FBL",
-        "name":     "Frauen-Bundesliga",
-        "db_path":  ROOT / "frauen_bundesliga_draft.db",
-        "seasons":  list(range(2024, 2014, -1)),  # 2024/25 → 2015/16
-    },
 ]
 
 BASE = "https://www.transfermarkt.de"
@@ -59,11 +53,22 @@ HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
+        "Chrome/125.0.0.0 Safari/537.36"
     ),
-    "Accept-Language": "de-DE,de;q=0.9",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
     "Referer": "https://www.transfermarkt.de/",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "max-age=0",
+    "sec-ch-ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
 }
 
 DELAY       = 2.5
@@ -151,13 +156,22 @@ def init_db(con: sqlite3.Connection):
 session = requests.Session()
 session.headers.update(HEADERS)
 
+def _warmup():
+    try:
+        r = session.get(BASE + "/", timeout=20)
+        r.raise_for_status()
+    except Exception:
+        pass  # cookies still captured; ignore errors
+
+_warmup()
+
 
 def fetch(url: str, retries: int = 5) -> BeautifulSoup:
     for attempt in range(retries):
         try:
             time.sleep(DELAY)
             r = session.get(url, timeout=30)
-            if r.status_code in (429, 502, 503):
+            if r.status_code in (405, 429, 502, 503):
                 wait = RETRY_DELAY * (attempt + 1)
                 print(f"    Rate-limited ({r.status_code}), waiting {wait:.0f}s …")
                 time.sleep(wait)
