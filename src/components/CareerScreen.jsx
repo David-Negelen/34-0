@@ -221,6 +221,7 @@ export default function CareerScreen() {
         state={state}
         promoted={promoted}
         relegated={relegated}
+        newDivision={newDivision}
         onContinue={() => {
           const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
           const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear);
@@ -527,7 +528,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
 
 // ── Result ────────────────────────────────────────────────────────────────────
 
-function CareerResult({ state, promoted, relegated, onContinue, onEnd, onHome }) {
+function CareerResult({ state, promoted, relegated, newDivision, onContinue, onEnd, onHome }) {
   const { result, division, seasonNumber, seasonHistory, slots } = state;
   const playoff = result?.playoff ?? null;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
