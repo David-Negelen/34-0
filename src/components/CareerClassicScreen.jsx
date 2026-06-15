@@ -9,7 +9,7 @@ import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
-import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
+import { applyGrowthClassic, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga' };
@@ -155,7 +155,7 @@ export default function CareerClassicScreen() {
       return (
         <ClassicEntwicklung
           growthLog={entwicklungData.growthLog}
-          retirements={entwicklungData.retirements}
+          iconLog={entwicklungData.iconLog}
           seasonNumber={state.seasonNumber}
           onContinue={() => {
             career.applyGrowth(entwicklungData.updatedSlots);
@@ -180,8 +180,8 @@ export default function CareerClassicScreen() {
         relegated={relegated}
         newDivision={newDivision}
         onContinue={() => {
-          const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, null);
-          setEntwicklungData({ updatedSlots, growthLog, retirements });
+          const { updatedSlots, growthLog, iconLog } = applyGrowthClassic(state.slots, state.result?.playerStats);
+          setEntwicklungData({ updatedSlots, growthLog, iconLog });
         }}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
@@ -674,10 +674,9 @@ function ClassicOfferCard({ offer, division, isActive, onUse }) {
 
 // ── Entwicklung ───────────────────────────────────────────────────────────────
 
-function ClassicEntwicklung({ growthLog, retirements = [], seasonNumber, onContinue }) {
-  const gains    = [...growthLog].filter(e => e.gain > 0).sort((a, b) => b.gain - a.gain);
-  const declines = [...growthLog].filter(e => e.gain < 0);
-  const hasContent = growthLog.length > 0 || retirements.length > 0;
+function ClassicEntwicklung({ growthLog, iconLog = [], seasonNumber, onContinue }) {
+  const sorted = [...growthLog].sort((a, b) => b.gain - a.gain);
+  const hasContent = sorted.length > 0 || iconLog.length > 0;
 
   return (
     <div className="career-screen">
@@ -691,15 +690,18 @@ function ClassicEntwicklung({ growthLog, retirements = [], seasonNumber, onConti
         <div />
       </header>
       <div className="entw-body">
-        {retirements.length > 0 && (
+        {iconLog.length > 0 && (
           <div className="entw-icon-section">
-            <div className="entw-icon-header">Karriereende</div>
+            <div className="entw-icon-header">Upgrade zur Legende</div>
             <div className="entw-icon-cards">
-              {retirements.map((entry, i) => (
-                <div key={i} className="entw-retirement-plain">
-                  <div className="entw-retirement-plain-pos">{labelDE(entry.slotType)}</div>
-                  <div className="entw-retirement-plain-name">{entry.name}</div>
-                  <div className="entw-retirement-plain-seasons">{entry.seasons} Saisons · Karriereende</div>
+              {iconLog.map((entry, i) => (
+                <div key={i} className="entw-icon-card">
+                  <div className="entw-icon-card-stars">★ ★ ★</div>
+                  <div className="entw-icon-card-label">IKONE</div>
+                  <div className="entw-icon-card-ovr">{entry.newRating}</div>
+                  <div className="entw-icon-card-pos">{labelDE(entry.slotType)}</div>
+                  <div className="entw-icon-card-name">{entry.name}</div>
+                  <div className="entw-icon-card-seasons">{entry.seasons} Saisons im Kader</div>
                 </div>
               ))}
             </div>
@@ -707,41 +709,21 @@ function ClassicEntwicklung({ growthLog, retirements = [], seasonNumber, onConti
         )}
         {!hasContent ? (
           <div className="entw-empty">Keine Entwicklung diese Saison.</div>
-        ) : (
-          <>
-            {gains.length > 0 && (
-              <div className="entw-list">
-                {gains.map((entry, i) => (
-                  <div key={i} className="entw-row">
-                    <span className="entw-gain-badge">+{entry.gain}</span>
-                    <span className="entw-pos">{labelDE(entry.slotType)}</span>
-                    <span className="entw-name">{entry.name}</span>
-                    <span className="entw-ratings">
-                      <span className="entw-old">{entry.oldRating}</span>
-                      <span className="entw-arrow">→</span>
-                      <span className="entw-new">{entry.newRating}</span>
-                    </span>
-                  </div>
-                ))}
+        ) : sorted.length > 0 && (
+          <div className="entw-list">
+            {sorted.map((entry, i) => (
+              <div key={i} className="entw-row">
+                <span className="entw-gain-badge">+{entry.gain}</span>
+                <span className="entw-pos">{labelDE(entry.slotType)}</span>
+                <span className="entw-name">{entry.name}</span>
+                <span className="entw-ratings">
+                  <span className="entw-old">{entry.oldRating}</span>
+                  <span className="entw-arrow">→</span>
+                  <span className="entw-new">{entry.newRating}</span>
+                </span>
               </div>
-            )}
-            {declines.length > 0 && (
-              <div className="entw-list entw-list--declines">
-                {declines.map((entry, i) => (
-                  <div key={i} className="entw-row entw-row--decline">
-                    <span className="entw-gain-badge entw-gain-badge--decline">{entry.gain}</span>
-                    <span className="entw-pos">{labelDE(entry.slotType)}</span>
-                    <span className="entw-name">{entry.name}</span>
-                    <span className="entw-ratings">
-                      <span className="entw-old">{entry.oldRating}</span>
-                      <span className="entw-arrow">→</span>
-                      <span className="entw-new entw-new--decline">{entry.newRating}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
         <button className="btn btn-primary entw-cta" onClick={onContinue}>Transferfenster →</button>
       </div>

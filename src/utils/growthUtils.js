@@ -139,3 +139,46 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
 
   return { updatedSlots, growthLog, retirements };
 }
+
+// Classic-mode growth: identical to main branch behaviour.
+// Returns { updatedSlots, growthLog, iconLog } — no retirement, icon promotion only.
+export function applyGrowthClassic(slots, playerStats) {
+  const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.id ?? p.name, p]));
+  const growthLog = [];
+  const iconLog   = [];
+
+  const updatedSlots = slots.map(slot => {
+    if (!slot.player) return slot;
+    let p = slot.player;
+
+    const newSeasons = (p.seasonsInSquad ?? 0) + 1;
+    p = { ...p, seasonsInSquad: newSeasons };
+
+    // Icon promotion: one-time +5 boost after ICON_MIN_SEASONS seasons.
+    if (!p.isIcon && newSeasons >= ICON_MIN_SEASONS && Math.random() < 0.15) {
+      const newRating = p.displayRating + 5;
+      const iconPot   = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
+      p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
+      iconLog.push({ name: p.name, slotType: slot.type, oldRating: newRating - 5, newRating, seasons: newSeasons });
+      return { ...slot, player: p };
+    }
+
+    // Normal growth
+    if (!p.potential || p.displayRating >= p.potential) return { ...slot, player: p };
+
+    const gap     = p.potential - p.displayRating;
+    const score   = perfScore(statsMap[p.id ?? p.name], slot.type);
+    const rawGain = score * gap * 0.35 + Math.random() * 0.4;
+    const gainCap = gap >= 20 ? 5 : gap >= 12 ? 4 : 3;
+    const gain    = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
+
+    if (gain > 0) {
+      growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + gain, gain });
+      p = { ...p, displayRating: p.displayRating + gain };
+    }
+
+    return { ...slot, player: p };
+  });
+
+  return { updatedSlots, growthLog, iconLog };
+}
