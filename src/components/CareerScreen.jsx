@@ -686,7 +686,8 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   const selectedSlot      = selectedSlotId ? slots.find(s => s.id === selectedSlotId) : null;
   const selectedKaderPlayer = selectedKaderId ? kader.find(p => p.id === selectedKaderId) : null;
 
-  const allAvailableOffers = transferOffers.filter(o => !o.used && !o.skipped);
+  const byOvr = (a, b) => b.seasonRating - a.seasonRating;
+  const allAvailableOffers = transferOffers.filter(o => !o.used && !o.skipped).sort(byOvr);
 
   const activeBid       = activeBidIdx !== null ? (incomingBids[activeBidIdx] ?? null) : null;
   const effectiveBudget = activeBid ? budget + activeBid.amount : budget;
@@ -695,7 +696,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
     : allAvailableOffers.filter(o => !posFilter || o.slotType === posFilter);
 
   const marketOffers = selectedSlot
-    ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type)
+    ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type).sort(byOvr)
     : [];
 
   // Formation slots the selected kader player can fill (highlighted green)

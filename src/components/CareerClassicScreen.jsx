@@ -541,6 +541,9 @@ function ClassicTransfer({ state, onSwap, onUndo, onStartSeason, onEnd }) {
   }
 
   const usedCount = transferOffers.filter(o => o.used).length;
+  const sortedOffers = transferOffers
+    .map((offer, i) => ({ offer, i }))
+    .sort((a, b) => b.offer.seasonRating - a.offer.seasonRating);
 
   return (
     <div className="career-screen">
@@ -615,7 +618,7 @@ function ClassicTransfer({ state, onSwap, onUndo, onStartSeason, onEnd }) {
             )}
           </div>
 
-          {transferOffers.map((offer, i) => (
+          {sortedOffers.map(({ offer, i }) => (
             <ClassicOfferCard
               key={`${offer.id}-${i}`}
               offer={offer}
