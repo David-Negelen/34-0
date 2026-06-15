@@ -161,14 +161,14 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
       .filter(p => canPlayerFillSlot(p, slotType))
   );
 
-  const withPot = p => assignPotential(p, getAge(p.id, currentYear));
+  const withPot = p => assignPotential(p, getAge(p.id, seasonToYear(p.spunSeason)));
 
   if (!teamAvg || !eligible.length) {
     return eligible.slice(0, count).map(p => {
-      const age = getAge(p.id, currentYear);
-      const offer = assignPotential(attachSeason(p), age);
-      const displayAge = getAge(offer.id, seasonToYear(offer.spunSeason));
-      return { ...offer, age: displayAge, slotType, price: offerPrice(offer.seasonRating, false, age, offer.potential) };
+      const offer = attachSeason(p);
+      const age = getAge(offer.id, seasonToYear(offer.spunSeason));
+      const offerWithPot = assignPotential(offer, age);
+      return { ...offerWithPot, age, slotType, price: offerPrice(offerWithPot.seasonRating, false, age, offerWithPot.potential) };
     });
   }
 
@@ -206,15 +206,14 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   }
 
   return final.map(p => {
-    const age = getAge(p.id, currentYear);
-    const displayAge = getAge(p.id, seasonToYear(p.spunSeason));
+    const age = getAge(p.id, seasonToYear(p.spunSeason));
     const gap = p.potential - p.seasonRating;
     const isYoungGem = age !== null && age <= 19 && gap >= 13;
     const isGem = !!(p.isGem || isYoungGem);
     const potential = isYoungGem
       ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))
       : p.potential;
-    return { ...p, age: displayAge, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential) };
+    return { ...p, age, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential) };
   });
 }
 
