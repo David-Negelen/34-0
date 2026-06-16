@@ -98,8 +98,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const age = getAge(p.id, currentYear);
 
     // ── Retirement check ──────────────────────────────────────────────────────
+    const potGap = (p.potential ?? p.displayRating) - p.displayRating;
     const chance = retirementChance(age, newSeasons);
-    if (!p.isIcon && chance > 0 && newSeasons >= 2 && Math.random() < chance) {
+    if (!p.isIcon && potGap < 10 && chance > 0 && newSeasons >= 2 && Math.random() < chance) {
       const oldRating = p.displayRating;
       if (newSeasons >= ICON_MIN_SEASONS) {
         // Earned an Icon card — stays in squad
