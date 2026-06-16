@@ -770,19 +770,32 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
             <div style={{ marginTop: 16 }}>
               <div className="result-section-label">Kader</div>
               <div className="career-bench-row">
-                {kader.map(p => (
-                  <div
-                    key={p.id}
-                    className={['career-bench-slot', p.id === selectedKaderId ? 'career-bench-slot--selected' : ''].filter(Boolean).join(' ')}
-                    onClick={() => handleKaderClick(p.id)}
-                  >
-                    <span className={`career-bench-ovr rating rating-sm ${p.isIcon ? 'rating-icon' : ovrColorClass(p.displayRating)}`}>
-                      {p.displayRating}
-                    </span>
-                    <span className="career-bench-name">{p.name.split(' ').pop()}</span>
-                  </div>
-                ))}
+                {kader.map(p => {
+                  const gap = (p.potential ?? p.displayRating) - p.displayRating;
+                  const leavingNextSeason = (p.inactiveSeasons ?? 0) >= 3 && gap < 8;
+                  return (
+                    <div
+                      key={p.id}
+                      className={['career-bench-slot', p.id === selectedKaderId ? 'career-bench-slot--selected' : '', leavingNextSeason ? 'career-bench-slot--leaving' : ''].filter(Boolean).join(' ')}
+                      onClick={() => handleKaderClick(p.id)}
+                    >
+                      <span className={`career-bench-ovr rating rating-sm ${p.isIcon ? 'rating-icon' : ovrColorClass(p.displayRating)}`}>
+                        {p.displayRating}
+                      </span>
+                      <span className="career-bench-name">{p.name.split(' ').pop()}</span>
+                      {leavingNextSeason && <span className="career-bench-leaving">!</span>}
+                    </div>
+                  );
+                })}
               </div>
+              {kader.some(p => (p.inactiveSeasons ?? 0) >= 3 && ((p.potential ?? p.displayRating) - p.displayRating) < 8) && (
+                <div className="career-kader-warning">
+                  ⚠ Verlassen den Kader nächste Saison:{' '}
+                  {(names => names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} und ${names[names.length - 1]}`)(
+                    kader.filter(p => (p.inactiveSeasons ?? 0) >= 3 && ((p.potential ?? p.displayRating) - p.displayRating) < 8).map(p => p.name.split(' ').pop())
+                  )}
+                </div>
+              )}
             </div>
           )}
 
