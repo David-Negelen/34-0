@@ -187,8 +187,8 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const result = [];
   const usedIds = new Set();
 
-  // Four tiers: budget → average → quality → star
-  for (const offset of [-6, -1, 4, 9]) {
+  // Five tiers: budget → average → good → great → elite
+  for (const offset of [-6, 0, 8, 16, 24]) {
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
       result.push(withPot(attachSeasonNear(p, teamAvg + offset)));
@@ -223,11 +223,11 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   });
 }
 
-// Build a full transfer market: 5 offers per unique slot type in the formation.
+// Build a full transfer market: 6 offers per unique slot type in the formation.
 export function generateTransferMarket(players, excludeIds, formation, teamAvg = null, currentYear = null) {
   const slotTypes = [...new Set(formation.slots.map(s => s.type))];
   return slotTypes.flatMap(slotType =>
-    generateOffersForSlotType(players, excludeIds, slotType, 5, teamAvg, currentYear)
+    generateOffersForSlotType(players, excludeIds, slotType, 6, teamAvg, currentYear)
   );
 }
 
