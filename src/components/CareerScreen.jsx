@@ -965,21 +965,34 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
             </div>
           )}
 
-          {/* Kader player selected — no panel; green highlights on board guide the swap */}
+          {/* Kader player selected — replace list */}
           {selectedKaderPlayer && !selectedSlot && (
             <div className="career-market-panel fade-in">
               <div className="career-market-header">
-                <div>
-                  <span className="career-market-pos">Kader</span>
-                  <span className="career-market-current">{selectedKaderPlayer.name}</span>
-                </div>
+                <span className="career-replace-title">Wen ersetzen durch {selectedKaderPlayer.name}?</span>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSelectedKaderId(null)}>✕</button>
               </div>
-              <div className="career-swap-empty">
-                {kaderFormationTargets.length > 0
-                  ? 'Position auf dem Spielfeld wählen →'
-                  : 'Keine kompatible Formation-Position.'}
-              </div>
+              {kaderFormationTargets.filter(s => s.player).length > 0 ? (
+                <div className="career-replace-list">
+                  {kaderFormationTargets.filter(s => s.player).map(s => (
+                    <button
+                      key={s.id}
+                      className="career-replace-row"
+                      onClick={() => { onMoveFromKader(selectedKaderId, s.id); setSelectedKaderId(null); }}
+                    >
+                      <span className="career-replace-pos">{labelDE(s.type)}</span>
+                      <span className="career-replace-name">{s.player.name}</span>
+                      <span className="career-replace-ratings">
+                        <span className={`rating rating-sm ${ovrColorClass(s.player.displayRating)}`}>{s.player.displayRating}</span>
+                        <span className="career-replace-arrow">→</span>
+                        <span className={`rating rating-sm ${ovrColorClass(selectedKaderPlayer.displayRating)}`}>{selectedKaderPlayer.displayRating}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
+              )}
             </div>
           )}
 

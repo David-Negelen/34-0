@@ -1634,6 +1634,65 @@
   margin-bottom: 2px;
 }
 
+.career-replace-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.career-replace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.career-replace-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.career-replace-row:hover {
+  border-color: var(--gold);
+  background: rgba(245, 197, 24, 0.06);
+}
+
+.career-replace-pos {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  min-width: 28px;
+}
+
+.career-replace-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.career-replace-ratings {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.career-replace-arrow {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
 .career-bench-pick-row {
   display: flex;
   align-items: center;
