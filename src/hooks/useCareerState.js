@@ -165,6 +165,9 @@ function reducer(state, action) {
       if (!offer || offer.used || offer.skipped) return state;
       const price = offer.price ?? 0;
       if ((state.budget ?? 0) < price) return state;
+      const alreadyInSquad = state.slots.some(s => s.player?.id === offer.id) ||
+                             (state.kader ?? []).some(p => p.id === offer.id);
+      if (alreadyInSquad) return state;
 
       // If no slotId provided, auto-place into first empty matching slot
       const slotId = providedSlotId
