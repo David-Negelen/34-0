@@ -2,12 +2,12 @@ import { getAge } from './ageUtils';
 
 // Potential ceiling ranges: [minGap, maxGap] above current seasonRating.
 const POT_RANGES = [
-  [88, [0, 1]],
-  [83, [1, 3]],
-  [78, [2, 5]],
-  [73, [4, 8]],
-  [68, [5, 10]],
-  [0,  [7, 14]],
+  [88, [1, 3]],
+  [83, [2, 5]],
+  [78, [3, 7]],
+  [73, [5, 10]],
+  [68, [6, 12]],
+  [0,  [8, 16]],
 ];
 
 // How much of the raw gap an older player can still realize.

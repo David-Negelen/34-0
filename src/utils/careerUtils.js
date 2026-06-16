@@ -175,23 +175,17 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const result = [];
   const usedIds = new Set();
 
-  if (Math.random() < 0.2) {
+  // Four tiers: budget → average → quality → star
+  for (const offset of [-6, -1, 4, 9]) {
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
-      const candidate = withPot(attachSeasonNear(p, teamAvg + 7));
-      if (candidate.seasonRating >= teamAvg + 5) {
-        result.push(candidate); usedIds.add(p.id); break;
-      }
+      result.push(withPot(attachSeasonNear(p, teamAvg + offset)));
+      usedIds.add(p.id);
+      break;
     }
   }
 
-  for (const p of eligible) {
-    if (result.length >= count) break;
-    if (usedIds.has(p.id)) continue;
-    const candidate = withPot(attachSeasonNear(p, teamAvg + 1.75));
-    if (candidate.seasonRating >= teamAvg - 3) { result.push(candidate); usedIds.add(p.id); }
-  }
-
+  // Fill any remaining slots at average
   for (const p of eligible) {
     if (result.length >= count) break;
     if (!usedIds.has(p.id)) { result.push(withPot(attachSeasonNear(p, teamAvg))); usedIds.add(p.id); }
