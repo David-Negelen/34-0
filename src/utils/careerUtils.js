@@ -95,11 +95,21 @@ const BID_CLUBS = {
   '3l': ['TSV 1860 München', 'Dynamo Dresden', 'FC Hansa Rostock', 'SV Wehen Wiesbaden', 'VfL Osnabrück', 'Hallescher FC', 'FC Ingolstadt 04', 'MSV Duisburg', 'SpVgg Unterhaching'],
 };
 
+// Compute a player's effective age consistent with the growth system:
+// prefer historical-season age + seasons-in-squad over raw career year.
+function playerEffectiveAge(player, currentYear) {
+  if (player.spunSeason) {
+    const historicalAge = getAge(player.id, seasonToYear(player.spunSeason));
+    if (historicalAge !== null) return historicalAge + (player.seasonsInSquad ?? 0);
+  }
+  return getAge(player.id, currentYear);
+}
+
 // Rival clubs want to buy 1–3 non-Icon formation players under 34.
 export function generateIncomingBids(slots, currentYear = null, division = '2bl') {
   const eligible = slots.filter(s => {
     if (!s.player || s.player.isIcon || s.type === 'BENCH') return false;
-    const age = getAge(s.player.id, currentYear);
+    const age = playerEffectiveAge(s.player, currentYear);
     return age === null || age < 34; // no market for 34+ players
   });
   if (!eligible.length) return [];
@@ -112,7 +122,7 @@ export function generateIncomingBids(slots, currentYear = null, division = '2bl'
   const shuffledClubs = shuffle(clubPool);
   const count = 1 + Math.floor(Math.random() * Math.min(3, eligible.length));
   return shuffle(eligible).slice(0, count).map((s, i) => {
-    const age = getAge(s.player.id, currentYear);
+    const age = playerEffectiveAge(s.player, currentYear);
     const base = offerPrice(s.player.displayRating, false, age, s.player.potential, s.type);
     return {
       playerId:    s.player.id,
