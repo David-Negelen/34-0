@@ -119,7 +119,7 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
 
     // ── Decline phase ─────────────────────────────────────────────────────────
     // Age-based (32+); falls back to seasonsInSquad proxy (15+) without birth data
-    const inDecline = !p.isIcon && (age !== null ? age >= 32 : newSeasons >= 15);
+    const inDecline = !p.isIcon && potGap < 8 && (age !== null ? age >= 32 : newSeasons >= 15);
     if (inDecline) {
       const rate  = (age !== null ? age >= 36 : newSeasons >= 20) ? 2 : 1;
       const prime = Math.max(p.primeRating ?? 0, p.seasonRating ?? 0);
@@ -160,9 +160,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const score = perfScore(statsMap[p.id ?? p.name], slot.type);
 
     let minGain, maxGain;
-    if      (gap >= 20) { minGain = 4; maxGain = 10; }
-    else if (gap >= 12) { minGain = 2; maxGain = 7;  }
-    else if (gap >= 6)  { minGain = 1; maxGain = 4;  }
+    if      (gap >= 20) { minGain = 5; maxGain = 15; }
+    else if (gap >= 12) { minGain = 3; maxGain = 8;  }
+    else if (gap >= 6)  { minGain = 1; maxGain = 5;  }
     else                { minGain = 0; maxGain = 3;  }
 
     const rawGain = minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2;
