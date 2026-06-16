@@ -103,11 +103,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
       const oldRating = p.displayRating;
       if (newSeasons >= ICON_MIN_SEASONS) {
         // Earned an Icon card — stays in squad
-        const score = perfScore(statsMap[p.id ?? p.name], slot.type);
-        const perfBonus = 3 + Math.round(score * 2); // 3–5
         const base = Math.max(p.primeRating ?? 0, p.displayRating);
-        const newRating = base + perfBonus;
-        const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
+        const newRating = base - 2;
+        const iconPot = base + 5 + Math.floor(Math.random() * 3); // base+5 to base+7
         p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
         retirements.push({ name: p.name, slotType: slot.type, seasons: newSeasons, isIcon: true, oldRating, newRating, stats: careerStats[p.id] ?? null });
         return { ...slot, player: p };
