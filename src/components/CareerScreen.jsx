@@ -828,7 +828,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
 
               {kaderLeft.length > 0 && (
                 <div className="career-kader-left-msg">
-                  {kaderLeft.map(p => p.name.split(' ').pop()).join(', ')} {kaderLeft.length === 1 ? 'hat' : 'haben'} den Verein verlassen
+                  {(names => names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} und ${names[names.length - 1]}`)(kaderLeft.map(p => p.name.split(' ').pop()))} {kaderLeft.length === 1 ? 'hat' : 'haben'} den Verein verlassen
                 </div>
               )}
 
