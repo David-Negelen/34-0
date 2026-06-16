@@ -215,6 +215,35 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     }
   }
 
+  // Youth talent: one guaranteed pick ≤24 with the highest peak season in the data
+  {
+    let bestYouth = null;
+    let bestPeak  = -1;
+    for (const p of eligible) {
+      if (usedIds.has(p.id)) continue;
+      const peak = Math.max(...p.seasons.map(s => s.rating));
+      if (peak <= bestPeak) continue;
+      const hasYoung = p.seasons.some(s => {
+        const a = getAge(p.id, seasonToYear(s.season));
+        return a !== null && a <= 24;
+      });
+      if (hasYoung) { bestPeak = peak; bestYouth = p; }
+    }
+    if (bestYouth) {
+      const youngSeason = bestYouth.seasons
+        .filter(s => { const a = getAge(bestYouth.id, seasonToYear(s.season)); return a !== null && a <= 24; })
+        .reduce((b, s) => s.rating > b.rating ? s : b);
+      result.push(withPot({
+        ...bestYouth,
+        seasonRating:  youngSeason.rating,
+        spunClub:      youngSeason.club,
+        spunSeason:    youngSeason.season,
+        displayRating: youngSeason.rating,
+      }));
+      usedIds.add(bestYouth.id);
+    }
+  }
+
   // Fill any remaining slots at average
   for (const p of eligible) {
     if (result.length >= count) break;
@@ -232,7 +261,7 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   return final.map(p => {
     const age = getAge(p.id, seasonToYear(p.spunSeason));
     const gap = p.potential - p.seasonRating;
-    const isYoungGem = age !== null && age <= 19 && gap >= 13;
+    const isYoungGem = age !== null && age <= 23 && gap >= 6;
     const isGem = !!(p.isGem || isYoungGem);
     const potential = isYoungGem
       ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))
