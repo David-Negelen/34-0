@@ -131,10 +131,14 @@ function reducer(state, action) {
           }]
         : state.seasonHistory;
 
-      const KADER_MAX_IDLE = 2;
+      const KADER_MAX_IDLE = 4;
       const kaderNext = (state.kader ?? []).map(p => ({ ...p, inactiveSeasons: (p.inactiveSeasons ?? 0) + 1 }));
-      const kaderLeft = kaderNext.filter(p => p.inactiveSeasons >= KADER_MAX_IDLE);
-      const kader     = kaderNext.filter(p => p.inactiveSeasons < KADER_MAX_IDLE);
+      const kaderLeft = kaderNext.filter(p => {
+        if (p.inactiveSeasons < KADER_MAX_IDLE) return false;
+        const gap = (p.potential ?? p.displayRating) - p.displayRating;
+        return gap < 8; // still developing → stays longer
+      });
+      const kader = kaderNext.filter(p => !kaderLeft.includes(p));
 
       return {
         ...state,
