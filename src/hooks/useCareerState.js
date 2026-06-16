@@ -193,7 +193,26 @@ function reducer(state, action) {
 
     case 'UNDO_BUY': {
       if (!state.swapHistory.length) return state;
-      const { offerIndex, price = 0 } = state.swapHistory[state.swapHistory.length - 1];
+      const last = state.swapHistory[state.swapHistory.length - 1];
+
+      if (last.type === 'sell') {
+        const { player, amount, wasInSlotId } = last;
+        if (!player) return state;
+        return {
+          ...state,
+          budget: (state.budget ?? 0) - amount,
+          slots: wasInSlotId
+            ? state.slots.map(s => s.id === wasInSlotId ? { ...s, player } : s)
+            : state.slots,
+          kader: wasInSlotId
+            ? (state.kader ?? [])
+            : [...(state.kader ?? []), player],
+          swapHistory: state.swapHistory.slice(0, -1),
+        };
+      }
+
+      // Undo a buy
+      const { offerIndex, price = 0 } = last;
       const offer = state.transferOffers[offerIndex];
       return {
         ...state,
@@ -245,6 +264,9 @@ function reducer(state, action) {
 
     case 'SELL_PLAYER': {
       const { playerId, amount, newOffers = [] } = action.payload;
+      const soldSlot = state.slots.find(s => s.player?.id === playerId);
+      const soldFromKader = !soldSlot && (state.kader ?? []).find(p => p.id === playerId);
+      const soldPlayer = soldSlot?.player ?? soldFromKader ?? null;
       return {
         ...state,
         budget: (state.budget ?? 0) + amount,
@@ -254,7 +276,7 @@ function reducer(state, action) {
         kader: (state.kader ?? []).filter(p => p.id !== playerId),
         incomingBids: state.incomingBids.filter(b => b.playerId !== playerId),
         transferOffers: [...state.transferOffers, ...newOffers],
-        swapHistory: [],
+        swapHistory: [...state.swapHistory, { type: 'sell', player: soldPlayer, amount, wasInSlotId: soldSlot?.id ?? null }],
       };
     }
 

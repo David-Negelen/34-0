@@ -795,7 +795,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
 
           {swapHistory.length > 0 && (
             <button className="btn btn-ghost btn-sm" style={{ marginTop: 12, width: '100%' }} onClick={onUndo}>
-              ↩ Letzten Kauf rückgängig
+              ↩ Letzten Transfer rückgängig
             </button>
           )}
         </div>
