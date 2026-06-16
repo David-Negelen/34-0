@@ -242,11 +242,17 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
 }
 
 // Build a full transfer market: 6 offers per unique slot type in the formation.
+// Accumulated exclusions prevent the same player appearing under multiple slot types.
 export function generateTransferMarket(players, excludeIds, formation, teamAvg = null, currentYear = null) {
   const slotTypes = [...new Set(formation.slots.map(s => s.type))];
-  return slotTypes.flatMap(slotType =>
-    generateOffersForSlotType(players, excludeIds, slotType, 6, teamAvg, currentYear)
-  );
+  const accumulated = new Set(excludeIds);
+  const all = [];
+  for (const slotType of slotTypes) {
+    const offers = generateOffersForSlotType(players, accumulated, slotType, 6, teamAvg, currentYear);
+    offers.forEach(o => accumulated.add(o.id));
+    all.push(...offers);
+  }
+  return all;
 }
 
 // Fresh offers for one slot type — call after selling a player to replenish that position.

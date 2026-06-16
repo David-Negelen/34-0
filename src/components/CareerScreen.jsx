@@ -943,6 +943,10 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSelectedSlotId(null)}>✕</button>
               </div>
+              <div className="career-budget-display">
+                <span className="career-budget-label">Budget</span>
+                <span className="career-budget-value">€ {budget}M</span>
+              </div>
               {!selectedSlot.player && (
                 <div className="career-swap-empty">Position leer — kaufe einen Spieler über den Markt.</div>
               )}
