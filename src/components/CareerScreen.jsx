@@ -711,6 +711,14 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   }
 
   function handleKaderClick(playerId) {
+    const player = kader.find(p => p.id === playerId);
+    if (!player) return;
+    const emptySlot = formationSlots.find(s => !s.player && canPlayerFillSlot(player, s.type));
+    if (emptySlot) {
+      onMoveFromKader(playerId, emptySlot.id);
+      return;
+    }
+    // No empty slot — select so board shows green highlights for manual swap
     setSelectedKaderId(prev => prev === playerId ? null : playerId);
     setSelectedSlotId(null);
   }
@@ -727,9 +735,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   function handleBuyFromOverview(offerIndex) {
     const offer = transferOffers[offerIndex];
     const emptySlot = formationSlots.find(s => !s.player && s.type === offer?.slotType);
-    const anySlot   = formationSlots.find(s => s.type === offer?.slotType);
-    const targetSlot = emptySlot ?? anySlot ?? null;
-    onBuy(offerIndex, targetSlot?.id ?? null);
+    onBuy(offerIndex, emptySlot?.id ?? null);
   }
 
   return (
@@ -959,8 +965,8 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
             </div>
           )}
 
-          {/* Kader player selected */}
-          {selectedKaderPlayer && (
+          {/* Kader player selected — no panel; green highlights on board guide the swap */}
+          {selectedKaderPlayer && !selectedSlot && (
             <div className="career-market-panel fade-in">
               <div className="career-market-header">
                 <div>
@@ -969,24 +975,11 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => setSelectedKaderId(null)}>✕</button>
               </div>
-              {kaderFormationTargets.length > 0 ? (
-                <div className="career-from-bench">
-                  <div className="career-from-bench-label">In die Startelf:</div>
-                  {kaderFormationTargets.map(s => (
-                    <button
-                      key={s.id}
-                      className="career-bench-pick-row"
-                      onClick={() => { onMoveFromKader(selectedKaderId, s.id); setSelectedKaderId(null); }}
-                    >
-                      <span className="career-market-pos">{labelDE(s.type)}</span>
-                      <span className="career-bench-pick-name">{s.player?.name ?? '— leer —'}</span>
-                      <span className="career-bench-pick-tag">einsetzen →</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="career-swap-empty">Keine kompatible Formation-Position.</div>
-              )}
+              <div className="career-swap-empty">
+                {kaderFormationTargets.length > 0
+                  ? 'Position auf dem Spielfeld wählen →'
+                  : 'Keine kompatible Formation-Position.'}
+              </div>
             </div>
           )}
 
