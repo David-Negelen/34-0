@@ -66,18 +66,18 @@ function perfScore(stats, slotType) {
 // Falls back to seasonsInSquad-based chance when age is unknown.
 function retirementChance(age, seasons) {
   if (age !== null) {
-    if (age < 32) return 0;
-    if (age < 34) return 0.08;
-    if (age < 36) return 0.20;
-    if (age < 38) return 0.40;
-    return 0.65;
+    if (age < 34) return 0;
+    if (age < 36) return 0.06;
+    if (age < 38) return 0.18;
+    if (age < 40) return 0.35;
+    return 0.55;
   }
   // Fallback: no birth date data
-  if (seasons < 10) return 0;
-  return 1 / 6;
+  if (seasons < 12) return 0;
+  return 1 / 7;
 }
 
-const ICON_MIN_SEASONS = 10;
+const ICON_MIN_SEASONS = 7;
 
 // Applies one season of growth/decline to all squad slots.
 // Returns { updatedSlots, growthLog, retirements } — does NOT mutate state.
@@ -99,13 +99,14 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
 
     // ── Retirement check ──────────────────────────────────────────────────────
     const chance = retirementChance(age, newSeasons);
-    if (!p.isIcon && chance > 0 && Math.random() < chance) {
+    if (!p.isIcon && chance > 0 && newSeasons >= 2 && Math.random() < chance) {
       const oldRating = p.displayRating;
       if (newSeasons >= ICON_MIN_SEASONS) {
         // Earned an Icon card — stays in squad
         const score = perfScore(statsMap[p.id ?? p.name], slot.type);
-        const perfBonus = 2 + Math.round(score * 3); // 2–5
-        const newRating = (p.primeRating ?? p.displayRating) + perfBonus;
+        const perfBonus = 3 + Math.round(score * 2); // 3–5
+        const base = Math.max(p.primeRating ?? 0, p.displayRating);
+        const newRating = base + perfBonus;
         const iconPot = Math.max(newRating, 90 + Math.floor(Math.random() * 8));
         p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
         retirements.push({ name: p.name, slotType: slot.type, seasons: newSeasons, isIcon: true, oldRating, newRating, stats: careerStats[p.id] ?? null });
