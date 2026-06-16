@@ -13,10 +13,10 @@ const POT_RANGES = [
 // How much of the raw gap an older player can still realize.
 function ageGapScale(age) {
   if (age <= 21) return 1.0;
-  if (age <= 23) return 0.65;
-  if (age <= 25) return 0.35;
-  if (age <= 28) return 0.12;
-  if (age <= 31) return 0.03;
+  if (age <= 23) return 0.80;
+  if (age <= 26) return 0.55;
+  if (age <= 29) return 0.25;
+  if (age <= 32) return 0.08;
   return 0.0;
 }
 

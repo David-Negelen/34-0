@@ -58,8 +58,20 @@ function potentialMultiplier(potential) {
   return 1.0;
 }
 
-// Transfer fee in millions. Adjusted by age and potential.
-function offerPrice(rating, _isGem = false, age = null, potential = null) {
+// Position market value multiplier — GKs and CBs worth less than attackers/wingers.
+function positionFactor(slotType) {
+  if (slotType === 'GK') return 0.50;
+  if (slotType === 'CB') return 0.80;
+  if (['LB', 'RB'].includes(slotType)) return 0.90;
+  if (slotType === 'DM') return 0.85;
+  if (slotType === 'CM') return 1.00;
+  if (['LW', 'RW'].includes(slotType)) return 1.10;
+  if (slotType === 'ST') return 1.15;
+  return 1.00;
+}
+
+// Transfer fee in millions. Adjusted by age, potential, and position.
+function offerPrice(rating, _isGem = false, age = null, potential = null, slotType = null) {
   let base;
   if (rating >= 92)      base = 70 + Math.floor(Math.random() * 40);
   else if (rating >= 87) base = 35 + Math.floor(Math.random() * 30);
@@ -67,7 +79,7 @@ function offerPrice(rating, _isGem = false, age = null, potential = null) {
   else if (rating >= 77) base = 6  + Math.floor(Math.random() * 10);
   else if (rating >= 72) base = 2  + Math.floor(Math.random() * 5);
   else                   base = 1  + Math.floor(Math.random() * 2);
-  return Math.max(1, Math.round(base * ageFactor(age) * potentialMultiplier(potential)));
+  return Math.max(1, Math.round(base * ageFactor(age) * potentialMultiplier(potential) * positionFactor(slotType)));
 }
 
 // Prize money (€M) by final league position.
@@ -101,7 +113,7 @@ export function generateIncomingBids(slots, currentYear = null, division = '2bl'
   const count = 1 + Math.floor(Math.random() * Math.min(3, eligible.length));
   return shuffle(eligible).slice(0, count).map((s, i) => {
     const age = getAge(s.player.id, currentYear);
-    const base = offerPrice(s.player.displayRating, false, age, s.player.potential);
+    const base = offerPrice(s.player.displayRating, false, age, s.player.potential, s.type);
     return {
       playerId:    s.player.id,
       playerName:  s.player.name,
@@ -168,7 +180,7 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
       const offer = attachSeason(p);
       const age = getAge(offer.id, seasonToYear(offer.spunSeason));
       const offerWithPot = assignPotential(offer, age);
-      return { ...offerWithPot, age, slotType, price: offerPrice(offerWithPot.seasonRating, false, age, offerWithPot.potential) };
+      return { ...offerWithPot, age, slotType, price: offerPrice(offerWithPot.seasonRating, false, age, offerWithPot.potential, slotType) };
     });
   }
 
@@ -207,7 +219,7 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     const potential = isYoungGem
       ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))
       : p.potential;
-    return { ...p, age, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential) };
+    return { ...p, age, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential, slotType) };
   });
 }
 
