@@ -1,0 +1,81 @@
+# 3. Liga clubs — fifaindex.com team IDs (all clubs from dritte_liga_draft.db)
+# Format: {id}-{slug}   (one per line, # = comment)
+# Find the ID+slug from the URL at https://fifaindex.com/teams/
+# Replace ??? with the real ID once found. Reserve/amateur clubs may be absent from FIFA.
+
+# ── Known IDs ────────────────────────────────────────────────────────────────
+29-1-fc-kaiserslautern
+583-1-fc-schweinfurt-05           # FC26 only
+110588-1-fc-magdeburg
+523-1-fc-saarbrucken
+1831-1-fc-union-berlin
+1826-alemannia-aachen
+159-arminia-bielefeld
+507-chemnitzer-fc
+503-dynamo-dresden
+110500-eintracht-braunschweig
+110591-fc-carl-zeiss-jena
+162-energie-cottbus
+506-erzgebirge-aue                # alt slug: fc-erzgebirge-aue
+115820-fc-viktoria-1889-berlin
+27-hansa-rostock
+111235-1-fc-heidenheim
+111239-fc-ingolstadt-04
+110645-viktoria-koln
+110636-fortuna-dusseldorf
+110596-fsv-frankfurt
+110592-fsv-zwickau
+110482-hallescher-fc
+576-holstein-kiel
+1832-karlsruher-sc
+167-kfc-uerdingen-05
+1950-kickers-offenbach
+1825-msv-duisburg
+531-preu-en-munster
+112172-rb-leipzig
+100424-rot-wei-erfurt
+526-rot-wei-essen
+1828-rot-wei-oberhausen
+110169-fortuna-koln               # SC Fortuna Köln
+25-sc-freiburg
+10030-sc-paderborn-07
+110501-sc-verl
+543-jahn-regensburg
+111379-sg-sonnenhof-gro-aspach
+110700-sportfreunde-lotte
+110194-spvgg-bayreuth
+172-spvgg-unterhaching
+580-sv-elversberg
+110502-sv-darmstadt-98
+110597-sv-meppen
+110178-sv-sandhausen
+492-sv-wehen-wiesbaden            # alt slug: sv-wehen-taunusstein
+110532-sv-waldhof-mannheim
+33-tsv-1860-munchen               # alt slug: 1860-munich in older FIFA
+110678-tsv-havelse
+110526-tus-koblenz
+114398-turkgucu-munchen
+110176-ssv-ulm-1846
+1829-vfb-lubeck
+110587-vfb-oldenburg
+487-vfl-osnabruck
+550-vfr-aalen
+110197-wurzburger-kickers
+
+# ── Reserve teams (own FIFA entry confirmed) ─────────────────────────────────
+110676-borussia-dortmund-ii
+110679-bayern-munchen-ii
+110683-hannover-96-ii
+110691-sc-freiburg-ii
+110685-tsg-1899-hoffenheim-ii
+110697-vfb-stuttgart-ii
+110694-werder-bremen-ii
+
+# ── Pre-FIFA18 clubs (left 3. Liga before 2017 — no FIFA entry exists) ────────
+# 1. FSV Mainz 05 II   last season: 2016
+# Kickers Emden        last season: 2008
+# Rot Weiss Ahlen      last season: 2010
+# SV Babelsberg 03     last season: 2012
+# SV Wacker Burghausen last season: 2013
+# Stuttgarter Kickers  last season: 2015
+# Wuppertaler SV       last season: 2009

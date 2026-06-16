@@ -136,6 +136,10 @@
   border-left: 3px solid #9c27b0;
 }
 
+.league-card--karriere-klassik {
+  border-left: 3px solid #607d8b;
+}
+
 .league-card-name {
   font-size: 20px;
   font-weight: 800;

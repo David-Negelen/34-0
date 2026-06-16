@@ -111,6 +111,11 @@
   box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.4);
 }
 
+.slot-highlight {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(76, 217, 100, 0.35);
+}
+
 .slot-clickable {
   cursor: pointer;
   border-color: rgba(255, 255, 255, 0.55);
@@ -151,6 +156,16 @@
   line-height: 1;
 }
 
+.slot-pot-label {
+  font-size: 8px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 4px;
+  border-radius: 6px;
+  line-height: 1;
+}
+
 .slot-pot-pip {
   position: absolute;
   top: 5px;
@@ -163,6 +178,21 @@
 
 .slot-pot-pip.pot-high { background: #f59e0b; }
 .slot-pot-pip.pot-mid  { background: #94a3b8; }
+
+.slot-oop-badge {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(239, 68, 68, 0.85);
+  padding: 1px 3px;
+  border-radius: 4px;
+  line-height: 1;
+  pointer-events: none;
+}
 
 /* ── OVR summary bar ── */
 .board-ovr-bar {

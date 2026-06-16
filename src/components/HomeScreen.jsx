@@ -45,7 +45,7 @@ export default function HomeScreen() {
         <div className="league-group">
           <button className="league-card league-card--karriere" onClick={() => navigate('/karriere')}>
             <span className="league-card-name">Karriere</span>
-            <span className="league-card-sub">Start in der 2. Liga · Aufstieg möglich</span>
+            <span className="league-card-sub">3. Liga bis Bundesliga · Budget · Transfermarkt</span>
           </button>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { getOopPenalty } from './positionUtils';
+
 const GK_TYPES   = ['GK'];
 const DEF_TYPES  = ['RB', 'CB', 'LB'];
 const MID_TYPES  = ['DM', 'CM', 'AM', 'LM', 'RM'];
@@ -9,7 +11,9 @@ function avg(values) {
 }
 
 function ratingForSlot(slot) {
-  return slot.player?.displayRating ?? null;
+  const base = slot.player?.displayRating ?? null;
+  if (base === null) return null;
+  return Math.max(1, base - getOopPenalty(slot.player?.positions, slot.type));
 }
 
 export function calcSquadRatings(slots) {

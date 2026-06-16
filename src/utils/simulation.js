@@ -1,4 +1,5 @@
 import { calcSquadRatings } from './ratingCalc';
+import { getOopPenalty } from './positionUtils';
 import { HISTORIC_TABLES } from '../data/historicTables';
 import { dfbPokalParticipants } from '../data/dfbPokalParticipants';
 
@@ -119,6 +120,26 @@ const ZWEITE_LIGA_TEAMS = [
   { name: 'Preußen Münster',            strength: 56 },
 ];
 
+const DRITTE_LIGA_TEAMS = [
+  { name: '1. FC Saarbrücken',          club: '1. FC Saarbrücken',   strength: 62 },
+  { name: 'Dynamo Dresden',             club: 'Dynamo Dresden',       strength: 61 },
+  { name: 'TSV 1860 München',           club: 'TSV 1860 München',     strength: 61 },
+  { name: 'FC Ingolstadt 04',           club: 'FC Ingolstadt 04',     strength: 60 },
+  { name: 'MSV Duisburg',               club: 'MSV Duisburg',         strength: 60 },
+  { name: 'FC Hansa Rostock',           club: 'FC Hansa Rostock',     strength: 59 },
+  { name: 'Preußen Münster',            club: 'Preußen Münster',      strength: 59 },
+  { name: 'SpVgg Unterhaching',         club: 'SpVgg Unterhaching',   strength: 58 },
+  { name: 'Hallescher FC',              club: 'Hallescher FC',        strength: 58 },
+  { name: 'SV Wehen Wiesbaden',         club: 'SV Wehen Wiesbaden',   strength: 57 },
+  { name: 'VfL Osnabrück',              club: 'VfL Osnabrück',        strength: 57 },
+  { name: 'FC Erzgebirge Aue',          club: 'FC Erzgebirge Aue',    strength: 56 },
+  { name: 'Rot-Weiß Erfurt',            club: 'Rot-Weiß Erfurt',      strength: 56 },
+  { name: 'FC Viktoria Köln',           club: 'FC Viktoria Köln',     strength: 55 },
+  { name: 'SV Waldhof Mannheim',        club: 'SV Waldhof Mannheim',  strength: 55 },
+  { name: 'FSV Zwickau',                club: 'FSV Zwickau',          strength: 54 },
+  { name: 'FC Carl Zeiss Jena',         club: 'FC Carl Zeiss Jena',   strength: 53 },
+];
+
 // ── Historic opponent generation ──────────────────────────────────────────────
 
 function shuffleArr(arr) {
@@ -131,9 +152,10 @@ function shuffleArr(arr) {
 }
 
 // Map final-table points to simulation strength range.
-// BL:  [16, 91] pts → [55, 92]; 2BL: [19, 76] pts → [54, 71]
+// BL:  [16, 91] pts → [55, 92]; 2BL: [19, 76] pts → [54, 71]; 3L: [19, 76] pts → [50, 64]
 function ptsToStrength(pts, league) {
   if (league === '2bl') return Math.round(Math.min(71, Math.max(54, 54 + (pts - 19) / 57 * 17)));
+  if (league === '3l')  return Math.round(Math.min(64, Math.max(50, 50 + (pts - 19) / 57 * 14)));
   return Math.round(Math.min(92, Math.max(55, 55 + (pts - 16) / 75 * 37)));
 }
 
@@ -244,23 +266,46 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   const attStr = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
   const defStr = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
 
+  // Late-game boost: for 90+ OVR squads, effective strength can exceed 99 in lambda
+  // calculations, making 34-0-0 achievable. 95 OVR → +7.5, 100 OVR → +15.
+  const lateBoost = overall > 90 ? (overall - 90) * 3 : 0;
+
+  // Bad season: 12% chance of underperforming — makes finishing 2nd or lower possible.
+  const formPenalty = Math.random() < 0.12 ? -(8 + Math.floor(Math.random() * 6)) : 0;
+
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
   const historicOpponents = buildHistoricOpponents(league, allPlayers);
   const LEAGUE_TEAMS = historicOpponents.length === 17
     ? historicOpponents
-    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
+    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : league === '3l' ? DRITTE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
+  const STRIKER_POS = new Set(['ST', 'LF', 'RF', 'AM', 'SS']);
+
   const teams = [
     ...LEAGUE_TEAMS.map(t => {
       const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
-      // Build scorer pool from real player data for this club+season
-      const seasonKey = t.season ? seasonLabelToKey(t.season) : null;
-      const scorerPool = seasonKey && allPlayers.length
-        ? allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey))
-        : [];
+      let scorerPool = [];
+      if (t.season && allPlayers.length) {
+        // Historic opponent: exact season, all positions
+        const seasonKey = seasonLabelToKey(t.season);
+        scorerPool = allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey));
+      } else if (t.club && allPlayers.length) {
+        // Static 3L team: pick a random season from data, strikers only
+        const clubStrikers = allPlayers.filter(p =>
+          p.positions?.some(pos => STRIKER_POS.has(pos)) &&
+          p.seasons.some(s => s.club === t.club)
+        );
+        if (clubStrikers.length) {
+          const seasons = [...new Set(
+            clubStrikers.flatMap(p => p.seasons.filter(s => s.club === t.club).map(s => s.season))
+          )];
+          const picked = seasons[Math.floor(Math.random() * seasons.length)];
+          scorerPool = clubStrikers.filter(p => p.seasons.some(s => s.club === t.club && s.season === picked));
+        }
+      }
       return { ...t, att: eff, def: eff, scorerPool };
     }),
-    { name: 'Deine 11', att: attStr, def: defStr, isPlayer: true, scorerPool: [] },
+    { name: 'Deine 11', att: attStr + lateBoost + formPenalty, def: defStr + lateBoost + formPenalty, isPlayer: true, scorerPool: [] },
   ];
   const n = teams.length; // 18
   const playerIdx = n - 1;
@@ -320,13 +365,16 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
 
   playerMatches.forEach((m, i) => { m.day = i + 1; });
 
-  // Generate per-player events and aggregate season stats
+  // Generate per-player events and aggregate season stats (bench excluded)
   const squad = slots
-    .filter(s => s.player)
-    .map(s => ({ name: s.player.name, slotType: s.type, slotLabel: s.label, rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
+    .filter(s => s.player && s.type !== 'BENCH')
+    .map(s => {
+      const base = s.player.displayRating ?? s.player.primeRating ?? 75;
+      return { id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label, rating: Math.max(1, base - getOopPenalty(s.player.positions, s.type)) };
+    });
 
   const statsMap = {};
-  squad.forEach(p => { statsMap[p.name] = { name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0, cleanSheets: 0 }; });
+  squad.forEach(p => { statsMap[p.id] = { id: p.id, name: p.name, slotLabel: p.slotLabel, slotType: p.slotType, goals: 0, assists: 0, cleanSheets: 0 }; });
 
   playerMatches.forEach(m => {
     const goalsFor    = m.home === 'Deine 11' ? m.hg : m.ag;
@@ -334,7 +382,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
     if (goalsAgainst === 0) {
       squad
         .filter(p => ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p.slotType))
-        .forEach(p => { statsMap[p.name].cleanSheets++; });
+        .forEach(p => { statsMap[p.id].cleanSheets++; });
     }
     const events = squad.length ? generateMatchEvents(goalsFor, goalsAgainst, squad) : [];
     m.events = events;
@@ -353,11 +401,11 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
       return { minute, scorerName };
     }).sort((a, b) => a.minute - b.minute);
     events.forEach(e => {
-      if (e.type === 'goal') { statsMap[e.scorer.name].goals++; if (e.assister) statsMap[e.assister.name].assists++; }
+      if (e.type === 'goal') { statsMap[e.scorer.id].goals++; if (e.assister) statsMap[e.assister.id].assists++; }
     });
   });
 
-  const playerStats = squad.map(p => ({ ...statsMap[p.name], games: 34 }));
+  const playerStats = squad.map(p => ({ ...statsMap[p.id], games: 34 }));
 
   // Build sorted table
   const table = teams.map((t, i) => ({
@@ -491,11 +539,10 @@ export function drawPokalRound(teams, round, slots) {
     return Math.random() < 0.5 ? [b, a] : [a, b];
   });
 
-  const squad = slots.filter(s => s.player).map(s => ({
-    ...s.player,
-    slotType: s.type,
-    rating: s.player.displayRating ?? s.player.primeRating ?? 75,
-  }));
+  const squad = slots.filter(s => s.player && s.type !== 'BENCH').map(s => {
+    const base = s.player.displayRating ?? s.player.primeRating ?? 75;
+    return { ...s.player, slotType: s.type, rating: Math.max(1, base - getOopPenalty(s.player.positions, s.type)) };
+  });
 
   const matchups = [];
   const winners  = [];
@@ -615,11 +662,20 @@ export function getAchievements(result, slots = [], league = 'bl') {
   const { W, D, L, GF, GA, pts, pos = 18, gkGoal = false } = result;
   const achievements = [];
   const is2bl = league === '2bl';
+  const is3l  = league === '3l';
 
   if (L === 0 && D === 0) achievements.push({ key: 'perfect',    label: 'Perfekte Saison',      desc: '34-0-0 – Eine Legende des deutschen Fußballs.' });
   else if (L === 0)       achievements.push({ key: 'invincible', label: 'Ungeschlagen',          desc: 'Die gesamte Saison unbesiegt.' });
 
-  if (is2bl) {
+  if (is3l) {
+    if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 3. Liga!',  desc: 'Direkter Aufstieg in die 2. Bundesliga.' });
+    else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',          desc: 'Direkter Aufstieg in die 2. Bundesliga.' });
+    else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation Aufstieg',    desc: 'Platz 3 – Aufstiegsspiel gegen die 2. Bundesliga.' });
+    else if (pos <= 9)    achievements.push({ key: 'tophalf',    label: 'Oberes Mittelfeld',      desc: 'Solide Saison in der oberen Tabellenhälfte.' });
+    else if (pos <= 15)   achievements.push({ key: 'midtable',   label: 'Gerettet',               desc: 'Klassenerhalt gesichert.' });
+    else if (pos === 16)  achievements.push({ key: 'relegpl',    label: 'Relegation Abstieg',     desc: 'Platz 16 – Abstiegsspiel.' });
+    else                  achievements.push({ key: 'relegated',  label: 'Platz im Tabellenkeller', desc: 'Schwierige Saison in der 3. Liga.' });
+  } else if (is2bl) {
     if (pos === 1)        achievements.push({ key: 'champions',  label: 'Meister der 2. Liga!',  desc: 'Direkter Aufstieg in die Bundesliga.' });
     else if (pos === 2)   achievements.push({ key: 'promoted',   label: 'Aufgestiegen!',          desc: 'Direkter Aufstieg – zurück im Fußballoberhaus.' });
     else if (pos === 3)   achievements.push({ key: 'playoff',    label: 'Relegation Aufstieg',    desc: 'Platz 3 – Aufstiegsspiel gegen einen Bundesligisten.' });

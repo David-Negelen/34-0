@@ -192,6 +192,28 @@ def load_clubs() -> list[tuple[int, str]]:
     return clubs
 
 
+def build_club_map(con: sqlite3.Connection, clubs: list[tuple[int, str]]) -> dict[int, int]:
+    """Map fi_club_id → tm_club_id by matching fifaindex slug against TM club names."""
+    tm_clubs = con.execute("SELECT tm_id, name FROM clubs").fetchall()
+    club_map: dict[int, int] = {}
+    unmapped: list[str] = []
+    for fi_club_id, fi_slug in clubs:
+        best_id, best_score = None, 0.0
+        for tm_id, tm_name in tm_clubs:
+            s = name_score(fi_slug, tm_name)
+            if s > best_score:
+                best_score = s
+                best_id = tm_id
+        if best_score >= 0.65:
+            club_map[fi_club_id] = best_id
+        else:
+            unmapped.append(fi_slug)
+    if unmapped:
+        print(f"  ⚠  {len(unmapped)} clubs not mapped to TM: {', '.join(unmapped)}")
+    print(f"  Club map: {len(club_map)}/{len(clubs)} clubs → TM IDs")
+    return club_map
+
+
 # ── Team page parser ───────────────────────────────────────────────────────────
 
 def parse_team_page(soup: BeautifulSoup) -> list[dict]:
@@ -243,6 +265,8 @@ def run(con: sqlite3.Connection):
         print("Add entries like:  123-hamburger-sv")
         return
 
+    club_id_map = build_club_map(con, clubs)
+
     db_players = con.execute("SELECT tm_id, name FROM players").fetchall()
     norm_exact: dict[str, int] = {}
     norm_list: list[tuple[str, int, str]] = []
@@ -251,16 +275,43 @@ def run(con: sqlite3.Connection):
         norm_exact[key] = tm_id
         norm_list.append((name, tm_id, key))
 
-    THRESHOLD          = 0.80
-    FALLBACK_THRESHOLD = 0.55
+    SCOPED_THRESHOLD   = 0.80   # match within club+season pool
+    FALLBACK_THRESHOLD = 0.75   # global fallback
 
     lastname_index: dict[str, list[tuple[int, str]]] = {}
     for _, tm_id, nk in norm_list:
         last = nk.split()[-1]
         lastname_index.setdefault(last, []).append((tm_id, nk))
 
-    def find_tm_id(scraped_name: str) -> tuple[int | None, float]:
+    def find_tm_id(scraped_name: str, scoped_pool=None) -> tuple[int | None, float]:
         key = normalize(scraped_name)
+
+        # ── Scoped: only players at this club in this season ─────────────────
+        if scoped_pool:
+            for _, tid, nk in scoped_pool:
+                if nk == key:
+                    return tid, 1.0
+            tokens = key.split()
+            if len(tokens) >= 2 and len(tokens[0]) == 1:
+                last = tokens[-1]
+                cands = [(tid, nk) for _, tid, nk in scoped_pool if nk.split()[-1] == last]
+                hits  = [(tid, nk) for tid, nk in cands if nk.split()[0][0] == tokens[0]]
+                if len(hits) == 1:
+                    return hits[0][0], 0.90
+                if len(cands) == 1 and cands[0][1].split()[0][0] == tokens[0]:
+                    return cands[0][0], 0.90
+            best_id, best_score = None, 0.0
+            for raw_name, tm_id, _ in scoped_pool:
+                s = name_score(scraped_name, raw_name)
+                if s > best_score:
+                    best_score = s
+                    best_id = tm_id
+            if best_score >= SCOPED_THRESHOLD:
+                return best_id, best_score
+            if DEBUG:
+                print(f"    ~ scoped miss: {scraped_name!r} (score={best_score:.2f}), trying global …")
+
+        # ── Global fallback ───────────────────────────────────────────────────
         if key in norm_exact:
             return norm_exact[key], 1.0
 
@@ -324,9 +375,20 @@ def run(con: sqlite3.Connection):
                 continue
 
             squad = parse_team_page(soup)
+            scoped_pool = None
+            tm_club_id = club_id_map.get(fi_club_id)
+            if tm_club_id:
+                rows = con.execute(
+                    "SELECT p.name, p.tm_id FROM players p "
+                    "JOIN squad_entries se ON se.player_id = p.tm_id "
+                    "WHERE se.club_id = ? AND se.season_year = ?",
+                    (tm_club_id, season_year)
+                ).fetchall()
+                if rows:
+                    scoped_pool = [(name, tm_id, normalize(name)) for name, tm_id in rows]
             matched = unmatched = 0
             for p in squad:
-                tm_id, score = find_tm_id(p["name"])
+                tm_id, score = find_tm_id(p["name"], scoped_pool)
                 if tm_id:
                     con.execute(
                         "INSERT OR REPLACE INTO player_ratings "

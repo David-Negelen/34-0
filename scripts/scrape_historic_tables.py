@@ -96,6 +96,52 @@ CLUB_NAME_MAP = {
     "FC Erzgebirge Aue":        "FC Erzgebirge Aue",
     "SSV Ulm 1846":             "SSV Ulm 1846",
     "VfR Aalen":                "VfR Aalen",
+    # 3L clubs
+    "1.FC Saarbrücken":         "1. FC Saarbrücken",
+    "1. FC Saarbrücken":        "1. FC Saarbrücken",
+    "1.FC Heidenheim 1846":     "1. FC Heidenheim 1846",
+    "1. FC Heidenheim 1846":    "1. FC Heidenheim 1846",
+    "Dynamo Dresden":           "Dynamo Dresden",
+    "Chemnitzer FC":            "Chemnitzer FC",
+    "Hallescher FC":            "Hallescher FC",
+    "FC Carl Zeiss Jena":       "FC Carl Zeiss Jena",
+    "FSV Zwickau":              "FSV Zwickau",
+    "Rot-Weiß Erfurt":          "Rot-Weiß Erfurt",
+    "SV Waldhof Mannheim":      "SV Waldhof Mannheim",
+    "SpVgg Unterhaching":       "SpVgg Unterhaching",
+    "KFC Uerdingen 05":         "KFC Uerdingen 05",
+    "FC Viktoria Köln":         "FC Viktoria Köln",
+    "Viktoria Berlin":          "FC Viktoria 1889 Berlin",
+    "FC Viktoria 1889 Berlin":  "FC Viktoria 1889 Berlin",
+    "SC Verl":                  "SC Verl",
+    "SV Meppen":                "SV Meppen",
+    "Türkgücü München":         "Türkgücü München",
+    "TSV Havelse":              "TSV Havelse",
+    "SpVgg Bayreuth":           "SpVgg Bayreuth",
+    "VfB Lübeck":               "VfB Lübeck",
+    "VfB Oldenburg":            "VfB Oldenburg",
+    "Rot-Weiss Essen":          "Rot-Weiss Essen",
+    "SG Sonnenhof Großaspach":  "SG Sonnenhof Großaspach",
+    "Sportfreunde Lotte":       "Sportfreunde Lotte",
+    "Stuttgarter Kickers":      "Stuttgarter Kickers",
+    "SV Wacker Burghausen":     "SV Wacker Burghausen",
+    "SV 07 Elversberg":         "SV 07 Elversberg",
+    "SV Darmstadt 98":          "SV Darmstadt 98",
+    "Borussia Dortmund II":     "Borussia Dortmund II",
+    "FC Bayern München II":     "FC Bayern München II",
+    "Bayern München II":        "FC Bayern München II",
+    "1. FSV Mainz 05 II":       "1. FSV Mainz 05 II",
+    "1.FSV Mainz 05 II":        "1. FSV Mainz 05 II",
+    "SC Freiburg II":           "SC Freiburg II",
+    "VfB Stuttgart II":         "VfB Stuttgart II",
+    "Hannover 96 II":           "Hannover 96 II",
+    "Werder Bremen II":         "Werder Bremen II",
+    "SV Babelsberg 03":         "SV Babelsberg 03",
+    "Hansa Rostock":            "FC Hansa Rostock",
+    "SC Fortuna Köln":          "SC Fortuna Köln",
+    "1. FC Union Berlin":       "1. FC Union Berlin",
+    "Holstein Kiel":            "Holstein Kiel",
+    "1. FC Magdeburg":          "1. FC Magdeburg",
 }
 
 CLUB_BLACKLIST = {"RB Leipzig"}  # everyone hates them
@@ -110,6 +156,11 @@ LEAGUES = [
         "key":   "2bl",
         "url":   "https://www.transfermarkt.de/2-bundesliga/tabelle/wettbewerb/L2/saison_id/{year}",
         "years": range(2012, 2026),
+    },
+    {
+        "key":   "3l",
+        "url":   "https://www.transfermarkt.de/3-liga/tabelle/wettbewerb/L3/saison_id/{year}",
+        "years": range(2008, 2026),
     },
 ]
 
@@ -161,7 +212,7 @@ def fetch_table(url):
 
 
 def main():
-    result = {"bl": {}, "2bl": {}}
+    result = {"bl": {}, "2bl": {}, "3l": {}}
     unmapped = set()
 
     for league in LEAGUES:
@@ -198,7 +249,7 @@ def main():
         "export const HISTORIC_TABLES = {",
     ]
 
-    for league_key in ("bl", "2bl"):
+    for league_key in ("bl", "2bl", "3l"):
         lines.append(f"  '{league_key}': {{")
         for club in sorted(result[league_key]):
             seasons = result[league_key][club]
@@ -212,7 +263,7 @@ def main():
     lines.append("};")
     OUT_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\nWrote {OUT_PATH}")
-    print(f"BL clubs: {len(result['bl'])}, 2BL clubs: {len(result['2bl'])}")
+    print(f"BL clubs: {len(result['bl'])}, 2BL clubs: {len(result['2bl'])}, 3L clubs: {len(result['3l'])}")
 
 
 if __name__ == "__main__":

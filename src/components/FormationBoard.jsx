@@ -1,12 +1,14 @@
 import { tokenName, labelDE } from '../utils/playerUtils';
 import { ovrColorClass } from '../utils/growthUtils';
 import { calcSquadRatings } from '../utils/ratingCalc';
+import { getOopPenalty } from '../utils/positionUtils';
 import './FormationBoard.css';
 
 export default function FormationBoard({
   slots,
   showRatings,
   selectedSlotId,
+  highlightSlotIds = [],
   onSlotClick,
   draftMode,
   league = 'bl',
@@ -38,8 +40,10 @@ export default function FormationBoard({
         {/* Slot tokens */}
         {slots.map(slot => {
           const isSelected = slot.id === selectedSlotId;
+          const isHighlighted = highlightSlotIds.includes(slot.id);
           const isEmpty = slot.player === null;
-          const isClickable = draftMode === 'position-first' && isEmpty && !!onSlotClick;
+          const isClickable = !!onSlotClick && (draftMode !== 'position-first' || isEmpty);
+          const oopPenalty = !isEmpty ? getOopPenalty(slot.player.positions, slot.type) : 0;
 
           return (
             <button
@@ -47,8 +51,9 @@ export default function FormationBoard({
               className={[
                 'slot-token',
                 isEmpty ? 'slot-empty' : `slot-filled ${ovrColorClass(slot.player.displayRating)}`,
-                isSelected ? 'slot-selected' : '',
-                isClickable ? 'slot-clickable' : '',
+                isSelected    ? 'slot-selected'   : '',
+                isHighlighted ? 'slot-highlight'  : '',
+                isClickable   ? 'slot-clickable'  : '',
                 !isEmpty && slot.player.isIcon  ? 'slot-token--icon'  : '',
                 !isEmpty && slot.player.isPrime ? 'slot-token--prime' : '',
                 !isEmpty && slot.player.isGem   ? 'slot-token--gem'   : '',
@@ -69,6 +74,12 @@ export default function FormationBoard({
                     <span className="slot-rating">
                       {slot.player.displayRating}
                     </span>
+                  )}
+                  {showRatings && slot.player.potential > slot.player.displayRating && (
+                    <span className="slot-pot-label">→{slot.player.potential}</span>
+                  )}
+                  {oopPenalty > 0 && (
+                    <span className="slot-oop-badge">-{oopPenalty}</span>
                   )}
                 </>
               )}

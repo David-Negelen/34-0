@@ -30,6 +30,7 @@ export function getPlayersForClubSeason(players, club, season) {
 
 // Can player fill a given slot type?
 export function canPlayerFillSlot(player, slotType) {
+  if (slotType === 'BENCH') return true;
   if (player.id === 'kevin_grosskreutz_44521') return true; // he played every position
   const compatible = SLOT_COMPAT[slotType] ?? [];
   return player.positions.some(pos => compatible.includes(pos));

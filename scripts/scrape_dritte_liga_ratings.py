@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Scrape player OVR ratings from fifaindex.com team pages into bundesliga_draft.db.
+Scrape player OVR ratings from fifaindex.com into dritte_liga_draft.db.
 
-For each club in data/fifaindex_clubs.txt, scrapes the squad page for every
-FIFA / EA FC edition to get per-player OVR ratings. Players are matched to
-TM players by normalised name.
+Works identically to scrape_ratings.py but targets the 3. Liga DB
+and reads club IDs from data/fifaindex_dritte_liga_clubs.txt.
+3. Liga was added to FIFA in FIFA 18 (2017-18 season).
 
 Usage:
-    python scripts/scrape_ratings.py [--debug]
+    python scripts/scrape_dritte_liga_ratings.py [--debug]
 
-Fill in data/fifaindex_clubs.txt before running. Resumes automatically.
+Reuses data/fifaindex_session.txt for auth. Resumes automatically.
 """
 
 import sqlite3
@@ -26,40 +26,26 @@ try:
 except ImportError:
     sys.exit("Run: pip install requests beautifulsoup4 lxml")
 
-ROOT       = Path(__file__).parent.parent
-DB_PATH    = ROOT / "bundesliga_draft.db"
-CLUBS_FILE = ROOT / "data" / "fifaindex_clubs.txt"
-BASE       = "https://fifaindex.com"
-
+ROOT         = Path(__file__).parent.parent
+DB_PATH      = ROOT / "dritte_liga_draft.db"
+CLUBS_FILE   = ROOT / "data" / "fifaindex_dritte_liga_clubs.txt"
 SESSION_FILE = ROOT / "data" / "fifaindex_session.txt"
+BASE         = "https://fifaindex.com"
 
 DELAY       = 1.5
 RETRY_DELAY = 30.0
 
-# game slug → season start year  (aligns with squad_entries.season_year)
+# 3. Liga added to FIFA in FIFA 18 (2017-18 season)
 GAME_SLUG_TO_YEAR: dict[str, int] = {
-    "fc26":   2025,
-    "fc25":   2024,
-    "fc24":   2023,
-    "fifa23": 2022,
-    "fifa22": 2021,
-    "fifa21": 2020,
-    "fifa20": 2019,
-    "fifa19": 2018,
     "fifa18": 2017,
-    "fifa17": 2016,
-    "fifa16": 2015,
-    "fifa15": 2014,
-    "fifa14": 2013,
-    "fifa13": 2012,
-    "fifa12": 2011,
-    "fifa11": 2010,
-    "fifa10": 2009,
-    "fifa09": 2008,
-    "fifa08": 2007,
-    "fifa07": 2006,
-    "fifa06": 2005,
-    "fifa05": 2004,
+    "fifa19": 2018,
+    "fifa20": 2019,
+    "fifa21": 2020,
+    "fifa22": 2021,
+    "fifa23": 2022,
+    "fc24":   2023,
+    "fc25":   2024,
+    "fc26":   2025,
 }
 
 DEBUG = "--debug" in sys.argv
@@ -77,7 +63,6 @@ def init_db(con: sqlite3.Connection):
             FOREIGN KEY (player_id) REFERENCES players(tm_id)
         );
 
-        -- tracks which (fi_club_id, game_slug) pages have been scraped
         CREATE TABLE IF NOT EXISTS fi_team_scraped (
             fi_club_id INTEGER NOT NULL,
             game_slug  TEXT    NOT NULL,
@@ -87,10 +72,9 @@ def init_db(con: sqlite3.Connection):
     con.commit()
 
 
-# ── Session (loaded in main) ───────────────────────────────────────────────────
+# ── Session ────────────────────────────────────────────────────────────────────
 
 def load_session() -> requests.Session:
-    """Read user_agent + full cookie string from SESSION_FILE."""
     values: dict[str, str] = {}
     if SESSION_FILE.exists():
         for line in SESSION_FILE.read_text(encoding="utf-8").splitlines():
@@ -112,11 +96,10 @@ def load_session() -> requests.Session:
     sess = requests.Session()
     sess.headers.update({
         "User-Agent": ua,
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language": "de-DE,de;q=0.9",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Referer": "https://fifaindex.com/",
     })
-    # Parse "name=value; name2=value2; …" cookie header
     for part in cookie_str.split(";"):
         part = part.strip()
         if "=" in part:
@@ -125,11 +108,10 @@ def load_session() -> requests.Session:
     return sess
 
 
-session: requests.Session | None = None   # set by main()
+session: requests.Session | None = None
 
 
 def fetch(url: str, retries: int = 3) -> BeautifulSoup | None:
-    """Returns None on 404. Raises on persistent errors."""
     for attempt in range(retries):
         try:
             time.sleep(DELAY)
@@ -152,14 +134,13 @@ def fetch(url: str, retries: int = 3) -> BeautifulSoup | None:
 
 # ── Name normalisation ─────────────────────────────────────────────────────────
 
-# Characters that don't decompose via NFD — map them explicitly
 _TRANSLIT = str.maketrans({
-    'ı': 'i', 'İ': 'I',          # Turkish dotless i
-    'ø': 'o', 'Ø': 'O',          # Danish/Norwegian
-    'ł': 'l', 'Ł': 'L',          # Polish
-    'đ': 'd', 'Đ': 'D',          # South Slavic
-    'ð': 'd', 'Ð': 'D',          # Icelandic
-    'æ': 'ae', 'Æ': 'AE',        # Danish
+    'ı': 'i', 'İ': 'I',
+    'ø': 'o', 'Ø': 'O',
+    'ł': 'l', 'Ł': 'L',
+    'đ': 'd', 'Đ': 'D',
+    'ð': 'd', 'Ð': 'D',
+    'æ': 'ae', 'Æ': 'AE',
 })
 
 def normalize(name: str) -> str:
@@ -180,21 +161,12 @@ def name_score(a: str, b: str) -> float:
     token_score = len(ta & tb) / min(len(ta), len(tb))
     if token_score >= 0.80:
         return token_score
-    # Fuzzy fallback: catches transliteration differences (e.g. Tymoschuk/Tymoshchuk)
     return max(token_score, difflib.SequenceMatcher(None, na, nb).ratio())
 
 
 # ── Clubs file ─────────────────────────────────────────────────────────────────
 
-# Some clubs have different URL slugs across FIFA editions.
-# If the primary slug returns 404, try these alternatives in order.
-_SLUG_ALTERNATIVES: dict[int, list[str]] = {
-    23: ["monchengladbach", "bor-monchengladbach"],  # old editions use different slug
-}
-
-
 def load_clubs() -> list[tuple[int, str]]:
-    """Parse fifaindex_clubs.txt → [(fi_club_id, fi_slug), …]"""
     if not CLUBS_FILE.exists():
         return []
     clubs = []
@@ -235,11 +207,6 @@ def build_club_map(con: sqlite3.Connection, clubs: list[tuple[int, str]]) -> dic
 # ── Team page parser ───────────────────────────────────────────────────────────
 
 def parse_team_page(soup: BeautifulSoup) -> list[dict]:
-    """
-    Extract players from a fifaindex team page (Tailwind/React build).
-    Player links: /de/spieler/{id}-{slug}/{game}
-    OVR: first <td> with class containing 'font-bold font-heading' in each row.
-    """
     players = []
     seen: set[str] = set()
 
@@ -260,7 +227,6 @@ def parse_team_page(soup: BeautifulSoup) -> list[dict]:
         m = re.search(r"/spieler/(\d+)-", href)
         fi_player_id = int(m.group(1)) if m else None
 
-        # First stat <td> (font-bold font-heading) → OVR
         ovr = None
         for td in row.find_all("td"):
             cls = " ".join(td.get("class", []))
@@ -286,84 +252,43 @@ def run(con: sqlite3.Connection):
     clubs = load_clubs()
     if not clubs:
         print(f"\nNo clubs found in {CLUBS_FILE}")
-        print("Add entries like:  21-bayern-munchen")
         return
 
     club_id_map = build_club_map(con, clubs)
 
-    # Build name index from DB for fast matching
-    db_players = con.execute("SELECT tm_id, name FROM players").fetchall()
-    norm_exact: dict[str, int] = {}
-    norm_list: list[tuple[str, int, str]] = []   # (raw_name, tm_id, normalized)
-    for tm_id, name in db_players:
-        key = normalize(name)
-        norm_exact[key] = tm_id
-        norm_list.append((name, tm_id, key))
+    SCOPED_THRESHOLD = 0.80
 
-    SCOPED_THRESHOLD   = 0.80   # match within club+season pool
-    FALLBACK_THRESHOLD = 0.75   # global fallback
+    def find_tm_id(scraped_name: str, scoped_pool: list | None) -> int | None:
+        """Returns tm_id if a confident match is found within scoped_pool, else None."""
+        if not scoped_pool:
+            return None
 
-    # Build last-name → list of (tm_id, full_normalized) for abbreviation matching
-    lastname_index: dict[str, list[tuple[int, str]]] = {}
-    for _, tm_id, nk in norm_list:
-        last = nk.split()[-1]
-        lastname_index.setdefault(last, []).append((tm_id, nk))
-
-    def find_tm_id(scraped_name: str, scoped_pool=None) -> tuple[int | None, float]:
         key = normalize(scraped_name)
 
-        # ── Scoped: only players at this club in this season ─────────────────
-        if scoped_pool:
-            for _, tid, nk in scoped_pool:
-                if nk == key:
-                    return tid, 1.0
-            tokens = key.split()
-            if len(tokens) >= 2 and len(tokens[0]) == 1:
-                last = tokens[-1]
-                cands = [(tid, nk) for _, tid, nk in scoped_pool if nk.split()[-1] == last]
-                hits  = [(tid, nk) for tid, nk in cands if nk.split()[0][0] == tokens[0]]
-                if len(hits) == 1:
-                    return hits[0][0], 0.90
-                if len(cands) == 1 and cands[0][1].split()[0][0] == tokens[0]:
-                    return cands[0][0], 0.90
-            best_id, best_score = None, 0.0
-            for raw_name, tm_id, _ in scoped_pool:
-                s = name_score(scraped_name, raw_name)
-                if s > best_score:
-                    best_score = s
-                    best_id = tm_id
-            if best_score >= SCOPED_THRESHOLD:
-                return best_id, best_score
-            if DEBUG:
-                print(f"    ~ scoped miss: {scraped_name!r} (score={best_score:.2f}), trying global …")
-
-        # ── Global fallback ───────────────────────────────────────────────────
-        if key in norm_exact:
-            return norm_exact[key], 1.0
+        for _, tid, nk in scoped_pool:
+            if nk == key:
+                return tid
 
         tokens = key.split()
         if len(tokens) >= 2 and len(tokens[0]) == 1:
             last = tokens[-1]
-            candidates = lastname_index.get(last, [])
-            initial_hits = [(tid, nk) for tid, nk in candidates if nk.split()[0][0] == tokens[0]]
-            if len(initial_hits) == 1:
-                return initial_hits[0][0], 0.90
-            if len(candidates) == 1:
-                db_initial = candidates[0][1].split()[0][0]
-                if db_initial == tokens[0]:
-                    return candidates[0][0], 0.90
+            cands = [(tid, nk) for _, tid, nk in scoped_pool if nk.split()[-1] == last]
+            hits  = [(tid, nk) for tid, nk in cands if nk.split()[0][0] == tokens[0]]
+            if len(hits) == 1:
+                return hits[0][0]
+            if len(cands) == 1 and cands[0][1].split()[0][0] == tokens[0]:
+                return cands[0][0]
 
         best_id, best_score = None, 0.0
-        for raw_name, tm_id, nk in norm_list:
+        for raw_name, tm_id, _ in scoped_pool:
             s = name_score(scraped_name, raw_name)
             if s > best_score:
                 best_score = s
                 best_id = tm_id
-        if best_score >= FALLBACK_THRESHOLD:
-            return best_id, best_score
-        return None, best_score
 
-    games = list(GAME_SLUG_TO_YEAR.items())   # newest first
+        return best_id if best_score >= SCOPED_THRESHOLD else None
+
+    games = list(GAME_SLUG_TO_YEAR.items())
 
     for ci, (fi_club_id, fi_slug) in enumerate(clubs, 1):
         print(f"\n[{ci}/{len(clubs)}] {fi_club_id}-{fi_slug}")
@@ -379,22 +304,12 @@ def run(con: sqlite3.Connection):
             label = f"{season_year}-{str(season_year + 1)[-2:]}"
             print(f"  {game_slug:7s} ({label}) … ", end="", flush=True)
 
-            # Try primary slug, then any alternatives (e.g. Gladbach slug change by era)
-            slugs_to_try = list(dict.fromkeys(
-                [fi_slug] + _SLUG_ALTERNATIVES.get(fi_club_id, [])
-            ))
-            soup = None
-            used_slug = fi_slug
-            for slug in slugs_to_try:
-                url = f"{BASE}/de/teams/{fi_club_id}-{slug}/{game_slug}/"
-                try:
-                    soup = fetch(url)
-                except Exception as e:
-                    print(f"ERROR: {e}")
-                    break
-                if soup is not None:
-                    used_slug = slug
-                    break
+            url = f"{BASE}/de/teams/{fi_club_id}-{fi_slug}/{game_slug}/"
+            try:
+                soup = fetch(url)
+            except Exception as e:
+                print(f"ERROR: {e}")
+                continue
 
             if DEBUG and soup:
                 dump = ROOT / "data" / "debug_page.html"
@@ -411,6 +326,17 @@ def run(con: sqlite3.Connection):
                 continue
 
             squad = parse_team_page(soup)
+            if not squad:
+                not_avail = soup.find(string=re.compile("nicht verfügbar"))
+                msg = "not available in this edition" if not_avail else "0 players found"
+                print(msg + ", skipped")
+                con.execute(
+                    "INSERT OR IGNORE INTO fi_team_scraped (fi_club_id, game_slug) VALUES (?, ?)",
+                    (fi_club_id, game_slug)
+                )
+                con.commit()
+                continue
+
             scoped_pool = None
             tm_club_id = club_id_map.get(fi_club_id)
             if tm_club_id:
@@ -422,9 +348,19 @@ def run(con: sqlite3.Connection):
                 ).fetchall()
                 if rows:
                     scoped_pool = [(name, tm_id, normalize(name)) for name, tm_id in rows]
+
+            if scoped_pool is None:
+                print(f"{len(squad)} players scraped, club not in 3L this season — skipped")
+                con.execute(
+                    "INSERT OR IGNORE INTO fi_team_scraped (fi_club_id, game_slug) VALUES (?, ?)",
+                    (fi_club_id, game_slug)
+                )
+                con.commit()
+                continue
+
             matched = unmatched = 0
             for p in squad:
-                tm_id, score = find_tm_id(p["name"], scoped_pool)
+                tm_id = find_tm_id(p["name"], scoped_pool)
                 if tm_id:
                     con.execute(
                         "INSERT OR REPLACE INTO player_ratings "
@@ -432,12 +368,8 @@ def run(con: sqlite3.Connection):
                         (tm_id, season_year, p["ovr"])
                     )
                     matched += 1
-                    if DEBUG and score < THRESHOLD:
-                        print(f"    ~ close match: {p['name']!r} (score={score:.2f})")
                 else:
                     unmatched += 1
-                    if DEBUG:
-                        print(f"    ✗ no match: {p['name']!r} (best score={score:.2f})")
 
             con.execute(
                 "INSERT OR IGNORE INTO fi_team_scraped (fi_club_id, game_slug) VALUES (?, ?)",
@@ -457,12 +389,7 @@ def main():
     global session
 
     if not DB_PATH.exists():
-        sys.exit(f"DB not found: {DB_PATH}")
-    if not CLUBS_FILE.exists():
-        sys.exit(
-            f"Clubs file not found: {CLUBS_FILE}\n"
-            "Add entries like:  21-bayern-munchen"
-        )
+        sys.exit(f"DB not found: {DB_PATH}\nRun the 3. Liga TM scraper first.")
 
     session = load_session()
     con = sqlite3.connect(DB_PATH, timeout=60)
