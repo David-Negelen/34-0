@@ -93,11 +93,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     let p = slot.player;
 
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
-    p = { ...p, seasonsInSquad: newSeasons, primeRating: Math.max(p.primeRating ?? 0, p.seasonRating ?? 0, p.displayRating) };
-
-    // Use historical season age + seasons with us, so a "20 J." gem ages from 20, not from career year.
-    const historicalAge = p.spunSeason ? getAge(p.id, seasonToYear(p.spunSeason)) : getAge(p.id, currentYear);
-    const age = historicalAge !== null ? historicalAge + (newSeasons - 1) : null;
+    // Age stored on the player; fall back to spunSeason derivation for old saves without it.
+    const age = p.age ?? (p.spunSeason ? getAge(p.id, seasonToYear(p.spunSeason)) : null);
+    p = { ...p, seasonsInSquad: newSeasons, primeRating: Math.max(p.primeRating ?? 0, p.seasonRating ?? 0, p.displayRating), age: age != null ? age + 1 : null };
 
     // ── Retirement check ──────────────────────────────────────────────────────
     const potGap = (p.potential ?? p.displayRating) - p.displayRating;
@@ -190,8 +188,9 @@ export function applyKaderGrowth(kader) {
     const rawGain = 0.25 * gap * 0.5 + Math.random() * 1.5;
     const gainCap = gap >= 20 ? 5 : gap >= 10 ? 3 : 2;
     const gain = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
-    if (gain <= 0) return p;
-    return { ...p, displayRating: p.displayRating + gain };
+    const aged = { ...p, age: p.age != null ? p.age + 1 : null };
+    if (gain <= 0) return aged;
+    return { ...aged, displayRating: p.displayRating + gain };
   });
 }
 

@@ -95,12 +95,13 @@ const BID_CLUBS = {
   '3l': ['TSV 1860 München', 'Dynamo Dresden', 'FC Hansa Rostock', 'SV Wehen Wiesbaden', 'VfL Osnabrück', 'Hallescher FC', 'FC Ingolstadt 04', 'MSV Duisburg', 'SpVgg Unterhaching'],
 };
 
-// Compute a player's effective age consistent with the growth system:
-// prefer historical-season age + seasons-in-squad over raw career year.
+// Use the age stored on the player (set at purchase/draft, incremented each season).
+// Falls back to historical-season derivation for players without a stored age (old saves).
 function playerEffectiveAge(player, currentYear) {
+  if (player.age != null) return player.age;
   if (player.spunSeason) {
     const historicalAge = getAge(player.id, seasonToYear(player.spunSeason));
-    if (historicalAge !== null) return historicalAge + (player.seasonsInSquad ?? 0);
+    if (historicalAge !== null) return historicalAge;
   }
   return getAge(player.id, currentYear);
 }
@@ -154,7 +155,8 @@ export function generateCareerDraftPool(players, formation, count = 30, division
     for (const e of shuffled) {
       if (usedIds.has(e.id)) continue;
       if (canPlayerFillSlot(e, slotType)) {
-        chosen.push(assignPotential(e, getAge(e.id, seasonToYear(e.spunSeason))));
+        const draftAge = getAge(e.id, seasonToYear(e.spunSeason));
+        chosen.push({ ...assignPotential(e, draftAge), age: draftAge });
         usedIds.add(e.id);
         if (++added >= target) break;
       }
@@ -166,7 +168,8 @@ export function generateCareerDraftPool(players, formation, count = 30, division
     if (chosen.length >= count) break;
     if (!usedIds.has(e.id)) {
       if (canPlayerFillSlot(e, 'GK') && chosen.filter(p => canPlayerFillSlot(p, 'GK')).length >= GK_MAX) continue;
-      chosen.push(assignPotential(e, getAge(e.id, seasonToYear(e.spunSeason))));
+      const draftAge = getAge(e.id, seasonToYear(e.spunSeason));
+      chosen.push({ ...assignPotential(e, draftAge), age: draftAge });
       usedIds.add(e.id);
     }
   }
