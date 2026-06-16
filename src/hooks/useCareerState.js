@@ -155,11 +155,16 @@ function reducer(state, action) {
 
     // Buy a player — places directly in a slot if slotId given, otherwise lands in Kader.
     case 'BUY_OFFER': {
-      const { offerIndex, slotId } = action.payload;
+      const { offerIndex, slotId: providedSlotId } = action.payload;
       const offer = state.transferOffers[offerIndex];
       if (!offer || offer.used || offer.skipped) return state;
       const price = offer.price ?? 0;
       if ((state.budget ?? 0) < price) return state;
+
+      // If no slotId provided, auto-place into first empty matching slot
+      const slotId = providedSlotId
+        ?? state.slots.find(s => !s.player && s.type === offer.slotType)?.id
+        ?? null;
 
       const alreadyTracked = state.allPlayers.some(p => p.id === offer.id);
       const basePlayer = { ...offer, displayRating: offer.seasonRating };

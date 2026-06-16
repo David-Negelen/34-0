@@ -127,6 +127,8 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
         growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating - loss, gain: -loss });
         p = { ...p, displayRating: p.displayRating - loss };
       }
+      // Keep potential in sync with OVR for declining players — no false growth arrow
+      p = { ...p, potential: Math.min(p.potential ?? p.displayRating, p.displayRating) };
       return { ...slot, player: p };
     }
 
