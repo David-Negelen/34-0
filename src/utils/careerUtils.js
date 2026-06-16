@@ -188,12 +188,20 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const usedIds = new Set();
 
   // Five tiers: budget → average → good → great → elite
+  // For each tier, pick the player whose nearest season best matches the target.
   for (const offset of [-6, 0, 8, 16, 24]) {
+    const target = teamAvg + offset;
+    let bestPlayer = null;
+    let bestDiff = Infinity;
     for (const p of eligible) {
       if (usedIds.has(p.id)) continue;
-      result.push(withPot(attachSeasonNear(p, teamAvg + offset)));
-      usedIds.add(p.id);
-      break;
+      const nearest = p.seasons.reduce((b, s) => Math.abs(s.rating - target) < Math.abs(b - target) ? s.rating : b, p.seasons[0].rating);
+      const diff = Math.abs(nearest - target);
+      if (diff < bestDiff) { bestDiff = diff; bestPlayer = p; }
+    }
+    if (bestPlayer) {
+      result.push(withPot(attachSeasonNear(bestPlayer, target)));
+      usedIds.add(bestPlayer.id);
     }
   }
 
