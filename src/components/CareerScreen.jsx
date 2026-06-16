@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCareerState } from '../hooks/useCareerState';
 import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
-import { generateCareerDraftPool, generateTransferMarket, generateOffersForType, generateIncomingBids, prizeMoney } from '../utils/careerUtils';
+import { generateCareerDraftPool, generateTransferMarket, generateIncomingBids, prizeMoney } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
@@ -235,20 +235,7 @@ export default function CareerScreen() {
 
   if (state.phase === 'transfer') {
     function handleSell(playerId, amount) {
-      const bid = state.incomingBids.find(b => b.playerId === playerId);
-      const slotType = bid?.slotType;
-      const divPlayers = getPlayers(state.division);
-      const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
-      const filled = state.slots.filter(s => s.player && s.player.id !== playerId);
-      const teamAvg = filled.length
-        ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
-        : null;
-      const excludeIds = new Set([
-        ...state.slots.filter(s => s.player && s.player.id !== playerId).map(s => s.player.id),
-        ...(state.kader ?? []).filter(p => p.id !== playerId).map(p => p.id),
-      ]);
-      const newOffers = slotType ? generateOffersForType(divPlayers, excludeIds, slotType, teamAvg, currentYear) : [];
-      career.sellPlayer(playerId, amount, newOffers);
+      career.sellPlayer(playerId, amount);
     }
 
     return (
