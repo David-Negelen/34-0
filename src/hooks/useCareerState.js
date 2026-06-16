@@ -1,5 +1,6 @@
 import { useReducer, useEffect } from 'react';
 import { FORMATIONS } from '../data/formations';
+import { applyKaderGrowth } from '../utils/growthUtils';
 
 const STORAGE_KEY = 'karriere_v3';
 
@@ -309,15 +310,17 @@ function reducer(state, action) {
           isIcon: s.player.isIcon,
         }])
       );
+      const updatedKader = applyKaderGrowth(state.kader ?? []);
       return {
         ...state,
         slots: updatedSlots,
-        kader: (state.kader ?? []).map(p =>
-          playerUpdates[p.id] != null ? { ...p, ...playerUpdates[p.id] } : p
-        ),
-        allPlayers: state.allPlayers.map(p =>
-          playerUpdates[p.id] != null ? { ...p, ...playerUpdates[p.id] } : p
-        ),
+        kader: updatedKader,
+        allPlayers: state.allPlayers.map(p => {
+          const kaderUpdated = updatedKader.find(k => k.id === p.id);
+          if (kaderUpdated) return { ...p, displayRating: kaderUpdated.displayRating };
+          if (playerUpdates[p.id] != null) return { ...p, ...playerUpdates[p.id] };
+          return p;
+        }),
       };
     }
 

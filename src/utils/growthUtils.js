@@ -152,6 +152,19 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
   return { updatedSlots, growthLog, retirements };
 }
 
+// Bench (Kader) development: players with potential still grow, just slower than starters.
+export function applyKaderGrowth(kader) {
+  return kader.map(p => {
+    if (!p.potential || p.displayRating >= p.potential) return p;
+    const gap = p.potential - p.displayRating;
+    const rawGain = 0.25 * gap * 0.5 + Math.random() * 1.5;
+    const gainCap = gap >= 20 ? 5 : gap >= 10 ? 3 : 2;
+    const gain = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
+    if (gain <= 0) return p;
+    return { ...p, displayRating: p.displayRating + gain };
+  });
+}
+
 // Classic-mode growth: identical to main branch behaviour.
 // Returns { updatedSlots, growthLog, iconLog } — no retirement, icon promotion only.
 export function applyGrowthClassic(slots, playerStats) {
