@@ -179,7 +179,7 @@ export function generateCareerDraftPool(players, formation, count = 30, division
 
 // Generate up to `count` offers for a single slot type.
 // Each offer is tagged with { slotType }.
-function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg, currentYear) {
+function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg, currentYear, division = 'bl') {
   const eligible = shuffle(
     players
       .filter(p => !excludeIds.has(p.id) && p.seasons?.length)
@@ -200,9 +200,9 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const result = [];
   const usedIds = new Set();
 
-  // Five tiers: budget → average → good → great → elite
-  // For each tier, pick the player whose nearest season best matches the target.
-  for (const offset of [-6, 0, 8, 16, 24]) {
+  // Tiers capped by division: lower leagues don't offer elite players.
+  const maxOffset = division === 'bl' ? 24 : division === '2bl' ? 16 : 8;
+  for (const offset of [-6, 0, 8, 16, 24].filter(o => o <= maxOffset)) {
     const target = teamAvg + offset;
     let bestPlayer = null;
     let bestDiff = Infinity;
@@ -275,12 +275,12 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
 
 // Build a full transfer market: 6 offers per unique slot type in the formation.
 // Accumulated exclusions prevent the same player appearing under multiple slot types.
-export function generateTransferMarket(players, excludeIds, formation, teamAvg = null, currentYear = null) {
+export function generateTransferMarket(players, excludeIds, formation, teamAvg = null, currentYear = null, division = 'bl') {
   const slotTypes = [...new Set(formation.slots.map(s => s.type))];
   const accumulated = new Set(excludeIds);
   const all = [];
   for (const slotType of slotTypes) {
-    const offers = generateOffersForSlotType(players, accumulated, slotType, 6, teamAvg, currentYear);
+    const offers = generateOffersForSlotType(players, accumulated, slotType, 6, teamAvg, currentYear, division);
     offers.forEach(o => accumulated.add(o.id));
     all.push(...offers);
   }
@@ -288,6 +288,6 @@ export function generateTransferMarket(players, excludeIds, formation, teamAvg =
 }
 
 // Fresh offers for one slot type — call after selling a player to replenish that position.
-export function generateOffersForType(players, excludeIds, slotType, teamAvg = null, currentYear = null) {
-  return generateOffersForSlotType(players, excludeIds, slotType, 5, teamAvg, currentYear);
+export function generateOffersForType(players, excludeIds, slotType, teamAvg = null, currentYear = null, division = 'bl') {
+  return generateOffersForSlotType(players, excludeIds, slotType, 5, teamAvg, currentYear, division);
 }

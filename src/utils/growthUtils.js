@@ -83,7 +83,7 @@ const ICON_MIN_SEASONS = 7;
 // Returns { updatedSlots, growthLog, retirements } — does NOT mutate state.
 // retirements entries: { name, slotType, seasons, isIcon, oldRating, newRating, stats }
 // Non-Icon retirements have the slot cleared (player: null).
-export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = null) {
+export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = null, division = 'bl') {
   const statsMap = Object.fromEntries((playerStats ?? []).map(p => [p.id ?? p.name, p]));
   const growthLog  = [];
   const retirements = [];
@@ -165,7 +165,8 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     else if (gap >= 6)  { minGain = 1; maxGain = 5;  }
     else                { minGain = 0; maxGain = 3;  }
 
-    const rawGain = minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2;
+    const divScale = division === 'bl' ? 1.0 : division === '2bl' ? 0.65 : 0.45;
+    const rawGain = (minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2) * divScale;
     const gain    = clamp(Math.round(rawGain), 0, Math.min(gap, maxGain));
 
     if (gain > 0) {

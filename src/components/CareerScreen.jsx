@@ -206,7 +206,7 @@ export default function CareerScreen() {
             const teamAvg = filled.length
               ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
               : null;
-            const offers = generateTransferMarket(divPlayers, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear);
+            const offers = generateTransferMarket(divPlayers, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear, newDivision);
             const prize = prizeMoney(state.result?.pos ?? 18, state.division);
             const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear, state.division);
             career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize, incomingBids);
@@ -224,7 +224,7 @@ export default function CareerScreen() {
         newDivision={newDivision}
         onContinue={() => {
           const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
-          const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear);
+          const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
           setEntwicklungData({ updatedSlots, growthLog, retirements });
         }}
         onEnd={handleEndCareer}
