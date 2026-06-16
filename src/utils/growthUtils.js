@@ -93,14 +93,14 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     let p = slot.player;
 
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
-    p = { ...p, seasonsInSquad: newSeasons, primeRating: Math.max(p.primeRating ?? 0, p.displayRating) };
+    p = { ...p, seasonsInSquad: newSeasons, primeRating: Math.max(p.primeRating ?? 0, p.seasonRating ?? 0, p.displayRating) };
 
     const age = getAge(p.id, currentYear);
 
     // ── Retirement check ──────────────────────────────────────────────────────
     const potGap = (p.potential ?? p.displayRating) - p.displayRating;
     const chance = retirementChance(age, newSeasons);
-    if (!p.isIcon && potGap < 10 && chance > 0 && newSeasons >= 2 && Math.random() < chance) {
+    if (!p.isIcon && potGap < 10 && chance > 0 && newSeasons >= 4 && Math.random() < chance) {
       const oldRating = p.displayRating;
       if (newSeasons >= ICON_MIN_SEASONS) {
         // Earned an Icon card — stays in squad
@@ -122,7 +122,7 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const inDecline = !p.isIcon && (age !== null ? age >= 32 : newSeasons >= 15);
     if (inDecline) {
       const rate  = (age !== null ? age >= 36 : newSeasons >= 20) ? 2 : 1;
-      const prime = p.primeRating;
+      const prime = Math.max(p.primeRating ?? 0, p.seasonRating ?? 0);
       const floor = Math.max(60, prime - 10);
       if (p.displayRating > floor) {
         const loss = Math.min(rate, p.displayRating - floor);
@@ -160,9 +160,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const score = perfScore(statsMap[p.id ?? p.name], slot.type);
 
     let minGain, maxGain;
-    if      (gap >= 20) { minGain = 5; maxGain = 15; }
-    else if (gap >= 12) { minGain = 3; maxGain = 8;  }
-    else if (gap >= 6)  { minGain = 1; maxGain = 5;  }
+    if      (gap >= 20) { minGain = 4; maxGain = 10; }
+    else if (gap >= 12) { minGain = 2; maxGain = 7;  }
+    else if (gap >= 6)  { minGain = 1; maxGain = 4;  }
     else                { minGain = 0; maxGain = 3;  }
 
     const rawGain = minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2;
