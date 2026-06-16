@@ -135,11 +135,17 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     // ── Normal growth ─────────────────────────────────────────────────────────
     if (!p.potential || p.displayRating >= p.potential) return { ...slot, player: p };
 
-    const gap     = p.potential - p.displayRating;
-    const score   = perfScore(statsMap[p.id ?? p.name], slot.type);
-    const rawGain = score * gap * 0.35 + Math.random() * 0.4;
-    const gainCap = gap >= 20 ? 5 : gap >= 12 ? 4 : 3;
-    const gain    = clamp(Math.round(rawGain), 0, Math.min(gap, gainCap));
+    const gap   = p.potential - p.displayRating;
+    const score = perfScore(statsMap[p.id ?? p.name], slot.type);
+
+    let minGain, maxGain;
+    if      (gap >= 20) { minGain = 5; maxGain = 15; }
+    else if (gap >= 12) { minGain = 3; maxGain = 8;  }
+    else if (gap >= 6)  { minGain = 1; maxGain = 5;  }
+    else                { minGain = 0; maxGain = 3;  }
+
+    const rawGain = minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2;
+    const gain    = clamp(Math.round(rawGain), 0, Math.min(gap, maxGain));
 
     if (gain > 0) {
       growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + gain, gain });
