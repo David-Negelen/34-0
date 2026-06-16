@@ -4,13 +4,15 @@ import { useCareerState } from '../hooks/useCareerState';
 import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferMarket, generateIncomingBids, prizeMoney } from '../utils/careerUtils';
-import { simulateFullLeague, getAchievements } from '../utils/simulation';
+import { simulateFullLeague, calcTeamStrength, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
+import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
+import MultiplayerTableOverlay from './MultiplayerTableOverlay';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
@@ -69,10 +71,26 @@ export default function CareerScreen() {
   const { state } = career;
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
-  function runSeason(slots, division, seasonNumber) {
+  async function runSeason(slots, division, seasonNumber) {
     const players = getPlayers(division);
+    const mp = getMpSession();
+
+    let extraTeams = [];
+    if (mp) {
+      try {
+        const { att, def, ovr } = calcTeamStrength(slots);
+        await uploadSquad({ code: mp.code, playerName: mp.playerName, seasonNumber, att, def, ovr });
+        const others = await getRoomSeason(mp.code, seasonNumber);
+        extraTeams = others
+          .filter(m => m.player_name !== mp.playerName && m.team_att)
+          .map(m => ({ name: m.player_name, att: m.team_att, def: m.team_def }));
+      } catch {
+        // no-op: fall back to solo simulation
+      }
+    }
+
     const { result, table, playerMatches, playerStats, tableHistory } =
-      simulateFullLeague(slots, division, players);
+      simulateFullLeague(slots, division, players, extraTeams);
     const needsPlayoff =
       (result.pos === 3  && (division === '2bl' || division === '3l')) ||
       (result.pos === 16 && (division === 'bl'  || division === '2bl'));
@@ -82,6 +100,18 @@ export default function CareerScreen() {
       achievements: getAchievements(result, slots, division),
       table, playerMatches, playerStats, tableHistory, playoff,
     });
+
+    if (mp) {
+      submitResult({
+        code: mp.code,
+        playerName: mp.playerName,
+        seasonNumber,
+        pts: result.pts,
+        pos: result.pos,
+        gf: result.GF,
+        ga: result.GA,
+      }).catch(() => {});
+    }
   }
 
   function handleEndCareer() {
@@ -216,20 +246,30 @@ export default function CareerScreen() {
       );
     }
 
+    const mp = getMpSession();
     return (
-      <CareerResult
-        state={state}
-        promoted={promoted}
-        relegated={relegated}
-        newDivision={newDivision}
-        onContinue={() => {
-          const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
-          const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
-          setEntwicklungData({ updatedSlots, growthLog, retirements });
-        }}
-        onEnd={handleEndCareer}
-        onHome={() => { career.reset(); navigate('/'); }}
-      />
+      <>
+        <CareerResult
+          state={state}
+          promoted={promoted}
+          relegated={relegated}
+          newDivision={newDivision}
+          onContinue={() => {
+            const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
+            const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
+            setEntwicklungData({ updatedSlots, growthLog, retirements });
+          }}
+          onEnd={handleEndCareer}
+          onHome={() => { career.reset(); navigate('/'); }}
+        />
+        {mp && (
+          <MultiplayerTableOverlay
+            code={mp.code}
+            seasonNumber={state.seasonNumber}
+            myPlayerName={mp.playerName}
+          />
+        )}
+      </>
     );
   }
 

@@ -47,6 +47,9 @@ export default function HomeScreen() {
             <span className="league-card-name">Karriere</span>
             <span className="league-card-sub">3. Liga bis Bundesliga · Budget · Transfermarkt</span>
           </button>
+          <button className="league-lb-link" onClick={() => navigate('/multiplayer')}>
+            Multiplayer starten →
+          </button>
         </div>
       </div>
       </div>

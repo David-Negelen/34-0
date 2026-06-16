@@ -1,0 +1,181 @@
+.mp-lobby {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 40px;
+  background: #111;
+  color: #fff;
+}
+
+.mp-back {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 32px;
+}
+
+.mp-back:hover { color: #fff; }
+
+.mp-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.mp-subtitle {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 0 32px;
+  text-align: center;
+}
+
+.mp-field {
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 20px;
+}
+
+.mp-field-label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.mp-input {
+  width: 100%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 16px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.mp-input:focus { border-color: #555; }
+
+.mp-input--code {
+  font-family: monospace;
+  font-size: 20px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.mp-actions {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mp-join-form {
+  width: 100%;
+  max-width: 340px;
+}
+
+.mp-action-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1e1e1e;
+  color: #ccc;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mp-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mp-action-btn--primary {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+
+.mp-action-btn--primary:disabled {
+  background: #444;
+  color: #888;
+  border-color: #444;
+}
+
+/* Ready screen */
+.mp-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.mp-code-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 18px 24px;
+  margin-bottom: 20px;
+  font-family: monospace;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.mp-copy-btn {
+  background: #333;
+  border: none;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mp-copy-btn:hover { background: #444; }
+
+.mp-hint {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.mp-name-display {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 32px;
+}
+
+.mp-start-btn {
+  background: #fff;
+  color: #111;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  max-width: 340px;
+}
+
+.mp-start-btn:hover { background: #eee; }

@@ -257,14 +257,20 @@ function seasonLabelToKey(label) {
   return `20${a}-${b}`;
 }
 
-export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
+// Compute the att/def simulation strengths for a squad (same formula used inside the sim).
+export function calcTeamStrength(slots) {
   const ratings = calcSquadRatings(slots);
-  // Hidden OVR boost: rewards good drafts exponentially above 80.
-  // 85 OVR → +11 (effective ~95, dominates); 80 and below → no boost.
   const overall  = ratings.overall ?? 75;
   const ovrBoost = overall > 82 ? Math.pow(overall - 82, 1.5) : 0;
-  const attStr = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
-  const defStr = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
+  const att = Math.min(99, Math.max(50, (ratings.att ?? 72) * 0.7 + (ratings.mid ?? 72) * 0.3 + ovrBoost));
+  const def = Math.min(99, Math.max(50, (ratings.def ?? 72) * 0.65 + (ratings.gk  ?? 72) * 0.35 + ovrBoost));
+  return { att, def, ovr: overall };
+}
+
+// extraTeams: [{name, att, def}] — real multiplayer opponents injected into the league.
+export function simulateFullLeague(slots, league = 'bl', allPlayers = [], extraTeams = []) {
+  const { att: attStr, def: defStr, ovr: overall } = calcTeamStrength(slots);
+  const ovrBoost = overall > 82 ? Math.pow(overall - 82, 1.5) : 0;
 
   // Late-game boost: for 90+ OVR squads, effective strength can exceed 99 in lambda
   // calculations, making 34-0-0 achievable. 95 OVR → +7.5, 100 OVR → +15.
@@ -276,9 +282,14 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
   // Each team gets a season-form offset (σ=6) so the table shuffles each run.
   // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
   const historicOpponents = buildHistoricOpponents(league, allPlayers);
-  const LEAGUE_TEAMS = historicOpponents.length === 17
+  const allLeagueTeams = historicOpponents.length === 17
     ? historicOpponents
     : (league === '2bl' ? ZWEITE_LIGA_TEAMS : league === '3l' ? DRITTE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
+  // When real-player opponents are injected, reduce CPU team count so total stays at 18.
+  const cpuCount = Math.max(1, 17 - extraTeams.length);
+  const LEAGUE_TEAMS = extraTeams.length > 0
+    ? shuffleArr([...allLeagueTeams]).slice(0, cpuCount)
+    : allLeagueTeams;
   const STRIKER_POS = new Set(['ST', 'LF', 'RF', 'AM', 'SS']);
 
   const teams = [
@@ -305,9 +316,17 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = []) {
       }
       return { ...t, att: eff, def: eff, scorerPool };
     }),
+    ...extraTeams.map(t => ({
+      name: t.name,
+      club: t.name,
+      att: Math.round(Math.min(98, Math.max(40, t.att + gauss(4)))),
+      def: Math.round(Math.min(98, Math.max(40, t.def + gauss(4)))),
+      isRealPlayer: true,
+      scorerPool: [],
+    })),
     { name: 'Deine 11', att: attStr + lateBoost + formPenalty, def: defStr + lateBoost + formPenalty, isPlayer: true, scorerPool: [] },
   ];
-  const n = teams.length; // 18
+  const n = teams.length; // 18 (cpu + extra real players + player)
   const playerIdx = n - 1;
 
   const stats = Array.from({ length: n }, () => ({ W: 0, D: 0, L: 0, GF: 0, GA: 0 }));
