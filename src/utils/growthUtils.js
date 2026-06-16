@@ -1,4 +1,4 @@
-import { getAge } from './ageUtils';
+import { getAge, seasonToYear } from './ageUtils';
 
 // Potential ceiling ranges: [minGap, maxGap] above current seasonRating.
 const POT_RANGES = [
@@ -95,7 +95,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
     p = { ...p, seasonsInSquad: newSeasons, primeRating: Math.max(p.primeRating ?? 0, p.seasonRating ?? 0, p.displayRating) };
 
-    const age = getAge(p.id, currentYear);
+    // Use historical season age + seasons with us, so a "20 J." gem ages from 20, not from career year.
+    const historicalAge = p.spunSeason ? getAge(p.id, seasonToYear(p.spunSeason)) : getAge(p.id, currentYear);
+    const age = historicalAge !== null ? historicalAge + (newSeasons - 1) : null;
 
     // ── Retirement check ──────────────────────────────────────────────────────
     const potGap = (p.potential ?? p.displayRating) - p.displayRating;
