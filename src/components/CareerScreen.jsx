@@ -880,7 +880,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                       className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
                       onClick={() => setPosFilter('')}
                     >Alle</button>
-                    {[...new Set(allAvailableOffers.map(o => o.slotType))].map(pos => (
+                    {['GK', 'CB', 'LB', 'RB', 'DM', 'CM', 'LW', 'RW', 'ST'].filter(pos => allAvailableOffers.some(o => o.slotType === pos)).map(pos => (
                       <button
                         key={pos}
                         className={[
