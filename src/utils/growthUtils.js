@@ -93,7 +93,7 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     let p = slot.player;
 
     const newSeasons = (p.seasonsInSquad ?? 0) + 1;
-    p = { ...p, seasonsInSquad: newSeasons };
+    p = { ...p, seasonsInSquad: newSeasons, primeRating: Math.max(p.primeRating ?? 0, p.displayRating) };
 
     const age = getAge(p.id, currentYear);
 
@@ -122,11 +122,20 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const inDecline = !p.isIcon && (age !== null ? age >= 32 : newSeasons >= 15);
     if (inDecline) {
       const rate  = (age !== null ? age >= 36 : newSeasons >= 20) ? 2 : 1;
-      const floor = Math.max(60, (p.primeRating ?? p.seasonRating ?? 65) - 10);
+      const prime = p.primeRating;
+      const floor = Math.max(60, prime - 10);
       if (p.displayRating > floor) {
         const loss = Math.min(rate, p.displayRating - floor);
         growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating - loss, gain: -loss });
         p = { ...p, displayRating: p.displayRating - loss };
+      }
+      // Auto-promote to Icon once declined far enough — "Karriereende"
+      if (newSeasons >= ICON_MIN_SEASONS && prime >= 60 && p.displayRating <= prime - 6) {
+        const newRating = prime - 2;
+        const iconPot   = prime + 5 + Math.floor(Math.random() * 3);
+        p = { ...p, isIcon: true, displayRating: newRating, potential: iconPot };
+        retirements.push({ name: p.name, slotType: slot.type, seasons: newSeasons, isIcon: true, oldRating: prime, newRating, stats: careerStats[p.id] ?? null });
+        return { ...slot, player: p };
       }
       // Keep potential in sync with OVR for declining players — no false growth arrow
       p = { ...p, potential: Math.min(p.potential ?? p.displayRating, p.displayRating) };
@@ -136,7 +145,18 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     // ── Normal growth ─────────────────────────────────────────────────────────
     if (!p.potential || p.displayRating >= p.potential) return { ...slot, player: p };
 
-    const gap   = p.potential - p.displayRating;
+    const gap = p.potential - p.displayRating;
+
+    // Icons always reach potential within ~2 seasons regardless of performance
+    if (p.isIcon) {
+      const iconGain = Math.min(gap, Math.max(4, Math.ceil(gap / 2)));
+      if (iconGain > 0) {
+        growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + iconGain, gain: iconGain });
+        p = { ...p, displayRating: p.displayRating + iconGain };
+      }
+      return { ...slot, player: p };
+    }
+
     const score = perfScore(statsMap[p.id ?? p.name], slot.type);
 
     let minGain, maxGain;
@@ -149,8 +169,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const gain    = clamp(Math.round(rawGain), 0, Math.min(gap, maxGain));
 
     if (gain > 0) {
-      growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + gain, gain });
-      p = { ...p, displayRating: p.displayRating + gain };
+      const newRating = p.displayRating + gain;
+      growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating, gain });
+      p = { ...p, displayRating: newRating, primeRating: Math.max(p.primeRating, newRating) };
     }
 
     return { ...slot, player: p };
