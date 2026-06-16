@@ -783,6 +783,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                         {p.displayRating}
                       </span>
                       <span className="career-bench-name">{p.name.split(' ').pop()}</span>
+                      {gap >= 1 && <span className={`career-bench-pot ${ovrColorClass(p.potential)}`}>→{p.potential}</span>}
                       {leavingNextSeason && <span className="career-bench-leaving">!</span>}
                     </div>
                   );
