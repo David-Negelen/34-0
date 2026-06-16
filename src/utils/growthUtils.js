@@ -124,7 +124,7 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const inDecline = !p.isIcon && potGap < 8 && (age !== null ? age >= 32 : newSeasons >= 15);
     if (inDecline) {
       const rate  = (age !== null ? age >= 36 : newSeasons >= 20) ? 2 : 1;
-      const prime = Math.max(p.primeRating ?? 0, p.seasonRating ?? 0);
+      const prime = Math.max(p.primeRating ?? 0, p.seasonRating ?? 0, p.displayRating);
       const floor = Math.max(60, prime - 10);
       if (p.displayRating > floor) {
         const loss = Math.min(rate, p.displayRating - floor);
