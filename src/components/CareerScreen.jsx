@@ -120,11 +120,16 @@ export default function CareerScreen() {
 
       // Cup matches interleaved by fractional day number
       const cupMatches = [];
+      let pokalWon = false;
+      let europeanWon = false;
       if (division === 'bl' || division === '2bl') {
-        cupMatches.push(...simulatePokalMatches(slots));
+        const pokal = simulatePokalMatches(slots);
+        pokalWon = pokal.won;
+        cupMatches.push(...pokal.playerMatches);
       }
       if (state.europeanCup) {
         const eu = simulateEuropeanCupFull(slots, state.europeanCup);
+        europeanWon = eu.champion === 'Deine 11';
         cupMatches.push(...(eu.normalizedPlayerMatches ?? []));
       }
 
@@ -132,9 +137,10 @@ export default function CareerScreen() {
       const playerMatches = [...leagueMatchesTagged, ...cupMatches]
         .sort((a, b) => (a.day ?? 0) - (b.day ?? 0));
 
+      const cupInfo = { pokalWon, europeanWon, europeanComp: state.europeanCup ?? null };
       career.setResult({
         ...result,
-        achievements: getAchievements(result, slots, division),
+        achievements: getAchievements(result, slots, division, cupInfo),
         table, playerMatches, playerStats, tableHistory, playoff,
       });
 
@@ -717,6 +723,20 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
               )}
 
               <PlayerStats stats={playerStats} />
+
+              {result?.achievements?.length > 0 && (
+                <div className="career-achievements">
+                  <div className="result-section-label">Achievements</div>
+                  <div className="ach-grid">
+                    {result.achievements.map(a => (
+                      <div key={a.key} className={`ach-card ach-tier-${a.tier ?? 'stat'}`}>
+                        <div className="ach-label">{a.label}</div>
+                        <div className="ach-desc">{a.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {playoff && <CareerPlayoffCard playoff={playoff} />}
 
@@ -1363,13 +1383,14 @@ function CareerMatchLog({ matches, onDone, done }) {
             <div key={i} className={`ml-card ml-card-${res}${isCup ? ' ml-card-cup' : ''}`}>
               <div className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</div>
               <div className="ml-card-body">
-                <div className="ml-card-top">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {isCup && (
-                      <span className="ml-cup-label">{CUP_LABELS[m.competition]} · {m.roundLabel}</span>
-                    )}
-                    <span className="ml-opponent">{isHome ? m.away : m.home}</span>
+                {isCup && (
+                  <div className="ml-cup-header">
+                    <span className={`ml-cup-comp ml-cup-comp-${m.competition}`}>{CUP_LABELS[m.competition]}</span>
+                    <span className="ml-cup-round">{m.roundLabel}</span>
                   </div>
+                )}
+                <div className="ml-card-top">
+                  <span className="ml-opponent">{isHome ? m.away : m.home}</span>
                   <span className={`ml-score ml-score-${res}`}>{own}–{opp}{suffix}</span>
                 </div>
                 {events.length > 0 && (
@@ -1384,6 +1405,20 @@ function CareerMatchLog({ matches, onDone, done }) {
                     {oppGoals.map((g, j) => (
                       <span key={j}>{j > 0 && '  '}{g.scorerName ? `${g.scorerName} ${g.minute}'` : `${g.minute}'`}</span>
                     ))}
+                  </div>
+                )}
+                {isCup && m.otherResults?.length > 0 && (
+                  <div className="ml-other-results">
+                    {m.otherResults.map((r, j) => {
+                      const s = r.pens ? ` n.E.` : r.aet ? ` n.V.` : '';
+                      return (
+                        <div key={j} className="ml-other-row">
+                          <span className={r.homeWon ? 'ml-other-winner' : ''}>{r.home}</span>
+                          <span className="ml-other-score">{r.hg}–{r.ag}{s}</span>
+                          <span className={!r.homeWon ? 'ml-other-winner' : ''}>{r.away}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -1950,3 +1950,47 @@
   border-color: var(--red);
   color: #fff;
 }
+
+/* ── Achievements ── */
+.career-achievements { width: 100%; }
+
+.ach-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ach-card {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+}
+
+.ach-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.ach-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* tier colours */
+.ach-tier-mega   { border-left-color: #f5c518; background: rgba(245,197,24,0.06); }
+.ach-tier-mega   .ach-label { color: #f5c518; }
+
+.ach-tier-combo  { border-left-color: var(--green); background: rgba(76,175,80,0.06); }
+.ach-tier-combo  .ach-label { color: var(--green); }
+
+.ach-tier-trophy { border-left-color: #7ab4ff; background: rgba(122,180,255,0.06); }
+.ach-tier-trophy .ach-label { color: #7ab4ff; }
+
+.ach-tier-stat   { border-left-color: rgba(255,255,255,0.15); }

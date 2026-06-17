@@ -23,7 +23,7 @@ function scoreStr(m) {
 // ── DFB Pokal ─────────────────────────────────────────────────────────────────
 
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
-const POKAL_DAYS   = [4.3, 10.3, 17.3, 24.3, 29.3, 33.3];
+const POKAL_DAYS   = [4.3, 10.3, 17.3, 24.3, 29.3, 34.5];
 
 function normalizeCupMatch(pm, competition, roundLabel, day) {
   return {
@@ -45,14 +45,22 @@ function normalizeCupMatch(pm, competition, roundLabel, day) {
 export function simulatePokalMatches(slots) {
   const playerMatches = [];
   let teams = buildPokalField(slots, ALL_BL_PLAYERS);
+  let won = false;
   for (let round = 0; round < 6; round++) {
     const { matchups, winners } = drawPokalRound(teams, round, slots);
-    const pm = matchups.find(m => m.isPlayerMatch)?.playerMatch;
-    if (pm) playerMatches.push(normalizeCupMatch(pm, 'pokal', ROUND_LABELS[round], POKAL_DAYS[round]));
+    const playerMatchup = matchups.find(m => m.isPlayerMatch);
+    const pm = playerMatchup?.playerMatch;
+    if (pm) {
+      const otherResults = matchups
+        .filter(m => !m.isPlayerMatch)
+        .map(m => ({ home: m.home, away: m.away, hg: m.hg, ag: m.ag, homeWon: m.homeWon, aet: m.aet, pens: m.pens, penScore: m.penScore }));
+      playerMatches.push({ ...normalizeCupMatch(pm, 'pokal', ROUND_LABELS[round], POKAL_DAYS[round]), otherResults });
+      won = pm.won;
+    }
     teams = winners;
     if (!pm?.won) break;
   }
-  return playerMatches;
+  return { playerMatches, won };
 }
 
 export function CareerPokal({ slots, onDone }) {
@@ -109,7 +117,7 @@ export function CareerPokal({ slots, onDone }) {
 // ── UCL / UEL — full simulation (runs during runSeason) ───────────────────────
 
 const EU_LEAGUE_DAYS = [2.5, 5.5, 8.5, 11.5, 14.5, 17.5, 20.5, 23.5];
-const EU_KO_DAYS = { playoff: 18.7, r16: 24.7, qf: 28.7, sf: 31.7, final: 33.7 };
+const EU_KO_DAYS = { playoff: 18.7, r16: 24.7, qf: 28.7, sf: 31.7, final: 35 };
 
 export function simulateEuropeanCupFull(slots, competition = 'ucl') {
   const teams = buildCLField(slots);
@@ -160,9 +168,13 @@ export function simulateEuropeanCupFull(slots, competition = 'ucl') {
     const playerWon = playerMatchup?.playerMatch?.won ?? false;
     koRounds.push({ roundId: currentRoundId, matchups, playerWon });
     if (playerMatchup?.playerMatch) {
-      normalizedKoMatches.push(normalizeCupMatch(
-        playerMatchup.playerMatch, competition, CL_ROUND_LABELS[currentRoundId], EU_KO_DAYS[currentRoundId] ?? 35
-      ));
+      const otherResults = matchups
+        .filter(m => !m.isPlayerMatch)
+        .map(m => ({ home: m.home, away: m.away, hg: m.hg, ag: m.ag, homeWon: m.homeWon, aet: m.aet, pens: m.pens, penScore: m.penScore }));
+      normalizedKoMatches.push({
+        ...normalizeCupMatch(playerMatchup.playerMatch, competition, CL_ROUND_LABELS[currentRoundId], EU_KO_DAYS[currentRoundId] ?? 35),
+        otherResults,
+      });
     }
 
     if (!playerWon || currentRoundId === 'final') break;
