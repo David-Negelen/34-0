@@ -4,19 +4,15 @@ import { useGameState } from '../hooks/useGameState';
 import SetupScreen from './SetupScreen';
 import DraftScreen from './DraftScreen';
 import PokalMatchScreen from './PokalMatchScreen';
-import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from '../data/players';
-import { PLAYERS as BL2_PLAYERS, CLUBS as BL2_CLUBS } from '../data/players2bl';
+import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import {
   buildCLField, simulateCLLeague, drawCLRound, classifyCLTable,
   simulateToWinner, simulatePlayoffRound, NEXT_CL_ROUND, CL_ROUND_LABELS,
 } from '../utils/clUtils';
 import './CLScreen.css';
 
-const ALL_PLAYERS = [
-  ...BL_PLAYERS.map(p => ({ ...p, _league: 'bl' })),
-  ...BL2_PLAYERS.map(p => ({ ...p, _league: '2bl' })),
-];
-const ALL_CLUBS = { ...BL_CLUBS, ...BL2_CLUBS };
+const ALL_PLAYERS = PLAYERS_EUROPEAN;
+const ALL_CLUBS = {};
 const CL_KEY = 'cl_state_v1';
 
 function scoreStr(m) {

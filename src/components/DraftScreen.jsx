@@ -30,8 +30,8 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
       const updatedSlots = slots.map(s =>
         s.id === slotId ? { ...s, player: { ...player, displayRating } } : s
       );
-      if (league === 'pokal') {
-        setResult({ mode: 'pokal', slots: updatedSlots });
+      if (league === 'pokal' || league === 'ucl') {
+        setResult({ mode: league, slots: updatedSlots });
       } else {
         setPrognoseSlots(updatedSlots);
       }
@@ -64,7 +64,7 @@ export default function DraftScreen({ state, league, players, clubs, fillSlot, u
             className="btn btn-ghost btn-sm draft-nav-btn"
             onClick={() => window.confirm('Draft abbrechen und zum Menü?') && onGoHome()}
           >← <span className="draft-nav-label">Menü</span></button>
-          <span className="draft-title">{league === 'pokal' ? 'DFB-POKAL' : league === '2bl' ? '2. BUNDESLIGA' : 'BUNDESLIGA'} DREAM XI</span>
+          <span className="draft-title">{league === 'pokal' ? 'DFB-POKAL' : league === 'ucl' ? 'CHAMPIONS LEAGUE' : league === '2bl' ? '2. BUNDESLIGA' : 'BUNDESLIGA'} DREAM XI</span>
           <span className="draft-formation badge badge-muted">{setup.formation}</span>
           {!showRatings && <span className="badge badge-gold">Blind-Modus</span>}
         </div>

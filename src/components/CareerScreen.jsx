@@ -13,6 +13,7 @@ import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
+import { CareerPokal, CareerEuropean } from './CareerCups';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
@@ -65,52 +66,86 @@ function getPlayers(div) {
   return BL2_PLAYERS;
 }
 
+function determineCups(division, pos) {
+  const cups = [];
+  if (division === '2bl' || division === 'bl') cups.push('pokal');
+  if (division === 'bl' && pos <= 4) cups.push('ucl');
+  else if (division === 'bl' && pos <= 6) cups.push('uel');
+  return cups;
+}
+
 export default function CareerScreen() {
   const navigate = useNavigate();
   const career = useCareerState();
   const { state } = career;
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
+  const [remainingCups, setRemainingCups] = useState([]);
+
+  function startEntwicklung() {
+    const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
+    const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
+    setEntwicklungData({ updatedSlots, growthLog, retirements });
+  }
+
+  function advanceCup() {
+    const next = remainingCups.slice(1);
+    if (next.length > 0) setRemainingCups(next);
+    else { setRemainingCups([]); startEntwicklung(); }
+  }
+
+  const [seasonRunning, setSeasonRunning] = useState(false);
+  const [seasonError, setSeasonError] = useState(null);
+
   async function runSeason(slots, division, seasonNumber) {
-    const players = getPlayers(division);
-    const mp = getMpSession();
+    if (seasonRunning) return;
+    setSeasonRunning(true);
+    setSeasonError(null);
+    try {
+      const players = getPlayers(division);
+      const mp = getMpSession();
 
-    let extraTeams = [];
-    if (mp) {
-      try {
-        const { att, def, ovr } = calcTeamStrength(slots);
-        await uploadSquad({ code: mp.code, playerName: mp.playerName, seasonNumber, att, def, ovr });
-        const others = await getRoomSeason(mp.code, seasonNumber);
-        extraTeams = others
-          .filter(m => m.player_name !== mp.playerName && m.team_att)
-          .map(m => ({ name: m.player_name, att: m.team_att, def: m.team_def }));
-      } catch {
-        // no-op: fall back to solo simulation
+      let extraTeams = [];
+      if (mp) {
+        try {
+          const { att, def, ovr } = calcTeamStrength(slots);
+          await uploadSquad({ code: mp.code, playerName: mp.playerName, seasonNumber, att, def, ovr });
+          const others = await getRoomSeason(mp.code, seasonNumber);
+          extraTeams = others
+            .filter(m => m.player_name !== mp.playerName && m.team_att)
+            .map(m => ({ name: m.player_name, att: m.team_att, def: m.team_def }));
+        } catch {
+          // no-op: fall back to solo simulation
+        }
       }
-    }
 
-    const { result, table, playerMatches, playerStats, tableHistory } =
-      simulateFullLeague(slots, division, players, extraTeams);
-    const needsPlayoff =
-      (result.pos === 3  && (division === '2bl' || division === '3l')) ||
-      (result.pos === 16 && (division === 'bl'  || division === '2bl'));
-    const playoff = needsPlayoff ? generatePlayoff(division, result.pos) : null;
-    career.setResult({
-      ...result,
-      achievements: getAchievements(result, slots, division),
-      table, playerMatches, playerStats, tableHistory, playoff,
-    });
+      const { result, table, playerMatches, playerStats, tableHistory } =
+        simulateFullLeague(slots, division, players, extraTeams);
+      const needsPlayoff =
+        (result.pos === 3  && (division === '2bl' || division === '3l')) ||
+        (result.pos === 16 && (division === 'bl'  || division === '2bl'));
+      const playoff = needsPlayoff ? generatePlayoff(division, result.pos) : null;
+      career.setResult({
+        ...result,
+        achievements: getAchievements(result, slots, division),
+        table, playerMatches, playerStats, tableHistory, playoff,
+      });
 
-    if (mp) {
-      submitResult({
-        code: mp.code,
-        playerName: mp.playerName,
-        seasonNumber,
-        pts: result.pts,
-        pos: result.pos,
-        gf: result.GF,
-        ga: result.GA,
-      }).catch(() => {});
+      if (mp) {
+        submitResult({
+          code: mp.code,
+          playerName: mp.playerName,
+          seasonNumber,
+          pts: result.pts,
+          pos: result.pos,
+          gf: result.GF,
+          ga: result.GA,
+        }).catch(() => {});
+      }
+    } catch (err) {
+      setSeasonError(String(err));
+    } finally {
+      setSeasonRunning(false);
     }
   }
 
@@ -185,6 +220,8 @@ export default function CareerScreen() {
         onResult={(slots) => runSeason(slots, draftDiv, state.seasonNumber)}
         onReset={() => career.reset()}
         onHome={() => { career.reset(); navigate('/'); }}
+        seasonRunning={seasonRunning}
+        seasonError={seasonError}
       />
     );
   }
@@ -246,6 +283,22 @@ export default function CareerScreen() {
       );
     }
 
+    // Cup phases — shown between league result and Entwicklung
+    const activeCup = remainingCups[0];
+    if (activeCup === 'pokal') {
+      return <CareerPokal slots={state.slots} onDone={advanceCup} />;
+    }
+    if (activeCup === 'ucl' || activeCup === 'uel') {
+      return (
+        <CareerEuropean
+          slots={state.slots}
+          label={activeCup === 'ucl' ? 'Champions League' : 'Europa League'}
+          onDone={advanceCup}
+        />
+      );
+    }
+
+    const cups = determineCups(div, pos);
     const mp = getMpSession();
     return (
       <>
@@ -255,10 +308,10 @@ export default function CareerScreen() {
           relegated={relegated}
           newDivision={newDivision}
           onContinue={() => {
-            const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
-            const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
-            setEntwicklungData({ updatedSlots, growthLog, retirements });
+            if (cups.length > 0) setRemainingCups(cups);
+            else startEntwicklung();
           }}
+          continueLabel={cups.length > 0 ? 'Weiter →' : 'Transferfenster →'}
           onEnd={handleEndCareer}
           onHome={() => { career.reset(); navigate('/'); }}
         />
@@ -290,6 +343,8 @@ export default function CareerScreen() {
         onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
         onEnd={handleEndCareer}
         onHome={() => { career.reset(); navigate('/'); }}
+        seasonRunning={seasonRunning}
+        seasonError={seasonError}
       />
     );
   }
@@ -397,7 +452,7 @@ function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartin
 // ── Draft ─────────────────────────────────────────────────────────────────────
 
 
-function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
+function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome, seasonRunning = false, seasonError = null }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
   const [posFilter, setPosFilter] = useState('');
@@ -470,9 +525,18 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
               Keine Spieler mehr für {stuckSlots.map(s => labelDE(s.label)).join(', ')} — wähle einen Ersatz
             </div>
           )}
+          {seasonError && (
+            <div className="career-stuck-banner" style={{ color: 'var(--danger, red)', marginBottom: 8 }}>
+              Fehler: {seasonError}
+            </div>
+          )}
           {filledFormation === 11 && (
-            <button className="btn btn-primary btn-lg career-draft-start-btn-top" onClick={() => onResult(slots)}>
-              Saison starten →
+            <button
+              className="btn btn-primary btn-lg career-draft-start-btn-top"
+              onClick={() => onResult(slots)}
+              disabled={seasonRunning}
+            >
+              {seasonRunning ? 'Lädt…' : 'Saison starten →'}
             </button>
           )}
           <div className="career-pos-filters">
@@ -507,8 +571,12 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
       {filledFormation === 11 && (
         <div className="career-draft-sticky-bar">
           <div className="career-draft-sticky-inner">
-            <button className="btn btn-primary btn-lg career-draft-sticky-btn" onClick={() => onResult(slots)}>
-              Saison starten →
+            <button
+              className="btn btn-primary btn-lg career-draft-sticky-btn"
+              onClick={() => onResult(slots)}
+              disabled={seasonRunning}
+            >
+              {seasonRunning ? 'Lädt…' : 'Saison starten →'}
             </button>
           </div>
         </div>
@@ -555,7 +623,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
 
 // ── Result ────────────────────────────────────────────────────────────────────
 
-function CareerResult({ state, promoted, relegated, newDivision, onContinue, onEnd, onHome }) {
+function CareerResult({ state, promoted, relegated, newDivision, onContinue, continueLabel = 'Transferfenster →', onEnd, onHome }) {
   const { result, division, seasonNumber, seasonHistory, slots } = state;
   const playoff = result?.playoff ?? null;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
@@ -576,7 +644,7 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
           {logDone && (
             <div className="career-result-actions">
               <button className="btn btn-primary" onClick={onContinue}>
-                Transferfenster →
+                {continueLabel}
               </button>
               <button className="btn btn-ghost btn-sm" onClick={onEnd}>
                 Karriere beenden
@@ -680,7 +748,7 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
               )}
 
               <button className="btn btn-primary" style={{ width: '100%' }} onClick={onContinue}>
-                Transferfenster →
+                {continueLabel}
               </button>
 
             </div>
@@ -693,7 +761,7 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
 
 // ── Transfer ──────────────────────────────────────────────────────────────────
 
-function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell, onChangeFormation, onStartSeason, onEnd }) {
+function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell, onChangeFormation, onStartSeason, onEnd, onHome, seasonRunning = false, seasonError = null }) {
   const { slots, transferOffers, incomingBids = [], division, seasonNumber, seasonHistory, swapHistory,
           budget = 0, formation, kader = [], kaderLeft = [] } = state;
   const formationSlots  = slots;
@@ -858,13 +926,18 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                 <span className="career-budget-value">€ {budget}M</span>
               </div>
 
+              {seasonError && (
+                <div className="career-stuck-banner" style={{ color: 'var(--danger, red)', marginBottom: 8 }}>
+                  Fehler: {seasonError}
+                </div>
+              )}
               <button
                 className="btn btn-primary btn-lg career-transfer-inline-btn"
                 style={{ width: '100%', marginBottom: 16 }}
                 onClick={onStartSeason}
-                disabled={!canStart}
+                disabled={!canStart || seasonRunning}
               >
-                {canStart ? `Saison ${seasonNumber} starten →` : `${filledFormation}/11 Positionen besetzt`}
+                {seasonRunning ? 'Lädt…' : canStart ? `Saison ${seasonNumber} starten →` : `${filledFormation}/11 Positionen besetzt`}
               </button>
 
               {kaderLeft.length > 0 && (
@@ -963,9 +1036,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                   className="btn btn-primary btn-lg career-transfer-inline-btn"
                   style={{ width: '100%' }}
                   onClick={onStartSeason}
-                  disabled={!canStart}
+                  disabled={!canStart || seasonRunning}
                 >
-                  {canStart ? `Saison ${seasonNumber} starten →` : `${filledFormation}/11 Positionen besetzt`}
+                  {seasonRunning ? 'Lädt…' : canStart ? `Saison ${seasonNumber} starten →` : `${filledFormation}/11 Positionen besetzt`}
                 </button>
               </div>
             </>
@@ -1054,9 +1127,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
           className="btn btn-primary btn-lg"
           style={{ width: '100%' }}
           onClick={onStartSeason}
-          disabled={!canStart}
+          disabled={!canStart || seasonRunning}
         >
-          Saison {seasonNumber} starten →
+          {seasonRunning ? 'Lädt…' : `Saison ${seasonNumber} starten →`}
         </button>
       </div>
     </div>
