@@ -1364,7 +1364,7 @@ function CareerMatchLog({ matches, onDone, done }) {
   return (
     <div className="match-log">
       <div className="ml-header">
-        <span className="ml-matchday">Spieltag {visible} / {matches.length}</span>
+        <span className="ml-matchday">Spieltag {visible}</span>
         {visible < matches.length && (
           <button className="ml-skip-btn" onClick={() => setVisible(matches.length)}>Überspringen</button>
         )}
@@ -1405,6 +1405,12 @@ function CareerMatchLog({ matches, onDone, done }) {
                     {oppGoals.map((g, j) => (
                       <span key={j}>{j > 0 && '  '}{g.scorerName ? `${g.scorerName} ${g.minute}'` : `${g.minute}'`}</span>
                     ))}
+                  </div>
+                )}
+                {isCup && m.aggOwn != null && (
+                  <div className="ml-aggregate">
+                    {m.aggOwn > m.aggOpp ? 'WEITER' : m.aggOwn < m.aggOpp ? 'AUSGESCHIEDEN' : 'AUSGESCHIEDEN'}
+                    {' · '}Gesamt: {m.aggOwn}–{m.aggOpp}
                   </div>
                 )}
                 {isCup && m.otherResults?.length > 0 && (

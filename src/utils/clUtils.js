@@ -1,5 +1,5 @@
 import { UCL_PARTICIPANTS } from '../data/uclParticipants';
-import { calcTeamStrength, simulateKnockout, simulateMatch, generateMatchEvents } from './simulation';
+import { calcTeamStrength, simulateKnockout, simulateMatch, simulateTwoLegTie, generateMatchEvents } from './simulation';
 import { getOopPenalty } from './positionUtils';
 
 function gauss(sigma) {
@@ -238,6 +238,89 @@ export function drawCLRound(teams, roundLabel, slots) {
 
     matchups.push(entry);
     winners.push(homeWon ? home : away);
+  }
+
+  return { matchups, winners };
+}
+
+// Two-legged version: leg 1 = 90 min, leg 2 = 90+ET+pens if needed.
+// Returns { matchups, winners } where player matchups have playerLeg1/playerLeg2.
+export function drawCLRoundTwoLegs(teams, roundLabel, slots) {
+  const shuffled = shuffleCL(teams);
+  const pairs = [];
+  for (let i = 0; i + 1 < shuffled.length; i += 2) pairs.push([shuffled[i], shuffled[i + 1]]);
+
+  const squad = slots.filter(s => s.player && s.type !== 'BENCH').map(s => {
+    const base = s.player.displayRating ?? s.player.primeRating ?? 75;
+    return { ...s.player, slotType: s.type, rating: Math.max(1, base - getOopPenalty(s.player.positions, s.type)) };
+  });
+
+  const matchups = [];
+  const winners  = [];
+
+  for (const [a, b] of pairs) {
+    const [home, away] = Math.random() < 0.5 ? [a, b] : [b, a];
+    const isPlayerMatch = !!(home.isPlayer || away.isPlayer);
+    const { leg1, leg2, hWins } = simulateTwoLegTie(home.att, home.def, away.att, away.def);
+    const homeWinsOverall = hWins;
+
+    // Aggregate scores for display (home = leg1-home team)
+    const homeAgg = leg1.hg + leg2.ag; // leg1-home's total: scored in leg1 + scored away in leg2
+    const awayAgg = leg1.ag + leg2.hg;
+
+    const entry = {
+      home: home.name, away: away.name,
+      hg: homeAgg, ag: awayAgg,
+      homeWon: homeWinsOverall, isPlayerMatch,
+      aet: leg2.aet, pens: leg2.pens, penScore: leg2.penScore,
+    };
+
+    if (isPlayerMatch) {
+      const playerIsHomeLeg1 = !!home.isPlayer;
+      const oppTeam = playerIsHomeLeg1 ? away : home;
+      const playerWon = playerIsHomeLeg1 ? homeWinsOverall : !homeWinsOverall;
+
+      // Leg 1 (player home or away, 90 min)
+      const own1 = playerIsHomeLeg1 ? leg1.hg : leg1.ag;
+      const opp1 = playerIsHomeLeg1 ? leg1.ag : leg1.hg;
+      const ev1 = squad.length ? generateMatchEvents(own1, opp1, squad, 0.04, false, own1) : [];
+      const og1 = Array.from({ length: opp1 }, () => ({ minute: Math.floor(Math.random() * 90) + 1, scorerName: null })).sort((a, b) => a.minute - b.minute);
+
+      // Leg 2 (home/away reversed)
+      // In leg2: away becomes home, home becomes away
+      // leg2.hg = leg2 home goals = original away team's goals
+      // leg2.ag = leg2 away goals = original home team's goals
+      const own2 = playerIsHomeLeg1 ? leg2.ag : leg2.hg;
+      const opp2 = playerIsHomeLeg1 ? leg2.hg : leg2.ag;
+      const ownReg2 = playerIsHomeLeg1 ? leg2.agReg : leg2.hgReg;
+      const ev2 = squad.length ? generateMatchEvents(own2, opp2, squad, 0.04, leg2.aet, ownReg2) : [];
+      const og2 = Array.from({ length: opp2 }, (_, gi) => ({
+        minute: leg2.aet && gi >= (playerIsHomeLeg1 ? leg2.agReg : leg2.hgReg)
+          ? Math.floor(Math.random() * 30) + 91
+          : Math.floor(Math.random() * 90) + 1,
+        scorerName: null,
+      })).sort((a, b) => a.minute - b.minute);
+
+      entry.playerLeg1 = {
+        round: roundLabel, opponent: oppTeam.name,
+        home: playerIsHomeLeg1, ownGoals: own1, oppGoals2: opp1,
+        aet: false, pens: false, penScore: null,
+        events: ev1, oppGoals: og1, kicks: [],
+        aggOwn: own1 + own2, aggOpp: opp1 + opp2,
+      };
+      entry.playerLeg2 = {
+        round: roundLabel, opponent: oppTeam.name,
+        home: !playerIsHomeLeg1, ownGoals: own2, oppGoals2: opp2,
+        aet: leg2.aet, pens: leg2.pens, penScore: leg2.penScore,
+        events: ev2, oppGoals: og2, kicks: [],
+        aggOwn: own1 + own2, aggOpp: opp1 + opp2,
+        won: playerWon,
+      };
+      entry.playerWon = playerWon;
+    }
+
+    matchups.push(entry);
+    winners.push(homeWinsOverall ? home : away);
   }
 
   return { matchups, winners };

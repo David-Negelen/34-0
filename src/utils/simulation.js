@@ -676,6 +676,50 @@ export function simulateKnockout(hAtt, hDef, aAtt, aDef) {
   return { hg: hTotal, ag: aTotal, hgReg: hg, agReg: ag, aet: true, pens: true, penScore: `${hPen}:${aPen}`, hWins, kicks };
 }
 
+// Two-legged tie: leg 1 is 90 min only, leg 2 can go to ET + pens.
+// Returns { leg1: {hg, ag}, leg2: {hg, ag, hgReg, agReg, aet, pens, penScore}, hWins }
+// hWins = whether the original leg-1 home team (H) wins overall.
+export function simulateTwoLegTie(hAtt, hDef, aAtt, aDef) {
+  // Leg 1: H at home, A away — 90 min only
+  const { hg: l1h, ag: l1a } = simulateMatch(hAtt, hDef, aAtt, aDef);
+
+  // Leg 2: A at home, H away — 90 min first
+  const { hg: l2h90, ag: l2a90 } = simulateMatch(aAtt, aDef, hAtt, hDef);
+
+  // Aggregate (H's total = leg1 home + leg2 away)
+  const aggH = l1h + l2a90;
+  const aggA = l1a + l2h90;
+
+  if (aggH !== aggA) {
+    return { leg1: { hg: l1h, ag: l1a }, leg2: { hg: l2h90, ag: l2a90, hgReg: l2h90, agReg: l2a90, aet: false, pens: false, penScore: null }, hWins: aggH > aggA };
+  }
+
+  // ET in leg 2 (A still home)
+  const etAHome = poisson(0.45), etHAway = poisson(0.45);
+  const l2h = l2h90 + etAHome, l2a = l2a90 + etHAway;
+  const aggHEt = l1h + l2a, aggAEt = l1a + l2h;
+
+  if (aggHEt !== aggAEt) {
+    return { leg1: { hg: l1h, ag: l1a }, leg2: { hg: l2h, ag: l2a, hgReg: l2h90, agReg: l2a90, aet: true, pens: false, penScore: null }, hWins: aggHEt > aggAEt };
+  }
+
+  // Pens (in leg 2: A home → "home" kicks, H away → "away" kicks)
+  let ap = 0, hp = 0;
+  for (let i = 0; i < 5; i++) {
+    const aLeft = 5 - i, rAfter = 4 - i;
+    if (Math.random() < 0.75) ap++;
+    if (ap > hp + aLeft) break;
+    if (Math.random() < 0.75) hp++;
+    if (hp > ap + rAfter || ap > hp + rAfter) break;
+  }
+  while (ap === hp && ap + hp < 100) {
+    if (Math.random() < 0.75) ap++;
+    if (Math.random() < 0.75) hp++;
+  }
+  // H wins if their (away) pens > A's (home) pens
+  return { leg1: { hg: l1h, ag: l1a }, leg2: { hg: l2h, ag: l2a, hgReg: l2h90, agReg: l2a90, aet: true, pens: true, penScore: `${ap}:${hp}` }, hWins: hp > ap };
+}
+
 // ── Achievements ──────────────────────────────────────────────────────────────
 
 export function getAchievements(result, slots = [], league = 'bl', cupInfo = {}) {

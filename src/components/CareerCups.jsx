@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { buildPokalField, drawPokalRound } from '../utils/simulation';
 import {
-  buildCLField, simulateCLLeague, drawCLRound, classifyCLTable,
+  buildCLField, simulateCLLeague, drawCLRound, drawCLRoundTwoLegs, classifyCLTable,
   simulatePlayoffRound, simulateToWinner, NEXT_CL_ROUND, CL_ROUND_LABELS,
 } from '../utils/clUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
@@ -117,7 +117,14 @@ export function CareerPokal({ slots, onDone }) {
 // ── UCL / UEL — full simulation (runs during runSeason) ───────────────────────
 
 const EU_LEAGUE_DAYS = [2.5, 5.5, 8.5, 11.5, 14.5, 17.5, 20.5, 23.5];
-const EU_KO_DAYS = { playoff: 18.7, r16: 24.7, qf: 28.7, sf: 31.7, final: 35 };
+// [leg1, leg2] for two-legged rounds; final is single leg after season
+const EU_KO_DAYS = {
+  playoff: [18.7, 20.3],
+  r16:     [22.7, 24.3],
+  qf:      [26.7, 28.3],
+  sf:      [30.7, 32.3],
+  final:   [35],
+};
 
 export function simulateEuropeanCupFull(slots, competition = 'ucl') {
   const teams = buildCLField(slots);
@@ -163,21 +170,51 @@ export function simulateEuropeanCupFull(slots, competition = 'ucl') {
   const normalizedKoMatches = [];
 
   while (currentRoundId) {
-    const { matchups, winners } = drawCLRound(currentTeams, CL_ROUND_LABELS[currentRoundId], slots);
-    const playerMatchup = matchups.find(m => m.isPlayerMatch);
-    const playerWon = playerMatchup?.playerMatch?.won ?? false;
-    koRounds.push({ roundId: currentRoundId, matchups, playerWon });
-    if (playerMatchup?.playerMatch) {
-      const otherResults = matchups
-        .filter(m => !m.isPlayerMatch)
-        .map(m => ({ home: m.home, away: m.away, hg: m.hg, ag: m.ag, homeWon: m.homeWon, aet: m.aet, pens: m.pens, penScore: m.penScore }));
-      normalizedKoMatches.push({
-        ...normalizeCupMatch(playerMatchup.playerMatch, competition, CL_ROUND_LABELS[currentRoundId], EU_KO_DAYS[currentRoundId] ?? 35),
-        otherResults,
-      });
+    const isFinal = currentRoundId === 'final';
+    const days = EU_KO_DAYS[currentRoundId] ?? [35];
+    const roundLabel = CL_ROUND_LABELS[currentRoundId];
+
+    let matchups, winners, playerWon;
+
+    if (isFinal) {
+      // Single leg final
+      ({ matchups, winners } = drawCLRound(currentTeams, roundLabel, slots));
+      const pm = matchups.find(m => m.isPlayerMatch);
+      playerWon = pm?.playerMatch?.won ?? false;
+      koRounds.push({ roundId: currentRoundId, matchups, playerWon });
+
+      if (pm?.playerMatch) {
+        const otherResults = matchups.filter(m => !m.isPlayerMatch)
+          .map(m => ({ home: m.home, away: m.away, hg: m.hg, ag: m.ag, homeWon: m.homeWon, aet: m.aet, pens: m.pens, penScore: m.penScore }));
+        normalizedKoMatches.push({
+          ...normalizeCupMatch(pm.playerMatch, competition, roundLabel, days[0]),
+          otherResults,
+        });
+      }
+    } else {
+      // Two-legged round
+      ({ matchups, winners } = drawCLRoundTwoLegs(currentTeams, roundLabel, slots));
+      const pm = matchups.find(m => m.isPlayerMatch);
+      playerWon = pm?.playerWon ?? false;
+      koRounds.push({ roundId: currentRoundId, matchups, playerWon });
+
+      if (pm?.playerLeg1 && pm?.playerLeg2) {
+        const otherResults = matchups.filter(m => !m.isPlayerMatch)
+          .map(m => ({ home: m.home, away: m.away, hg: m.hg, ag: m.ag, homeWon: m.homeWon, aet: m.aet, pens: m.pens, penScore: m.penScore }));
+        // Leg 1
+        normalizedKoMatches.push({
+          ...normalizeCupMatch(pm.playerLeg1, competition, `${roundLabel} — HINSPIEL`, days[0]),
+          otherResults: [],
+        });
+        // Leg 2 (with aggregate + other results)
+        const leg2Match = normalizeCupMatch(pm.playerLeg2, competition, `${roundLabel} — RÜCKSPIEL`, days[1] ?? days[0] + 1.5);
+        leg2Match.aggOwn = pm.playerLeg2.aggOwn;
+        leg2Match.aggOpp = pm.playerLeg2.aggOpp;
+        normalizedKoMatches.push({ ...leg2Match, otherResults });
+      }
     }
 
-    if (!playerWon || currentRoundId === 'final') break;
+    if (!playerWon || isFinal) break;
 
     if (currentRoundId === 'playoff') {
       currentTeams = [...(directR16 ?? []), ...winners];
