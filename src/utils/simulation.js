@@ -443,6 +443,7 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = [], extraT
   const ps = stats[playerIdx];
   const playerPos = table.find(r => r.isPlayer)?.pos ?? 18;
   const gkGoal = playerStats.some(p => p.slotType === 'GK' && p.goals > 0);
+  const ratings = calcSquadRatings(slots);
   const result = {
     W: ps.W, D: ps.D, L: ps.L,
     GF: ps.GF, GA: ps.GA,
