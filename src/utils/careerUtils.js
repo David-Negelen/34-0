@@ -200,66 +200,74 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const result = [];
   const usedIds = new Set();
 
-  // Tiers capped by division: lower leagues don't offer elite players.
-  const maxOffset = division === 'bl' ? 24 : division === '2bl' ? 16 : 8;
-  for (const offset of [-6, 0, 8, 16, 24].filter(o => o <= maxOffset)) {
+  // Pick randomly from the top-N candidates closest to a target rating.
+  // Weights are front-loaded so closer fits win more often, but not always.
+  function pickNear(target, poolSize = 6) {
+    const candidates = eligible
+      .filter(p => !usedIds.has(p.id))
+      .map(p => ({ p, diff: Math.min(...p.seasons.map(s => Math.abs(s.rating - target))) }))
+      .sort((a, b) => a.diff - b.diff)
+      .slice(0, poolSize);
+    if (!candidates.length) return null;
+    const weights = candidates.map((_, i) => Math.max(0.08, 1 - i * 0.16));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < candidates.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return candidates[i].p;
+    }
+    return candidates[candidates.length - 1].p;
+  }
+
+  function addTier(offset) {
     const target = teamAvg + offset;
-    let bestPlayer = null;
-    let bestDiff = Infinity;
-    for (const p of eligible) {
-      if (usedIds.has(p.id)) continue;
-      const nearest = p.seasons.reduce((b, s) => Math.abs(s.rating - target) < Math.abs(b - target) ? s.rating : b, p.seasons[0].rating);
-      const diff = Math.abs(nearest - target);
-      if (diff < bestDiff) { bestDiff = diff; bestPlayer = p; }
-    }
-    if (bestPlayer) {
-      result.push(withPot(attachSeasonNear(bestPlayer, target)));
-      usedIds.add(bestPlayer.id);
-    }
+    const p = pickNear(target);
+    if (p) { result.push(withPot(attachSeasonWeighted(p, target))); usedIds.add(p.id); }
   }
 
-  // Youth talent: one guaranteed pick ≤24 with the highest peak season in the data
-  {
-    let bestYouth = null;
-    let bestPeak  = -1;
-    for (const p of eligible) {
-      if (usedIds.has(p.id)) continue;
-      const peak = Math.max(...p.seasons.map(s => s.rating));
-      if (peak <= bestPeak) continue;
-      const hasYoung = p.seasons.some(s => {
-        const a = getAge(p.id, seasonToYear(s.season));
-        return a !== null && a <= 24;
-      });
-      if (hasYoung) { bestPeak = peak; bestYouth = p; }
-    }
-    if (bestYouth) {
-      const youngSeason = bestYouth.seasons
-        .filter(s => { const a = getAge(bestYouth.id, seasonToYear(s.season)); return a !== null && a <= 24; })
-        .reduce((b, s) => s.rating > b.rating ? s : b);
-      result.push(withPot({
-        ...bestYouth,
-        seasonRating:  youngSeason.rating,
-        spunClub:      youngSeason.club,
-        spunSeason:    youngSeason.season,
-        displayRating: youngSeason.rating,
-      }));
-      usedIds.add(bestYouth.id);
-    }
+  // Core: two lateral offers, always present
+  addTier(-4);
+  addTier(0);
+
+  // Small upgrade (+4–8): frequent
+  if (Math.random() < 0.70) addTier(4 + Math.floor(Math.random() * 5));
+
+  // Medium upgrade: scales down as team gets stronger; present roughly half the time
+  const maxMedium = teamAvg >= 90 ? 6 : teamAvg >= 84 ? 10 : teamAvg >= 78 ? 14 : 18;
+  if (Math.random() < 0.45) addTier(Math.round(maxMedium * (0.55 + Math.random() * 0.45)));
+
+  // Big upgrade: rare and capped, only in lower divisions or weak teams
+  const maxBig = division === 'bl' ? (teamAvg >= 84 ? 0 : teamAvg >= 78 ? 10 : 16)
+               : division === '2bl' ? (teamAvg >= 78 ? 8 : 14)
+               : 10;
+  if (maxBig > 0 && Math.random() < 0.20) addTier(maxBig);
+
+  // Youth talent: random pick from top-6 youth by peak (not always the same person)
+  const youthPool = eligible.filter(p => !usedIds.has(p.id) && p.seasons.some(s => {
+    const a = getAge(p.id, seasonToYear(s.season));
+    return a !== null && a <= 24;
+  }));
+  if (youthPool.length && result.length < count) {
+    const topYouth = youthPool
+      .map(p => ({ p, peak: Math.max(...p.seasons.map(s => s.rating)) }))
+      .sort((a, b) => b.peak - a.peak)
+      .slice(0, 6);
+    const picked = topYouth[Math.floor(Math.random() * topYouth.length)].p;
+    const youngSeason = picked.seasons
+      .filter(s => { const a = getAge(picked.id, seasonToYear(s.season)); return a !== null && a <= 24; })
+      .reduce((b, s) => s.rating > b.rating ? s : b);
+    result.push(withPot({ ...picked, seasonRating: youngSeason.rating, spunClub: youngSeason.club, spunSeason: youngSeason.season, displayRating: youngSeason.rating }));
+    usedIds.add(picked.id);
   }
 
-  // Fill any remaining slots at average
-  for (const p of eligible) {
+  // Fill remaining slots with random players near teamAvg
+  for (const p of eligible.filter(p => !usedIds.has(p.id))) {
     if (result.length >= count) break;
-    if (!usedIds.has(p.id)) { result.push(withPot(attachSeasonNear(p, teamAvg))); usedIds.add(p.id); }
+    result.push(withPot(attachSeasonWeighted(p, teamAvg)));
+    usedIds.add(p.id);
   }
 
   const final = shuffle(result).slice(0, count);
-
-  const hasRealUpgrade = final.some(p => p.seasonRating >= teamAvg - 3);
-  if (teamAvg >= 90 && !hasRealUpgrade && final.length && Math.random() < 0.4) {
-    const idx = Math.floor(Math.random() * final.length);
-    final[idx] = { ...final[idx], isGem: true, potential: 97 + Math.floor(Math.random() * 3) };
-  }
 
   return final.map(p => {
     const age = getAge(p.id, seasonToYear(p.spunSeason));
