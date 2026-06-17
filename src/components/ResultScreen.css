@@ -520,6 +520,16 @@
 .ml-card-d { border-left-color: rgba(255,255,255,0.18); }
 .ml-card-l { border-left-color: var(--red); }
 
+.ml-card-cup { background: rgba(255,255,255,0.02); }
+
+.ml-cup-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
 @keyframes ml-appear {
   from { opacity: 0; }
   to   { opacity: 1; }

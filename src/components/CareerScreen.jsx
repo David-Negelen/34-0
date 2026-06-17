@@ -13,7 +13,7 @@ import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
-import { CareerPokal, CareerEuropean, simulateEuropeanCupFull } from './CareerCups';
+import { simulatePokalMatches, simulateEuropeanCupFull } from './CareerCups';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
@@ -66,11 +66,6 @@ function getPlayers(div) {
   return BL2_PLAYERS;
 }
 
-function determineCups(division) {
-  if (division === '2bl' || division === 'bl') return ['pokal'];
-  return [];
-}
-
 function nextEuropeanCup(division, pos) {
   if (division === 'bl' && pos <= 4) return 'ucl';
   if (division === 'bl' && pos <= 6) return 'uel';
@@ -83,20 +78,12 @@ export default function CareerScreen() {
   const { state } = career;
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
-  const [remainingCups, setRemainingCups] = useState([]);
 
   function startEntwicklung() {
     const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
     const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
-    // Set next season's European cup based on this season's league result
     career.setEuropeanCup(nextEuropeanCup(state.division, state.result?.pos ?? 18));
     setEntwicklungData({ updatedSlots, growthLog, retirements });
-  }
-
-  function advanceCup() {
-    const next = remainingCups.slice(1);
-    if (next.length > 0) setRemainingCups(next);
-    else { setRemainingCups([]); startEntwicklung(); }
   }
 
   const [seasonRunning, setSeasonRunning] = useState(false);
@@ -124,20 +111,31 @@ export default function CareerScreen() {
         }
       }
 
-      const { result, table, playerMatches, playerStats, tableHistory } =
+      const { result, table, playerMatches: leagueMatches, playerStats, tableHistory } =
         simulateFullLeague(slots, division, players, extraTeams);
       const needsPlayoff =
         (result.pos === 3  && (division === '2bl' || division === '3l')) ||
         (result.pos === 16 && (division === 'bl'  || division === '2bl'));
       const playoff = needsPlayoff ? generatePlayoff(division, result.pos) : null;
 
-      // Simulate European cup that was earned last season (runs concurrently with the league)
-      const europeanResult = state.europeanCup ? simulateEuropeanCupFull(slots) : null;
+      // Cup matches interleaved by fractional day number
+      const cupMatches = [];
+      if (division === 'bl' || division === '2bl') {
+        cupMatches.push(...simulatePokalMatches(slots));
+      }
+      if (state.europeanCup) {
+        const eu = simulateEuropeanCupFull(slots, state.europeanCup);
+        cupMatches.push(...(eu.normalizedPlayerMatches ?? []));
+      }
+
+      const leagueMatchesTagged = leagueMatches.map(m => ({ ...m, competition: division }));
+      const playerMatches = [...leagueMatchesTagged, ...cupMatches]
+        .sort((a, b) => (a.day ?? 0) - (b.day ?? 0));
 
       career.setResult({
         ...result,
         achievements: getAchievements(result, slots, division),
-        table, playerMatches, playerStats, tableHistory, playoff, europeanResult,
+        table, playerMatches, playerStats, tableHistory, playoff,
       });
 
       if (mp) {
@@ -292,24 +290,6 @@ export default function CareerScreen() {
       );
     }
 
-    // Cup phases — shown between league result and Entwicklung
-    const activeCup = remainingCups[0];
-    if (activeCup === 'pokal') {
-      return <CareerPokal slots={state.slots} onDone={advanceCup} />;
-    }
-    if (activeCup === 'ucl' || activeCup === 'uel') {
-      return (
-        <CareerEuropean
-          data={state.result.europeanResult}
-          label={activeCup === 'ucl' ? 'Champions League' : 'Europa League'}
-          onDone={advanceCup}
-        />
-      );
-    }
-
-    const cups = determineCups(div);
-    // European cup (earned last season, played this season) shown before Pokal
-    if (state.result?.europeanResult) cups.unshift(state.europeanCup);
     const mp = getMpSession();
     return (
       <>
@@ -318,11 +298,7 @@ export default function CareerScreen() {
           promoted={promoted}
           relegated={relegated}
           newDivision={newDivision}
-          onContinue={() => {
-            if (cups.length > 0) setRemainingCups(cups);
-            else startEntwicklung();
-          }}
-          continueLabel={cups.length > 0 ? 'Weiter →' : 'Transferfenster →'}
+          onContinue={startEntwicklung}
           onEnd={handleEndCareer}
           onHome={() => { career.reset(); navigate('/'); }}
         />
@@ -634,7 +610,7 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome, seas
 
 // ── Result ────────────────────────────────────────────────────────────────────
 
-function CareerResult({ state, promoted, relegated, newDivision, onContinue, continueLabel = 'Transferfenster →', onEnd, onHome }) {
+function CareerResult({ state, promoted, relegated, newDivision, onContinue, onEnd, onHome }) {
   const { result, division, seasonNumber, seasonHistory, slots } = state;
   const playoff = result?.playoff ?? null;
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
@@ -655,7 +631,7 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, con
           {logDone && (
             <div className="career-result-actions">
               <button className="btn btn-primary" onClick={onContinue}>
-                {continueLabel}
+                Transferfenster →
               </button>
               <button className="btn btn-ghost btn-sm" onClick={onEnd}>
                 Karriere beenden
@@ -759,7 +735,7 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, con
               )}
 
               <button className="btn btn-primary" style={{ width: '100%' }} onClick={onContinue}>
-                {continueLabel}
+                Transferfenster →
               </button>
 
             </div>
@@ -1363,6 +1339,8 @@ function CareerMatchLog({ matches, onDone, done }) {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [visible]);
 
+  const CUP_LABELS = { pokal: 'POKAL', ucl: 'UCL', uel: 'UEL' };
+
   return (
     <div className="match-log">
       <div className="ml-header">
@@ -1373,19 +1351,26 @@ function CareerMatchLog({ matches, onDone, done }) {
       </div>
       <div className="ml-list" ref={listRef}>
         {matches.slice(0, visible).map((m, i) => {
+          const isCup = m.competition === 'pokal' || m.competition === 'ucl' || m.competition === 'uel';
           const isHome = m.home === 'Deine 11';
           const own = isHome ? m.hg : m.ag;
           const opp = isHome ? m.ag : m.hg;
           const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
           const events = (m.events ?? []).filter(e => e.type === 'goal').sort((a, b) => a.minute - b.minute);
           const oppGoals = (m.oppGoals ?? []).sort((a, b) => a.minute - b.minute);
+          const suffix = m.pens ? ` n.E. (${m.penScore})` : m.aet ? ' n.V.' : '';
           return (
-            <div key={i} className={`ml-card ml-card-${res}`}>
+            <div key={i} className={`ml-card ml-card-${res}${isCup ? ' ml-card-cup' : ''}`}>
               <div className={`ml-badge ml-badge-${res}`}>{res.toUpperCase()}</div>
               <div className="ml-card-body">
                 <div className="ml-card-top">
-                  <span className="ml-opponent">{isHome ? m.away : m.home}</span>
-                  <span className={`ml-score ml-score-${res}`}>{own}–{opp}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {isCup && (
+                      <span className="ml-cup-label">{CUP_LABELS[m.competition]} · {m.roundLabel}</span>
+                    )}
+                    <span className="ml-opponent">{isHome ? m.away : m.home}</span>
+                  </div>
+                  <span className={`ml-score ml-score-${res}`}>{own}–{opp}{suffix}</span>
                 </div>
                 {events.length > 0 && (
                   <div className="ml-scorers ml-scorers-ours">

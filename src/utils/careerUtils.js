@@ -284,6 +284,15 @@ export function generateTransferMarket(players, excludeIds, formation, teamAvg =
     offers.forEach(o => accumulated.add(o.id));
     all.push(...offers);
   }
+
+  // Cap at 1 gem per market, appearing roughly every 2 seasons
+  const gemIndices = all.reduce((acc, o, i) => (o.isGem ? [...acc, i] : acc), []);
+  if (gemIndices.length > 0) {
+    const keepIdx = Math.random() < 0.5
+      ? gemIndices[Math.floor(Math.random() * gemIndices.length)]
+      : -1;
+    return all.map((o, i) => o.isGem && i !== keepIdx ? { ...o, isGem: false } : o);
+  }
   return all;
 }
 
