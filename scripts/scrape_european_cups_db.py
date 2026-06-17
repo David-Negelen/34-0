@@ -42,7 +42,7 @@ WIKI_HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-DELAY        = 1.2   # per-thread delay between requests
+DELAY        = 1.5   # minimum seconds between any two TM requests (global)
 RETRY_DELAY  = 45.0
 MAX_RETRY    = 5
 PROFILE_WORKERS = 3  # parallel profile fetches per club
@@ -110,7 +110,7 @@ TM_CLUBS = {
     "Feyenoord":                   ("feyenoord-rotterdam",          234),
     "AZ":                          ("az-alkmaar",                   208),
     "Club Brugge":                 ("fc-brugge",                   2282),
-    "Anderlecht":                  ("rsc-anderlecht",               655),
+    "Anderlecht":                  ("rsc-anderlecht",                58),
     "Celtic":                      ("celtic-glasgow",               371),
     "Rangers":                     ("rangers-glasgow",              416),
     "Galatasaray":                 ("galatasaray-sk",               141),
@@ -229,12 +229,27 @@ def _get_session() -> requests.Session:
         _tls.session = s
     return _tls.session
 
+# Global rate limiter — enforces DELAY between all TM requests across all threads
+_rate_lock       = threading.Lock()
+_last_request_ts = 0.0
+
+def _rate_wait():
+    global _last_request_ts
+    with _rate_lock:
+        now  = time.time()
+        wait = DELAY - (now - _last_request_ts)
+        if wait > 0:
+            time.sleep(wait)
+        _last_request_ts = time.time()
+
 def fetch_tm(url: str) -> BeautifulSoup:
     session = _get_session()
     for attempt in range(MAX_RETRY):
         try:
-            time.sleep(DELAY)
+            _rate_wait()
             r = session.get(url, timeout=30)
+            if r.status_code == 404:
+                r.raise_for_status()          # raises HTTPError — caught below, no retry
             if r.status_code in (429, 502, 503):
                 wait = RETRY_DELAY * (attempt + 1)
                 print(f"    Rate-limited ({r.status_code}), waiting {wait:.0f}s …")
@@ -242,6 +257,8 @@ def fetch_tm(url: str) -> BeautifulSoup:
                 continue
             r.raise_for_status()
             return BeautifulSoup(r.text, "lxml")
+        except requests.HTTPError:
+            raise                             # 404 / other HTTP errors: no retry
         except requests.RequestException as e:
             if attempt == MAX_RETRY - 1:
                 raise
@@ -723,12 +740,13 @@ def run_comp(con: sqlite3.Connection, comp: str, seasons: list[int]):
             cached  = [p for p in players if     profile_fetched(con, p["tm_id"])]
             to_fetch = [p for p in players if not profile_fetched(con, p["tm_id"])]
 
-            # Register cached players immediately
+            # Register cached players immediately (silent — profiles already in DB)
             for p in cached:
                 con.execute("INSERT OR IGNORE INTO players (tm_id, name) VALUES (?,?)",
                             (p["tm_id"], p["name"]))
                 save_squad_entry(con, year, comp, club_id, p["tm_id"])
-                print(f"    {p['name']:35s} — cached")
+            if cached:
+                print(f"    ({len(cached)} players already in DB, skipped)")
 
             # Fetch new profiles in parallel
             def _fetch(p):

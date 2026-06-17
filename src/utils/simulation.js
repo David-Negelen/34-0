@@ -38,7 +38,7 @@ function weightedPick(pool, weights) {
 }
 
 // goalsForReg: goals scored in regular time (so ET goals get minutes 91–120)
-function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01, aet = false, goalsForReg = null) {
+export function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01, aet = false, goalsForReg = null) {
   const events = [];
   const gk = squad.find(p => p.slotType === 'GK');
   const regGoals = goalsForReg ?? goalsFor;
@@ -72,7 +72,7 @@ function generateMatchEvents(goalsFor, goalsAgainst, squad, gkGoalChance = 0.01,
 // Simulate a single match with separate attack/defense ratings.
 // lambdaH is driven by home attack vs away defense; lambdaA vice-versa.
 // Home advantage baked in as +0.18 / -0.18.
-function simulateMatch(hAtt, hDef, aAtt, aDef) {
+export function simulateMatch(hAtt, hDef, aAtt, aDef) {
   const lambdaH = Math.max(0.40, 1.40 + 0.15 + (hAtt - aDef) * 0.040);
   const lambdaA = Math.max(0.40, 1.40 - 0.15 + (aAtt - hDef) * 0.040);
   return { hg: poisson(lambdaH), ag: poisson(lambdaA) };
@@ -623,7 +623,7 @@ export function drawPokalRound(teams, round, slots) {
 // Simulate a single knockout game (90 min → optional ET → optional pens).
 // Returns { hg, ag, aet, pens, penScore }
 // Tuned for Pokal: lower base scoring → ~32% draws for equal teams, more AET + pens.
-function simulateKnockout(hAtt, hDef, aAtt, aDef) {
+export function simulateKnockout(hAtt, hDef, aAtt, aDef) {
   const hAdj = Math.max(40, hAtt + gauss(5));
   const aAdj = Math.max(40, aAtt + gauss(5));
   const lambdaH = Math.max(0.25, 0.95 + (hAdj - aDef) * 0.022);

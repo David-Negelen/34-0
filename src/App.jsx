@@ -15,6 +15,7 @@ import LeaderboardScreen from './components/LeaderboardScreen';
 import PokalStatsScreen from './components/PokalStatsScreen';
 import CareerScreen from './components/CareerScreen';
 import CareerClassicScreen from './components/CareerClassicScreen';
+import CLScreen from './components/CLScreen';
 import MultiplayerLobbyScreen from './components/MultiplayerLobbyScreen';
 import PlayerBoardScreen from './components/PlayerBoardScreen';
 import { PLAYERS as BL_PLAYERS, CLUBS as BL_CLUBS } from './data/players';
@@ -298,6 +299,7 @@ export default function App() {
       <Route path="/leaderboard/:league" element={<LeaderboardPage />} />
       <Route path="/pokal-stats" element={<PokalStatsPage />} />
       <Route path="/spieler" element={<PlayerBoardPage />} />
+      <Route path="/ucl" element={<CLScreen />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

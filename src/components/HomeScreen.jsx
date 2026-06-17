@@ -51,6 +51,12 @@ export default function HomeScreen() {
             Multiplayer starten →
           </button>
         </div>
+        <div className="league-group">
+          <button className="league-card league-card--ucl" onClick={() => navigate('/ucl')}>
+            <span className="league-card-name">Champions League</span>
+            <span className="league-card-sub">UCL · 36 Teams · Ligaphase + K.o.-Runden</span>
+          </button>
+        </div>
       </div>
       </div>
 

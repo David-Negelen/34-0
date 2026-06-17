@@ -140,6 +140,10 @@
   border-left: 3px solid #607d8b;
 }
 
+.league-card--ucl {
+  border-left: 3px solid #1e90ff;
+}
+
 .league-card-name {
   font-size: 20px;
   font-weight: 800;

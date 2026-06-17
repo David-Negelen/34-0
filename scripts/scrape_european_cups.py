@@ -416,7 +416,7 @@ TM_CLUBS = {
     "Feyenoord":                   ("feyenoord-rotterdam",         234),
     "AZ":                          ("az-alkmaar",                  208),
     "Club Brugge":                 ("fc-brugge",                  2282),
-    "Anderlecht":                  ("rsc-anderlecht",               12),
+    "Anderlecht":                  ("rsc-anderlecht",                58),
     "Celtic":                      ("celtic-glasgow",              371),
     "Rangers":                     ("rangers-glasgow",             416),
     "Galatasaray":                 ("galatasaray-sk",              141),
