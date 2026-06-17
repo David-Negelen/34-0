@@ -24,6 +24,7 @@ const defaultState = {
   budget: 0,
   kader: [],     // unlimited reserves: [{...player, inactiveSeasons: 0}]
   kaderLeft: [], // players auto-released last window (for display message)
+  europeanCup: null, // 'ucl' | 'uel' | null — cup to play THIS season (set by previous season's result)
 };
 
 function mergeStats(careerStats, playerStats) {
@@ -117,6 +118,9 @@ function reducer(state, action) {
 
     case 'SET_RESULT':
       return { ...state, phase: 'result', result: action.payload, swapHistory: [] };
+
+    case 'SET_EUROPEAN_CUP':
+      return { ...state, europeanCup: action.payload };
 
     case 'BEGIN_TRANSFER': {
       const { newDivision, transferOffers, retiredThisSeason, prize, incomingBids } = action.payload;
@@ -363,6 +367,7 @@ export function useCareerState() {
     placePlayer:   (slotId, player, displayRating) =>
                      dispatch({ type: 'PLACE_PLAYER', payload: { slotId, player, displayRating } }),
     setResult:     result => dispatch({ type: 'SET_RESULT', payload: result }),
+    setEuropeanCup: cup  => dispatch({ type: 'SET_EUROPEAN_CUP', payload: cup }),
     beginTransfer: (newDivision, offers, retiredThisSeason, prize, incomingBids) =>
                      dispatch({ type: 'BEGIN_TRANSFER', payload: { newDivision, transferOffers: offers, retiredThisSeason, prize, incomingBids } }),
     buyOffer:        (offerIndex, slotId = null) =>

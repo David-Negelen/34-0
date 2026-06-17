@@ -13,7 +13,7 @@ import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
-import { CareerPokal, CareerEuropean } from './CareerCups';
+import { CareerPokal, CareerEuropean, simulateEuropeanCupFull } from './CareerCups';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
@@ -66,12 +66,15 @@ function getPlayers(div) {
   return BL2_PLAYERS;
 }
 
-function determineCups(division, pos) {
-  const cups = [];
-  if (division === '2bl' || division === 'bl') cups.push('pokal');
-  if (division === 'bl' && pos <= 4) cups.push('ucl');
-  else if (division === 'bl' && pos <= 6) cups.push('uel');
-  return cups;
+function determineCups(division) {
+  if (division === '2bl' || division === 'bl') return ['pokal'];
+  return [];
+}
+
+function nextEuropeanCup(division, pos) {
+  if (division === 'bl' && pos <= 4) return 'ucl';
+  if (division === 'bl' && pos <= 6) return 'uel';
+  return null;
 }
 
 export default function CareerScreen() {
@@ -85,6 +88,8 @@ export default function CareerScreen() {
   function startEntwicklung() {
     const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
     const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
+    // Set next season's European cup based on this season's league result
+    career.setEuropeanCup(nextEuropeanCup(state.division, state.result?.pos ?? 18));
     setEntwicklungData({ updatedSlots, growthLog, retirements });
   }
 
@@ -125,10 +130,14 @@ export default function CareerScreen() {
         (result.pos === 3  && (division === '2bl' || division === '3l')) ||
         (result.pos === 16 && (division === 'bl'  || division === '2bl'));
       const playoff = needsPlayoff ? generatePlayoff(division, result.pos) : null;
+
+      // Simulate European cup that was earned last season (runs concurrently with the league)
+      const europeanResult = state.europeanCup ? simulateEuropeanCupFull(slots) : null;
+
       career.setResult({
         ...result,
         achievements: getAchievements(result, slots, division),
-        table, playerMatches, playerStats, tableHistory, playoff,
+        table, playerMatches, playerStats, tableHistory, playoff, europeanResult,
       });
 
       if (mp) {
@@ -291,14 +300,16 @@ export default function CareerScreen() {
     if (activeCup === 'ucl' || activeCup === 'uel') {
       return (
         <CareerEuropean
-          slots={state.slots}
+          data={state.result.europeanResult}
           label={activeCup === 'ucl' ? 'Champions League' : 'Europa League'}
           onDone={advanceCup}
         />
       );
     }
 
-    const cups = determineCups(div, pos);
+    const cups = determineCups(div);
+    // European cup (earned last season, played this season) shown before Pokal
+    if (state.result?.europeanResult) cups.unshift(state.europeanCup);
     const mp = getMpSession();
     return (
       <>
