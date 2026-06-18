@@ -1353,8 +1353,9 @@ function CareerMatchLog({ matches, onDone, done }) {
       return;
     }
     const next = matches[visible];
-    const isCup = ['pokal', 'ucl', 'uel'].includes(next?.competition);
-    if (isCup) {
+    const isKnockoutCup = ['pokal', 'ucl', 'uel'].includes(next?.competition)
+      && next?.roundLabel !== 'LIGAPHASE';
+    if (isKnockoutCup) {
       setCupSim(next); // pause and show the sim; visible stays the same
       return;
     }
