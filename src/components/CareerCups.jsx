@@ -136,7 +136,7 @@ const EU_KO_DAYS = {
 };
 
 export function simulateEuropeanCupFull(slots, competition = 'ucl') {
-  const teams = buildCLField(slots);
+  const teams = buildCLField(slots, competition);
   const { table, playerLeagueMatches } = simulateCLLeague(teams, slots);
 
   const classified = classifyCLTable(table);

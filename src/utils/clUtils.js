@@ -1,4 +1,5 @@
 import { UCL_PARTICIPANTS } from '../data/uclParticipants';
+import { UEL_PARTICIPANTS } from '../data/uelParticipants';
 import { calcTeamStrength, simulateKnockout, simulateMatch, simulateTwoLegTie, generateMatchEvents } from './simulation';
 import { getOopPenalty } from './positionUtils';
 
@@ -16,10 +17,9 @@ export function shuffleCL(arr) {
   return a;
 }
 
-const RESULT_ORDER = ['winner', 'final', 'sf', 'qf', 'r16', 'po', 'group'];
-const RESULT_STRENGTH = {
-  winner: 88, final: 84, sf: 80, qf: 76, r16: 72, po: 68, group: 64,
-};
+const RESULT_ORDER = ['winner', 'final', 'sf', 'qf', 'r16', 'r32', 'po', 'group'];
+const UCL_STRENGTH = { winner: 88, final: 84, sf: 80, qf: 76, r16: 72, r32: 69, po: 68, group: 64 };
+const UEL_STRENGTH = { winner: 82, final: 78, sf: 74, qf: 70, r16: 67, r32: 64, po: 62, group: 60 };
 
 export const CL_ROUND_LABELS = {
   playoff: 'PLAYOFF',
@@ -36,11 +36,13 @@ export const NEXT_CL_ROUND = {
   sf: 'final',
 };
 
-export function buildCLField(slots, allPlayers = []) {
+export function buildCLField(slots, competition = 'ucl') {
   const { att, def } = calcTeamStrength(slots);
+  const participants = competition === 'uel' ? UEL_PARTICIPANTS : UCL_PARTICIPANTS;
+  const strengthTable = competition === 'uel' ? UEL_STRENGTH : UCL_STRENGTH;
 
   const clubMap = new Map();
-  for (const p of UCL_PARTICIPANTS) {
+  for (const p of participants) {
     if (!clubMap.has(p.club)) clubMap.set(p.club, []);
     clubMap.get(p.club).push(p);
   }
@@ -55,12 +57,12 @@ export function buildCLField(slots, allPlayers = []) {
       club,
       name: `${club} ${latest.season}`,
       season: latest.season,
-      baseStrength: RESULT_STRENGTH[best.result] ?? 64,
+      baseStrength: strengthTable[best.result] ?? 60,
     });
   }
 
   const cpuTeams = shuffleCL(teamPool).slice(0, 35).map(t => {
-    const str = Math.round(Math.min(95, Math.max(55, t.baseStrength + gauss(4))));
+    const str = Math.round(Math.min(92, Math.max(52, t.baseStrength + gauss(4))));
     return { club: t.club, name: t.name, season: t.season, att: str, def: str };
   });
 
