@@ -26,6 +26,13 @@ const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', '
 const POKAL_DAYS   = [4.3, 10.3, 17.3, 24.3, 29.3, 34.5];
 
 function normalizeCupMatch(pm, competition, roundLabel, day) {
+  // penScore convention in simulation is always "home:away" for that specific leg.
+  // Normalise to "player:opponent" so the display is unambiguous.
+  let penScore = pm.penScore;
+  if (pm.pens && penScore && !pm.home) {
+    const [a, b] = penScore.split(':');
+    penScore = `${b}:${a}`;
+  }
   return {
     home: pm.home ? 'Deine 11' : pm.opponent,
     away: pm.home ? pm.opponent : 'Deine 11',
@@ -35,7 +42,8 @@ function normalizeCupMatch(pm, competition, roundLabel, day) {
     oppGoals: pm.oppGoals ?? [],
     aet: pm.aet,
     pens: pm.pens,
-    penScore: pm.penScore,
+    penScore,
+    won: pm.won,    // overall cup advancement result (undefined for leg 1 of two-legged ties)
     competition,
     roundLabel,
     day,

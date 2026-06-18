@@ -1375,7 +1375,9 @@ function CareerMatchLog({ matches, onDone, done }) {
           const isHome = m.home === 'Deine 11';
           const own = isHome ? m.hg : m.ag;
           const opp = isHome ? m.ag : m.hg;
-          const res = own > opp ? 'w' : own < opp ? 'l' : 'd';
+          const res = isCup && m.pens && m.won != null
+            ? (m.won ? 'w' : 'l')
+            : own > opp ? 'w' : own < opp ? 'l' : 'd';
           const events = (m.events ?? []).filter(e => e.type === 'goal').sort((a, b) => a.minute - b.minute);
           const oppGoals = (m.oppGoals ?? []).sort((a, b) => a.minute - b.minute);
           const suffix = m.pens ? ` n.E. (${m.penScore})` : m.aet ? ' n.V.' : '';
