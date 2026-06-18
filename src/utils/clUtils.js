@@ -312,7 +312,7 @@ export function drawCLRoundTwoLegs(teams, roundLabel, slots) {
         round: roundLabel, opponent: oppTeam.name,
         home: !playerIsHomeLeg1, ownGoals: own2, oppGoals2: opp2,
         aet: leg2.aet, pens: leg2.pens, penScore: leg2.penScore,
-        events: ev2, oppGoals: og2, kicks: [],
+        events: ev2, oppGoals: og2, kicks: leg2.kicks ?? [],
         aggOwn: own1 + own2, aggOpp: opp1 + opp2,
         won: playerWon,
       };

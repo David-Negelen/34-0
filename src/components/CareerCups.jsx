@@ -43,6 +43,7 @@ function normalizeCupMatch(pm, competition, roundLabel, day) {
     aet: pm.aet,
     pens: pm.pens,
     penScore,
+    kicks: pm.kicks ?? [],
     won: pm.won,    // overall cup advancement result (undefined for leg 1 of two-legged ties)
     competition,
     roundLabel,

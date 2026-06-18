@@ -14,6 +14,7 @@ import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils'
 import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
 import { simulatePokalMatches, simulateEuropeanCupFull } from './CareerCups';
+import PokalMatchScreen from './PokalMatchScreen';
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
@@ -1340,33 +1341,78 @@ function CareerCard({ player, league, picked, incompatible, offRole, onClick }) 
 }
 
 function CareerMatchLog({ matches, onDone, done }) {
-  const [visible, setVisible] = useState(0);
+  const [visible, setVisible]   = useState(0);
+  const [cupSim, setCupSim]     = useState(null); // set when flow pauses for a cup match
   const listRef   = useRef(null);
   const calledRef = useRef(false);
 
   useEffect(() => {
+    if (cupSim) return; // paused — waiting for user to finish the cup sim
     if (done || visible >= matches.length) {
       if (!calledRef.current) { calledRef.current = true; onDone?.(); }
+      return;
+    }
+    const next = matches[visible];
+    const isCup = ['pokal', 'ucl', 'uel'].includes(next?.competition);
+    if (isCup) {
+      setCupSim(next); // pause and show the sim; visible stays the same
       return;
     }
     const progress = visible / Math.max(1, matches.length - 1);
     const delay    = 500 + Math.pow(progress, 2) * 300;
     const t = setTimeout(() => setVisible(v => v + 1), delay);
     return () => clearTimeout(t);
-  }, [visible, done, matches.length]);
+  }, [visible, done, matches.length, cupSim]);
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [visible]);
 
+  const handleSimDone = () => {
+    setCupSim(null);
+    setVisible(v => v + 1); // reveal the cup match card and resume flow
+  };
+
+  const skip = () => {
+    setCupSim(null);
+    setVisible(matches.length);
+  };
+
   const CUP_LABELS = { pokal: 'POKAL', ucl: 'UCL', uel: 'UEL' };
+
+  // Full-screen cup sim — renders instead of the match log
+  if (cupSim) {
+    const playerIsHome = cupSim.home === 'Deine 11';
+    return (
+      <div className="ml-cupsim-screen">
+        <PokalMatchScreen
+          key={cupSim.day}
+          match={{
+            home: playerIsHome,
+            aet: cupSim.aet,
+            pens: cupSim.pens,
+            events: cupSim.events,
+            oppGoals: cupSim.oppGoals,
+            kicks: cupSim.kicks ?? [],
+            ownGoals: playerIsHome ? cupSim.hg : cupSim.ag,
+            oppGoals2: playerIsHome ? cupSim.ag : cupSim.hg,
+            won: cupSim.won ?? (playerIsHome ? cupSim.hg > cupSim.ag : cupSim.ag > cupSim.hg),
+            opponent: playerIsHome ? cupSim.away : cupSim.home,
+          }}
+          roundLabel={`${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`}
+          closeLabel="Weiter →"
+          onContinue={handleSimDone}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="match-log">
       <div className="ml-header">
         <span className="ml-matchday">Spieltag {visible}</span>
         {visible < matches.length && (
-          <button className="ml-skip-btn" onClick={() => setVisible(matches.length)}>Überspringen</button>
+          <button className="ml-skip-btn" onClick={skip}>Überspringen</button>
         )}
       </div>
       <div className="ml-list" ref={listRef}>
@@ -1411,22 +1457,8 @@ function CareerMatchLog({ matches, onDone, done }) {
                 )}
                 {isCup && m.aggOwn != null && (
                   <div className="ml-aggregate">
-                    {m.aggOwn > m.aggOpp ? 'WEITER' : m.aggOwn < m.aggOpp ? 'AUSGESCHIEDEN' : 'AUSGESCHIEDEN'}
+                    {m.aggOwn > m.aggOpp ? 'WEITER' : 'AUSGESCHIEDEN'}
                     {' · '}Gesamt: {m.aggOwn}–{m.aggOpp}
-                  </div>
-                )}
-                {isCup && m.otherResults?.length > 0 && (
-                  <div className="ml-other-results">
-                    {m.otherResults.map((r, j) => {
-                      const s = r.pens ? ` n.E.` : r.aet ? ` n.V.` : '';
-                      return (
-                        <div key={j} className="ml-other-row">
-                          <span className={r.homeWon ? 'ml-other-winner' : ''}>{r.home}</span>
-                          <span className="ml-other-score">{r.hg}–{r.ag}{s}</span>
-                          <span className={!r.homeWon ? 'ml-other-winner' : ''}>{r.away}</span>
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
               </div>

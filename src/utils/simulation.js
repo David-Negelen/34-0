@@ -704,20 +704,29 @@ export function simulateTwoLegTie(hAtt, hDef, aAtt, aDef) {
   }
 
   // Pens (in leg 2: A home → "home" kicks, H away → "away" kicks)
+  const kicks = [];
   let ap = 0, hp = 0;
   for (let i = 0; i < 5; i++) {
-    const aLeft = 5 - i, rAfter = 4 - i;
-    if (Math.random() < 0.75) ap++;
-    if (ap > hp + aLeft) break;
-    if (Math.random() < 0.75) hp++;
+    const hKicksLeft = 5 - i, rAfter = 4 - i;
+    const aScored = Math.random() < 0.75;
+    if (aScored) ap++;
+    kicks.push({ side: 'home', scored: aScored });
+    if (ap > hp + hKicksLeft) break;
+    const hScored = Math.random() < 0.75;
+    if (hScored) hp++;
+    kicks.push({ side: 'away', scored: hScored });
     if (hp > ap + rAfter || ap > hp + rAfter) break;
   }
-  while (ap === hp && ap + hp < 100) {
-    if (Math.random() < 0.75) ap++;
-    if (Math.random() < 0.75) hp++;
+  while (ap === hp && kicks.length < 100) {
+    const aSD = Math.random() < 0.75;
+    if (aSD) ap++;
+    kicks.push({ side: 'home', scored: aSD, sd: true });
+    const hSD = Math.random() < 0.75;
+    if (hSD) hp++;
+    kicks.push({ side: 'away', scored: hSD, sd: true });
   }
   // H wins if their (away) pens > A's (home) pens
-  return { leg1: { hg: l1h, ag: l1a }, leg2: { hg: l2h, ag: l2a, hgReg: l2h90, agReg: l2a90, aet: true, pens: true, penScore: `${ap}:${hp}` }, hWins: hp > ap };
+  return { leg1: { hg: l1h, ag: l1a }, leg2: { hg: l2h, ag: l2a, hgReg: l2h90, agReg: l2a90, aet: true, pens: true, penScore: `${ap}:${hp}`, kicks }, hWins: hp > ap };
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────
@@ -803,7 +812,19 @@ export function getAchievements(result, slots = [], league = 'bl', cupInfo = {})
     }
   }
 
-  return achievements;
+  // Suppress position achievements made redundant by trophies
+  const keys = new Set(achievements.map(a => a.key));
+  const filtered = achievements.filter(a => {
+    if (a.key === 'top4'   && (keys.has('champions') || keys.has('ucl'))) return false;
+    if (a.key === 'europe' && keys.has('uel'))                            return false;
+    return true;
+  });
+
+  // Sort: mega → combo → trophy → stat
+  const TIER_ORDER = { mega: 0, combo: 1, trophy: 2 };
+  filtered.sort((a, b) => (TIER_ORDER[a.tier] ?? 3) - (TIER_ORDER[b.tier] ?? 3));
+
+  return filtered;
 }
 
 // ── Share text ────────────────────────────────────────────────────────────────

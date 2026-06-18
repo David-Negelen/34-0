@@ -451,6 +451,17 @@
   overflow: hidden;
 }
 
+/* Full-screen cup sim — takes over the scroll container while animating */
+.ml-cupsim-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg, #0d0d0d);
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+}
+
 .ml-header {
   display: flex;
   align-items: center;

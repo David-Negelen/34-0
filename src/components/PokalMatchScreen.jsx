@@ -4,7 +4,7 @@ import './PokalMatchScreen.css';
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
 const TICK_MS = 83;   // ms per in-game minute → 90 min ≈ 7.5 s, full 120 min ≈ 10 s
 
-export default function PokalMatchScreen({ match, roundIndex, onContinue, roundLabel }) {
+export default function PokalMatchScreen({ match, roundIndex, onContinue, roundLabel, closeLabel }) {
   const {
     home = true,
     aet = false,
@@ -231,7 +231,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
             {won ? 'Weiter ✓' : 'Ausgeschieden'}
           </div>
           <button className="btn btn-primary ms-continue" onClick={onContinue}>
-            {won ? 'Nächste Runde →' : 'Zusammenfassung →'}
+            {closeLabel ?? (won ? 'Nächste Runde →' : 'Zusammenfassung →')}
           </button>
         </>
       )}
