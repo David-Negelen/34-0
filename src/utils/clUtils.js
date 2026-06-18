@@ -271,6 +271,7 @@ export function drawCLRoundTwoLegs(teams, roundLabel, slots) {
     const awayAgg = leg1.ag + leg2.hg;
 
     const entry = {
+      homeTeam: home, awayTeam: away,
       home: home.name, away: away.name,
       hg: homeAgg, ag: awayAgg,
       homeWon: homeWinsOverall, isPlayerMatch,

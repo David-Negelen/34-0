@@ -239,7 +239,7 @@ export function simulateEuropeanCupFull(slots, competition = 'ucl') {
   const champion   = playerWon
     ? 'Deine 11'
     : simulateToWinner(
-        (lastRound?.matchups ?? []).map(m => m.homeWon ? m.homeTeam : m.awayTeam).filter(t => !t?.isPlayer)
+        (lastRound?.matchups ?? []).map(m => m.homeWon ? m.homeTeam : m.awayTeam).filter(t => t && !t.isPlayer)
       );
 
   return { table, playerLeagueMatches, koRounds, playerPos, champion, normalizedPlayerMatches: [...normalizedLeagueMatches, ...normalizedKoMatches] };
