@@ -451,15 +451,11 @@
   overflow: hidden;
 }
 
-/* Full-screen cup sim — takes over the scroll container while animating */
-.ml-cupsim-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: var(--bg, #0d0d0d);
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
+/* Cup sim rendered inline inside the match-log card */
+.match-log .ms-screen {
+  min-height: unset;
+  background: none;
+  padding: 20px 16px 24px;
 }
 
 .ml-header {

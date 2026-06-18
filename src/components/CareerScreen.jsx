@@ -1380,11 +1380,11 @@ function CareerMatchLog({ matches, onDone, done }) {
 
   const CUP_LABELS = { pokal: 'POKAL', ucl: 'UCL', uel: 'UEL' };
 
-  // Full-screen cup sim — renders instead of the match log
+  // Inline cup sim — renders inside the match-log card
   if (cupSim) {
     const playerIsHome = cupSim.home === 'Deine 11';
     return (
-      <div className="ml-cupsim-screen">
+      <div className="match-log">
         <PokalMatchScreen
           key={cupSim.day}
           match={{
