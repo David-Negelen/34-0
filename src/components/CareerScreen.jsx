@@ -1369,6 +1369,10 @@ function CareerMatchLog({ matches, onDone, done }) {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [visible]);
 
+  useEffect(() => {
+    if (cupSim && listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [cupSim]);
+
   const handleSimDone = () => {
     setCupSim(null);
     setVisible(v => v + 1); // reveal the cup match card and resume flow
@@ -1398,7 +1402,7 @@ function CareerMatchLog({ matches, onDone, done }) {
         opponent: playerIsHome ? cupSim.away : cupSim.home,
       },
       roundLabel: `${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`,
-      closeLabel: 'Weiter →',
+      autoClose: true,
       onContinue: handleSimDone,
     };
   })() : null;
