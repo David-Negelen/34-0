@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCareerState } from '../hooks/useCareerState';
 import FormationBoard from './FormationBoard';
@@ -14,7 +14,7 @@ import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils'
 import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
 import { simulatePokalMatches, simulateEuropeanCupFull } from './CareerCups';
-import PokalMatchScreen from './PokalMatchScreen';
+const PokalMatchScreen = lazy(() => import('./PokalMatchScreen'));
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
@@ -1457,13 +1457,15 @@ function CareerMatchLog({ matches, onDone, done }) {
           );
         })}
         {cupSim && cupSimMatch && (
-          <PokalMatchScreen
-            key={cupSim.day}
-            match={cupSimMatch}
-            roundLabel={`${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`}
-            autoClose
-            onContinue={handleSimDone}
-          />
+          <Suspense fallback={null}>
+            <PokalMatchScreen
+              key={cupSim.day}
+              match={cupSimMatch}
+              roundLabel={`${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`}
+              autoClose
+              onContinue={handleSimDone}
+            />
+          </Suspense>
         )}
       </div>
     </div>
