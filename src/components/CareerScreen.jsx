@@ -1384,28 +1384,19 @@ function CareerMatchLog({ matches, onDone, done }) {
   };
 
   const CUP_LABELS = { pokal: 'POKAL', ucl: 'UCL', uel: 'UEL' };
-
-  const cupSimProps = cupSim ? (() => {
-    const playerIsHome = cupSim.home === 'Deine 11';
-    return {
-      key: cupSim.day,
-      match: {
-        home: playerIsHome,
-        aet: cupSim.aet,
-        pens: cupSim.pens,
-        events: cupSim.events,
-        oppGoals: cupSim.oppGoals,
-        kicks: cupSim.kicks ?? [],
-        ownGoals: playerIsHome ? cupSim.hg : cupSim.ag,
-        oppGoals2: playerIsHome ? cupSim.ag : cupSim.hg,
-        won: cupSim.won ?? (playerIsHome ? cupSim.hg > cupSim.ag : cupSim.ag > cupSim.hg),
-        opponent: playerIsHome ? cupSim.away : cupSim.home,
-      },
-      roundLabel: `${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`,
-      autoClose: true,
-      onContinue: handleSimDone,
-    };
-  })() : null;
+  const cupSimPlayerIsHome = cupSim ? cupSim.home === 'Deine 11' : false;
+  const cupSimMatch = cupSim ? {
+    home: cupSimPlayerIsHome,
+    aet: cupSim.aet,
+    pens: cupSim.pens,
+    events: cupSim.events,
+    oppGoals: cupSim.oppGoals,
+    kicks: cupSim.kicks ?? [],
+    ownGoals: cupSimPlayerIsHome ? cupSim.hg : cupSim.ag,
+    oppGoals2: cupSimPlayerIsHome ? cupSim.ag : cupSim.hg,
+    won: cupSim.won ?? (cupSimPlayerIsHome ? cupSim.hg > cupSim.ag : cupSim.ag > cupSim.hg),
+    opponent: cupSimPlayerIsHome ? cupSim.away : cupSim.home,
+  } : null;
 
   return (
     <div className="match-log">
@@ -1465,7 +1456,15 @@ function CareerMatchLog({ matches, onDone, done }) {
             </div>
           );
         })}
-        {cupSimProps && <PokalMatchScreen {...cupSimProps} />}
+        {cupSim && cupSimMatch && (
+          <PokalMatchScreen
+            key={cupSim.day}
+            match={cupSimMatch}
+            roundLabel={`${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`}
+            autoClose
+            onContinue={handleSimDone}
+          />
+        )}
       </div>
     </div>
   );
