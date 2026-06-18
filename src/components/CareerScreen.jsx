@@ -1381,38 +1381,33 @@ function CareerMatchLog({ matches, onDone, done }) {
 
   const CUP_LABELS = { pokal: 'POKAL', ucl: 'UCL', uel: 'UEL' };
 
-  // Inline cup sim — renders inside the match-log card
-  if (cupSim) {
+  const cupSimProps = cupSim ? (() => {
     const playerIsHome = cupSim.home === 'Deine 11';
-    return (
-      <div className="match-log">
-        <PokalMatchScreen
-          key={cupSim.day}
-          match={{
-            home: playerIsHome,
-            aet: cupSim.aet,
-            pens: cupSim.pens,
-            events: cupSim.events,
-            oppGoals: cupSim.oppGoals,
-            kicks: cupSim.kicks ?? [],
-            ownGoals: playerIsHome ? cupSim.hg : cupSim.ag,
-            oppGoals2: playerIsHome ? cupSim.ag : cupSim.hg,
-            won: cupSim.won ?? (playerIsHome ? cupSim.hg > cupSim.ag : cupSim.ag > cupSim.hg),
-            opponent: playerIsHome ? cupSim.away : cupSim.home,
-          }}
-          roundLabel={`${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`}
-          closeLabel="Weiter →"
-          onContinue={handleSimDone}
-        />
-      </div>
-    );
-  }
+    return {
+      key: cupSim.day,
+      match: {
+        home: playerIsHome,
+        aet: cupSim.aet,
+        pens: cupSim.pens,
+        events: cupSim.events,
+        oppGoals: cupSim.oppGoals,
+        kicks: cupSim.kicks ?? [],
+        ownGoals: playerIsHome ? cupSim.hg : cupSim.ag,
+        oppGoals2: playerIsHome ? cupSim.ag : cupSim.hg,
+        won: cupSim.won ?? (playerIsHome ? cupSim.hg > cupSim.ag : cupSim.ag > cupSim.hg),
+        opponent: playerIsHome ? cupSim.away : cupSim.home,
+      },
+      roundLabel: `${CUP_LABELS[cupSim.competition]} · ${cupSim.roundLabel}`,
+      closeLabel: 'Weiter →',
+      onContinue: handleSimDone,
+    };
+  })() : null;
 
   return (
     <div className="match-log">
       <div className="ml-header">
         <span className="ml-matchday">Spieltag {visible}</span>
-        {visible < matches.length && (
+        {(visible < matches.length || cupSim) && (
           <button className="ml-skip-btn" onClick={skip}>Überspringen</button>
         )}
       </div>
@@ -1466,6 +1461,7 @@ function CareerMatchLog({ matches, onDone, done }) {
             </div>
           );
         })}
+        {cupSimProps && <PokalMatchScreen {...cupSimProps} />}
       </div>
     </div>
   );
