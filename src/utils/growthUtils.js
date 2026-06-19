@@ -147,9 +147,9 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
 
     const gap = p.potential - p.displayRating;
 
-    // Icons always reach potential within ~2 seasons regardless of performance
+    // Icons reach potential within ~3 seasons regardless of performance
     if (p.isIcon) {
-      const iconGain = Math.min(gap, Math.max(4, Math.ceil(gap / 2)));
+      const iconGain = Math.min(gap, Math.max(3, Math.ceil(gap / 3)));
       if (iconGain > 0) {
         growthLog.push({ name: p.name, slotType: slot.type, oldRating: p.displayRating, newRating: p.displayRating + iconGain, gain: iconGain });
         p = { ...p, displayRating: p.displayRating + iconGain };
@@ -160,10 +160,10 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
     const score = perfScore(statsMap[p.id ?? p.name], slot.type);
 
     let minGain, maxGain;
-    if      (gap >= 20) { minGain = 5; maxGain = 15; }
-    else if (gap >= 12) { minGain = 3; maxGain = 8;  }
-    else if (gap >= 6)  { minGain = 1; maxGain = 5;  }
-    else                { minGain = 0; maxGain = 3;  }
+    if      (gap >= 15) { minGain = 1; maxGain = 5;  }
+    else if (gap >= 8)  { minGain = 1; maxGain = 3;  }
+    else if (gap >= 3)  { minGain = 0; maxGain = 2;  }
+    else                { minGain = 0; maxGain = 1;  }
 
     const divScale = division === 'bl' ? 1.0 : division === '2bl' ? 0.65 : 0.45;
     const rawGain = (minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2) * divScale;

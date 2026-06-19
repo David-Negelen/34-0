@@ -2,6 +2,32 @@ import { canPlayerFillSlot } from './playerUtils';
 import { assignPotential } from './growthUtils';
 import { getAge, seasonToYear } from './ageUtils';
 
+function playerPrime(player) {
+  if (!player.seasons?.length) return player.seasonRating ?? player.displayRating ?? 60;
+  return Math.max(...player.seasons.map(s => s.rating));
+}
+
+// Duplicate of ageGapScale from growthUtils — avoids circular import.
+function ageGapScaleLocal(age) {
+  if (age <= 21) return 1.0;
+  if (age <= 23) return 0.80;
+  if (age <= 26) return 0.55;
+  if (age <= 29) return 0.25;
+  if (age <= 32) return 0.08;
+  return 0.0;
+}
+
+// Potential ceiling ≈ player's career prime, scaled down for age.
+// Replaces assignPotential in transfer market context.
+function assignPotentialFromPrime(player, age = null) {
+  const prime = playerPrime(player);
+  const displayRating = player.displayRating ?? player.seasonRating ?? 60;
+  const ceiling = prime + (Math.floor(Math.random() * 3) - 1); // prime-1 to prime+1
+  const rawGap = Math.max(0, ceiling - displayRating);
+  const scale = age !== null ? ageGapScaleLocal(age) : 1.0;
+  return { ...player, potential: displayRating + Math.round(rawGap * scale) };
+}
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -186,13 +212,17 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
       .filter(p => canPlayerFillSlot(p, slotType))
   );
 
-  const withPot = p => assignPotential(p, getAge(p.id, seasonToYear(p.spunSeason)));
+  // Use prime-based potential for market offers — ceiling = career peak, scaled by age.
+  const withPot = p => {
+    const age = getAge(p.id, seasonToYear(p.spunSeason));
+    return assignPotentialFromPrime(p, age);
+  };
 
   if (!teamAvg || !eligible.length) {
     return eligible.slice(0, count).map(p => {
       const offer = attachSeason(p);
       const age = getAge(offer.id, seasonToYear(offer.spunSeason));
-      const offerWithPot = assignPotential(offer, age);
+      const offerWithPot = assignPotentialFromPrime(offer, age);
       return { ...offerWithPot, age, slotType, price: offerPrice(offerWithPot.seasonRating, false, age, offerWithPot.potential, slotType) };
     });
   }
@@ -200,12 +230,11 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const result = [];
   const usedIds = new Set();
 
-  // Pick randomly from the top-N candidates closest to a target rating.
-  // Weights are front-loaded so closer fits win more often, but not always.
+  // Match by career prime, not any individual season — creates diverse career-year displays.
   function pickNear(target, poolSize = 6) {
     const candidates = eligible
       .filter(p => !usedIds.has(p.id))
-      .map(p => ({ p, diff: Math.min(...p.seasons.map(s => Math.abs(s.rating - target))) }))
+      .map(p => ({ p, diff: Math.abs(playerPrime(p) - target) }))
       .sort((a, b) => a.diff - b.diff)
       .slice(0, poolSize);
     if (!candidates.length) return null;
@@ -219,51 +248,53 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     return candidates[candidates.length - 1].p;
   }
 
+  // Show a random career year for variety; potential is still based on prime.
   function addTier(offset) {
-    const target = teamAvg + offset;
-    const p = pickNear(target);
-    if (p) { result.push(withPot(attachSeasonWeighted(p, target))); usedIds.add(p.id); }
+    const p = pickNear(teamAvg + offset);
+    if (p) { result.push(withPot(attachSeason(p))); usedIds.add(p.id); }
   }
 
-  // Core: two lateral offers, always present
-  addTier(-4);
-  addTier(0);
+  // Core: two lateral offers (slightly below current avg — harder to find direct upgrades)
+  addTier(-6);
+  addTier(-2);
 
-  // Small upgrade (+4–8): frequent
-  if (Math.random() < 0.70) addTier(4 + Math.floor(Math.random() * 5));
+  // Small upgrade (+2–5): frequent but modest
+  if (Math.random() < 0.65) addTier(2 + Math.floor(Math.random() * 4));
 
-  // Medium upgrade: scales down as team gets stronger; present roughly half the time
-  const maxMedium = teamAvg >= 90 ? 6 : teamAvg >= 84 ? 10 : teamAvg >= 78 ? 14 : 18;
-  if (Math.random() < 0.45) addTier(Math.round(maxMedium * (0.55 + Math.random() * 0.45)));
+  // Medium upgrade: capped lower to slow progression
+  const maxMedium = teamAvg >= 90 ? 4 : teamAvg >= 84 ? 7 : teamAvg >= 78 ? 10 : 13;
+  if (Math.random() < 0.40) addTier(Math.round(maxMedium * (0.55 + Math.random() * 0.45)));
 
-  // Big upgrade: rare and capped, only in lower divisions or weak teams
-  const maxBig = division === 'bl' ? (teamAvg >= 84 ? 0 : teamAvg >= 78 ? 10 : 16)
-               : division === '2bl' ? (teamAvg >= 78 ? 8 : 14)
-               : 10;
-  if (maxBig > 0 && Math.random() < 0.20) addTier(maxBig);
+  // Big upgrade: rare, lower ceiling than before
+  const maxBig = division === 'bl' ? (teamAvg >= 84 ? 0 : teamAvg >= 78 ? 8 : 12)
+               : division === '2bl' ? (teamAvg >= 78 ? 6 : 10)
+               : 8;
+  if (maxBig > 0 && Math.random() < 0.15) addTier(maxBig);
 
-  // Youth talent: random pick from top-6 youth by peak (not always the same person)
+  // Youth talent: random pick from young players (any young season, not necessarily peak)
   const youthPool = eligible.filter(p => !usedIds.has(p.id) && p.seasons.some(s => {
     const a = getAge(p.id, seasonToYear(s.season));
     return a !== null && a <= 24;
   }));
   if (youthPool.length && result.length < count) {
     const topYouth = youthPool
-      .map(p => ({ p, peak: Math.max(...p.seasons.map(s => s.rating)) }))
+      .map(p => ({ p, peak: playerPrime(p) }))
       .sort((a, b) => b.peak - a.peak)
-      .slice(0, 6);
+      .slice(0, 8);
     const picked = topYouth[Math.floor(Math.random() * topYouth.length)].p;
-    const youngSeason = picked.seasons
-      .filter(s => { const a = getAge(picked.id, seasonToYear(s.season)); return a !== null && a <= 24; })
-      .reduce((b, s) => s.rating > b.rating ? s : b);
+    const youngSeasons = picked.seasons.filter(s => {
+      const a = getAge(picked.id, seasonToYear(s.season));
+      return a !== null && a <= 24;
+    });
+    const youngSeason = youngSeasons[Math.floor(Math.random() * youngSeasons.length)];
     result.push(withPot({ ...picked, seasonRating: youngSeason.rating, spunClub: youngSeason.club, spunSeason: youngSeason.season, displayRating: youngSeason.rating }));
     usedIds.add(picked.id);
   }
 
-  // Fill remaining slots with random players near teamAvg
+  // Fill remaining slots with random players
   for (const p of eligible.filter(p => !usedIds.has(p.id))) {
     if (result.length >= count) break;
-    result.push(withPot(attachSeasonWeighted(p, teamAvg)));
+    result.push(withPot(attachSeason(p)));
     usedIds.add(p.id);
   }
 
@@ -271,13 +302,11 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
 
   return final.map(p => {
     const age = getAge(p.id, seasonToYear(p.spunSeason));
-    const gap = p.potential - p.seasonRating;
-    const isYoungGem = age !== null && age <= 23 && gap >= 6;
+    const prime = playerPrime(p);
+    // Gem: young player with significant gap to a strong prime — no artificial inflation
+    const isYoungGem = age !== null && age <= 21 && prime >= 78 && (prime - (p.displayRating ?? p.seasonRating)) >= 12;
     const isGem = !!(p.isGem || isYoungGem);
-    const potential = isYoungGem
-      ? Math.max(p.potential, 85 + Math.floor(Math.random() * 9))
-      : p.potential;
-    return { ...p, age, isGem, potential, slotType, price: offerPrice(p.seasonRating, isGem, age, potential, slotType) };
+    return { ...p, age, isGem, slotType, price: offerPrice(p.seasonRating, isGem, age, p.potential, slotType) };
   });
 }
 
@@ -293,10 +322,10 @@ export function generateTransferMarket(players, excludeIds, formation, teamAvg =
     all.push(...offers);
   }
 
-  // Cap at 1 gem per market, appearing roughly every 2 seasons
+  // Cap at 1 gem per market; appears roughly every 3 seasons
   const gemIndices = all.reduce((acc, o, i) => (o.isGem ? [...acc, i] : acc), []);
   if (gemIndices.length > 0) {
-    const keepIdx = Math.random() < 0.5
+    const keepIdx = Math.random() < 0.33
       ? gemIndices[Math.floor(Math.random() * gemIndices.length)]
       : -1;
     return all.map((o, i) => o.isGem && i !== keepIdx ? { ...o, isGem: false } : o);
