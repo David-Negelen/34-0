@@ -5,13 +5,19 @@ import SetupScreen from './SetupScreen';
 import DraftScreen from './DraftScreen';
 import PokalMatchScreen from './PokalMatchScreen';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
+import { PLAYERS as BL_PLAYERS } from '../data/players';
+import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import {
   buildCLField, simulateCLLeague, drawCLRound, drawCLRoundTwoLegs, classifyCLTable,
   simulateToWinner, simulatePlayoffRound, NEXT_CL_ROUND, CL_ROUND_LABELS,
 } from '../utils/clUtils';
 import './CLScreen.css';
 
-const ALL_PLAYERS = PLAYERS_EUROPEAN;
+const EURO_IDS = new Set(PLAYERS_EUROPEAN.map(p => p.id));
+const ALL_PLAYERS = [
+  ...PLAYERS_EUROPEAN,
+  ...[...BL_PLAYERS, ...BL2_PLAYERS].filter(p => !EURO_IDS.has(p.id)),
+];
 const ALL_CLUBS = {};
 const CL_KEY = 'cl_state_v1';
 
@@ -34,7 +40,7 @@ export default function CLScreen() {
       const saved = localStorage.getItem(CL_KEY);
       if (saved) { setCl(JSON.parse(saved)); return; }
     } catch {}
-    const teams = buildCLField(state.result.slots, ALL_PLAYERS);
+    const teams = buildCLField(state.result.slots);
     const { table, playerLeagueMatches } = simulateCLLeague(teams, state.result.slots);
     setCl({
       phase: 'league-match',
@@ -199,6 +205,7 @@ export default function CLScreen() {
           match={match}
           roundLabel={`LIGAPHASE · SPIELTAG ${idx + 1} / ${total}`}
           closeLabel={idx + 1 < total ? 'Nächster Spieltag →' : 'Zur Übersicht →'}
+          hideBadge
           onContinue={handleLeagueMatchDone}
         />
       );
