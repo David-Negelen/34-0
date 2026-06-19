@@ -289,8 +289,9 @@ export default function CareerScreen() {
               : null;
             const offers = generateTransferMarket(divPlayers, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear, newDivision);
             const prize = prizeMoney(state.result?.pos ?? 18, state.division);
+            const { total: cupBonus, perComp: cupBonusBreakdown } = calcCupBonus(state.result?.playerMatches ?? []);
             const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear, state.division);
-            career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize, incomingBids);
+            career.beginTransfer(newDivision, offers, entwicklungData.retirements, prize + cupBonus, incomingBids, cupBonusBreakdown);
             setEntwicklungData(null);
           }}
         />
@@ -689,6 +690,22 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
                   <SeasonStat label="Gegentore"    value={GA} />
                   <SeasonStat label="Tordifferenz" value={`${GD > 0 ? '+' : ''}${GD}`} />
                 </div>
+                {(() => {
+                  const { total: cb, perComp } = calcCupBonus(playerMatches ?? []);
+                  if (cb <= 0) return null;
+                  const COMP_LABEL = { pokal: 'DFB-Pokal', ucl: 'UCL', uel: 'UEL' };
+                  return (
+                    <div className="cup-bonus-row">
+                      <span className="cup-bonus-label">Cup-Prämien</span>
+                      <span className="cup-bonus-items">
+                        {Object.entries(perComp).map(([k, v]) => (
+                          <span key={k} className="cup-bonus-item">{COMP_LABEL[k] ?? k}: +€{v}M</span>
+                        ))}
+                      </span>
+                      <span className="cup-bonus-total">+€{cb}M</span>
+                    </div>
+                  );
+                })()}
                 <div className="league-position-bar">
                   <div className="lp-label">Tabellenplatz: <strong>{pos}.</strong></div>
                   <div className="lp-bar">

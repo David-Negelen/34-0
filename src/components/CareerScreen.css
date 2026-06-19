@@ -418,6 +418,45 @@
   padding: 16px;
 }
 
+/* ── Cup bonus ── */
+.cup-bonus-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.cup-bonus-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.cup-bonus-items {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cup-bonus-item {
+  background: rgba(255,190,0,0.12);
+  color: #d4a000;
+  border: 1px solid rgba(255,190,0,0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cup-bonus-total {
+  font-weight: 700;
+  color: #d4a000;
+  flex-shrink: 0;
+}
+
 /* ── Career history ── */
 .career-history-card {
   background: var(--bg-card);
