@@ -87,10 +87,10 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
 
   // Auto-continue when done (inline mode)
   useEffect(() => {
-    if (!autoClose || phase !== 'done') return;
+    if (!autoClose || simState.phase !== 'done') return;
     const t = setTimeout(() => onContinue?.(), 3000);
     return () => clearTimeout(t);
-  }, [autoClose, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoClose, simState.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Penalty kick reveal — one individual kick every 900 ms.
   useEffect(() => {
