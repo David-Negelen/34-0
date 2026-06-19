@@ -201,7 +201,6 @@ function PokalGame() {
         onBack={() => { handleReset(); navigate('/'); }}
         titleLeft="6"
         titleRight="0"
-        subtitle="Gewinne den DFB-Pokal"
       />
     );
   }

@@ -29,10 +29,8 @@ export default function SetupScreen({ setup, onUpdate, onStart, onLeaderboard, o
         </div>
         <div className="setup-title">
           <span className="title-num">{titleLeft}</span>
-          <span className="title-dash">-</span>
-          <span className="title-num">{titleRight}</span>
+          {titleRight && <><span className="title-dash">-</span><span className="title-num">{titleRight}</span></>}
         </div>
-        {subtitle && <div className="setup-subtitle">{subtitle}</div>}
       </header>
 
       <div className="setup-body">

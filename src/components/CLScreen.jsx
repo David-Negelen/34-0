@@ -160,9 +160,7 @@ export default function CLScreen() {
         players={ALL_PLAYERS}
         onStart={startDraft}
         onBack={() => { handleReset(); navigate('/'); }}
-        titleLeft="C"
-        titleRight="L"
-        subtitle="Gewinne die Champions League"
+        titleLeft="CL"
       />
     );
   }

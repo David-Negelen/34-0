@@ -159,11 +159,10 @@ export function applyGrowth(slots, playerStats, careerStats = {}, currentYear = 
 
     const score = perfScore(statsMap[p.id ?? p.name], slot.type);
 
-    let minGain, maxGain;
-    if      (gap >= 15) { minGain = 1; maxGain = 5;  }
-    else if (gap >= 8)  { minGain = 1; maxGain = 3;  }
-    else if (gap >= 3)  { minGain = 0; maxGain = 2;  }
-    else                { minGain = 0; maxGain = 1;  }
+    // Exponential curve: 30% of remaining gap per season at full performance.
+    // Fast early (big gap), asymptotically slow near ceiling.
+    const maxGain = Math.max(1, Math.round(gap * 0.30));
+    const minGain = gap >= 10 ? 1 : 0;
 
     const divScale = division === 'bl' ? 1.0 : division === '2bl' ? 0.65 : 0.45;
     const rawGain = (minGain + score * (maxGain - minGain) + (Math.random() - 0.5) * 2) * divScale;
