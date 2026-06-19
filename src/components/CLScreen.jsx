@@ -6,7 +6,7 @@ import DraftScreen from './DraftScreen';
 import PokalMatchScreen from './PokalMatchScreen';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import {
-  buildCLField, simulateCLLeague, drawCLRound, classifyCLTable,
+  buildCLField, simulateCLLeague, drawCLRound, drawCLRoundTwoLegs, classifyCLTable,
   simulateToWinner, simulatePlayoffRound, NEXT_CL_ROUND, CL_ROUND_LABELS,
 } from '../utils/clUtils';
 import './CLScreen.css';
@@ -37,7 +37,8 @@ export default function CLScreen() {
     const teams = buildCLField(state.result.slots, ALL_PLAYERS);
     const { table, playerLeagueMatches } = simulateCLLeague(teams, state.result.slots);
     setCl({
-      phase: 'league',
+      phase: 'league-match',
+      leagueMatchIdx: 0,
       slots: state.result.slots,
       leagueTeams: teams,
       leagueTable: table,
@@ -68,6 +69,15 @@ export default function CLScreen() {
     setCl(null);
   }
 
+  function handleLeagueMatchDone() {
+    const nextIdx = (cl.leagueMatchIdx ?? 0) + 1;
+    if (nextIdx >= cl.playerLeagueMatches.length) {
+      setCl(p => ({ ...p, phase: 'league' }));
+    } else {
+      setCl(p => ({ ...p, leagueMatchIdx: nextIdx }));
+    }
+  }
+
   function handleTableContinue() {
     const classified = classifyCLTable(cl.leagueTable);
     const playerRow = cl.leagueTable.find(r => r.isPlayer);
@@ -86,19 +96,32 @@ export default function CLScreen() {
     }
 
     if (playerPos >= 9) {
-      const { matchups, winners } = drawCLRound(playoffTeams, CL_ROUND_LABELS.playoff, slots);
+      const { matchups, winners } = drawCLRoundTwoLegs(playoffTeams, CL_ROUND_LABELS.playoff, slots);
       setCl(p => ({ ...p, phase: 'ko-draw', koRoundId: 'playoff', directR16Teams: directTeams, koMatchups: matchups, koWinners: winners }));
     } else {
       const playoffWinners = simulatePlayoffRound(playoffTeams);
       const r16Teams = [...directTeams, ...playoffWinners];
-      const { matchups, winners } = drawCLRound(r16Teams, CL_ROUND_LABELS.r16, slots);
+      const { matchups, winners } = drawCLRoundTwoLegs(r16Teams, CL_ROUND_LABELS.r16, slots);
       setCl(p => ({ ...p, phase: 'ko-draw', koRoundId: 'r16', directR16Teams: directTeams, koMatchups: matchups, koWinners: winners }));
     }
   }
 
   function handleMatchDone() {
-    const pm = cl.koMatchups?.find(m => m.isPlayerMatch)?.playerMatch;
-    if (!pm) return;
+    const matchup = cl.koMatchups?.find(m => m.isPlayerMatch);
+    if (!matchup) return;
+    let pm;
+    if (cl.koRoundId === 'final') {
+      pm = matchup.playerMatch;
+    } else {
+      // Two-legged: push aggregate entry so the done screen shows one row per round
+      pm = {
+        round: CL_ROUND_LABELS[cl.koRoundId],
+        opponent: matchup.playerLeg1?.opponent ?? matchup.playerLeg2?.opponent ?? '',
+        ownGoals: (matchup.playerLeg1?.ownGoals ?? 0) + (matchup.playerLeg2?.ownGoals ?? 0),
+        oppGoals2: (matchup.playerLeg1?.oppGoals2 ?? 0) + (matchup.playerLeg2?.oppGoals2 ?? 0),
+        won: matchup.playerWon ?? false,
+      };
+    }
     setCl(p => ({ ...p, phase: 'ko-results', playerKOMatches: [...p.playerKOMatches, pm] }));
   }
 
@@ -120,7 +143,10 @@ export default function CLScreen() {
       nextTeams = [...(cl.directR16Teams ?? []), ...cl.koWinners];
     }
 
-    const { matchups, winners } = drawCLRound(nextTeams, CL_ROUND_LABELS[nextRoundId], cl.slots);
+    // Final is single-leg; all other rounds are two-legged
+    const { matchups, winners } = nextRoundId === 'final'
+      ? drawCLRound(nextTeams, CL_ROUND_LABELS[nextRoundId], cl.slots)
+      : drawCLRoundTwoLegs(nextTeams, CL_ROUND_LABELS[nextRoundId], cl.slots);
     setCl(p => ({ ...p, phase: 'ko-draw', koRoundId: nextRoundId, koMatchups: matchups, koWinners: winners }));
   }
 
@@ -163,6 +189,22 @@ export default function CLScreen() {
   // ── Tournament ───────────────────────────────────────────────────────────────
 
   if (state.phase === 'result' && cl) {
+
+    if (cl.phase === 'league-match') {
+      const idx = cl.leagueMatchIdx ?? 0;
+      const match = cl.playerLeagueMatches[idx];
+      if (!match) { setCl(p => ({ ...p, phase: 'league' })); return null; }
+      const total = cl.playerLeagueMatches.length;
+      return (
+        <PokalMatchScreen
+          key={`league-${idx}`}
+          match={match}
+          roundLabel={`LIGAPHASE · SPIELTAG ${idx + 1} / ${total}`}
+          closeLabel={idx + 1 < total ? 'Nächster Spieltag →' : 'Zur Übersicht →'}
+          onContinue={handleLeagueMatchDone}
+        />
+      );
+    }
 
     if (cl.phase === 'league') {
       const leagueStats = cl.playerLeagueMatches.reduce(
@@ -276,11 +318,40 @@ export default function CLScreen() {
             ))}
           </div>
           <div className="cl-footer">
-            <button className="btn btn-primary" onClick={() => setCl(p => ({ ...p, phase: 'ko-match' }))}>
+            <button className="btn btn-primary" onClick={() => setCl(p => ({
+              ...p, phase: cl.koRoundId === 'final' ? 'ko-match' : 'ko-match-leg1',
+            }))}>
               Zum Spiel →
             </button>
           </div>
         </div>
+      );
+    }
+
+    if (cl.phase === 'ko-match-leg1') {
+      const matchup = cl.koMatchups?.find(m => m.isPlayerMatch);
+      if (!matchup?.playerLeg1) return null;
+      return (
+        <PokalMatchScreen
+          key={cl.koRoundId + '-leg1'}
+          match={matchup.playerLeg1}
+          roundLabel={`${CL_ROUND_LABELS[cl.koRoundId]} — HINSPIEL`}
+          closeLabel="Zum Rückspiel →"
+          onContinue={() => setCl(p => ({ ...p, phase: 'ko-match-leg2' }))}
+        />
+      );
+    }
+
+    if (cl.phase === 'ko-match-leg2') {
+      const matchup = cl.koMatchups?.find(m => m.isPlayerMatch);
+      if (!matchup?.playerLeg2) return null;
+      return (
+        <PokalMatchScreen
+          key={cl.koRoundId + '-leg2'}
+          match={matchup.playerLeg2}
+          roundLabel={`${CL_ROUND_LABELS[cl.koRoundId]} — RÜCKSPIEL`}
+          onContinue={handleMatchDone}
+        />
       );
     }
 

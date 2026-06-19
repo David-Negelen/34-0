@@ -37,8 +37,8 @@
 .slot-token {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -136,12 +136,12 @@
 }
 
 .slot-player-name {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
   text-align: center;
-  max-width: 48px;
+  max-width: 56px;
   overflow: hidden;
 }
 

@@ -15,6 +15,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
     ownGoals = 0,
     oppGoals2 = 0,
     won = false,
+    draw = false,
     opponent = '',
   } = match;
 
@@ -240,8 +241,8 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
       {/* Result + continue */}
       {isDone && !autoClose && (
         <>
-          <div className={`ms-result-badge ${won ? 'ms-result--win' : 'ms-result--loss'}`}>
-            {won ? 'Weiter ✓' : 'Ausgeschieden'}
+          <div className={`ms-result-badge ${won ? 'ms-result--win' : draw ? 'ms-result--draw' : 'ms-result--loss'}`}>
+            {won ? 'Weiter ✓' : draw ? 'Unentschieden' : 'Ausgeschieden'}
           </div>
           <button className="btn btn-primary ms-continue" onClick={onContinue}>
             {closeLabel ?? (won ? 'Nächste Runde →' : 'Zusammenfassung →')}
