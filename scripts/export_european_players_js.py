@@ -72,11 +72,12 @@ def export_participants(con: sqlite3.Connection):
 
 
 def export_players(con: sqlite3.Connection):
-    # All players with at least one squad entry
+    # Only players with at least one real fifaindex rating (unmatched players excluded)
     player_rows = con.execute(
         "SELECT DISTINCT p.tm_id, p.name, p.birth_date, p.nationality "
         "FROM players p "
         "JOIN squad_entries se ON se.player_id = p.tm_id "
+        "WHERE EXISTS (SELECT 1 FROM player_ratings pr WHERE pr.player_id = p.tm_id) "
         "ORDER BY p.name"
     ).fetchall()
 
