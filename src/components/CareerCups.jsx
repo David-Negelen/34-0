@@ -128,11 +128,11 @@ export function CareerPokal({ slots, onDone }) {
 const EU_LEAGUE_DAYS = [2.5, 5.5, 8.5, 11.5, 14.5, 17.5, 20.5, 23.5];
 // [leg1, leg2] for two-legged rounds; final is single leg after season
 const EU_KO_DAYS = {
-  playoff: [18.7, 20.3],
-  r16:     [22.7, 24.3],
-  qf:      [26.7, 28.3],
-  sf:      [30.7, 32.3],
-  final:   [35],
+  playoff: [24.3, 25.7],
+  r16:     [26.3, 27.7],
+  qf:      [28.3, 29.7],
+  sf:      [30.3, 31.7],
+  final:   [33.0],
 };
 
 export function simulateEuropeanCupFull(slots, competition = 'ucl') {

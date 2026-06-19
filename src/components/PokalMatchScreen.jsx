@@ -88,7 +88,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
   // Auto-continue when done (inline mode)
   useEffect(() => {
     if (!autoClose || simState.phase !== 'done') return;
-    const t = setTimeout(() => onContinue?.(), 3000);
+    const t = setTimeout(() => onContinue?.(), 2000);
     return () => clearTimeout(t);
   }, [autoClose, simState.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -155,7 +155,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
             {myScore}
           </span>
           <span className="ms-sep">:</span>
-          <span className={`ms-score ms-score--${oppScore > myScore ? 'lead' : oppScore < myScore ? 'trail' : 'level'}`}>
+          <span className="ms-score ms-score--level">
             {oppScore}
           </span>
         </div>
