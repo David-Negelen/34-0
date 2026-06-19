@@ -70,8 +70,8 @@ function ageFactor(age) {
   if (age <= 23)     return 1.4;
   if (age <= 27)     return 1.0;
   if (age <= 30)     return 0.7;
-  if (age <= 33)     return 0.4;
-  return 0.2;
+  if (age <= 33)     return 0.5;
+  return 0.32;
 }
 
 // Potential ceiling bonus: high upside drives up price.
@@ -99,12 +99,12 @@ function positionFactor(slotType) {
 // Transfer fee in millions. Adjusted by age, potential, and position.
 function offerPrice(rating, _isGem = false, age = null, potential = null, slotType = null) {
   let base;
-  if (rating >= 92)      base = 70 + Math.floor(Math.random() * 40);
-  else if (rating >= 87) base = 35 + Math.floor(Math.random() * 30);
-  else if (rating >= 82) base = 15 + Math.floor(Math.random() * 18);
-  else if (rating >= 77) base = 6  + Math.floor(Math.random() * 10);
-  else if (rating >= 72) base = 2  + Math.floor(Math.random() * 5);
-  else                   base = 1  + Math.floor(Math.random() * 2);
+  if (rating >= 92)      base = 75 + Math.floor(Math.random() * 40);
+  else if (rating >= 87) base = 38 + Math.floor(Math.random() * 30);
+  else if (rating >= 82) base = 19 + Math.floor(Math.random() * 20);
+  else if (rating >= 77) base = 9  + Math.floor(Math.random() * 13);
+  else if (rating >= 72) base = 4  + Math.floor(Math.random() * 7);
+  else                   base = 2  + Math.floor(Math.random() * 3);
   return Math.max(1, Math.round(base * ageFactor(age) * potentialMultiplier(potential) * positionFactor(slotType)));
 }
 

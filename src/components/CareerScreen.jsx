@@ -10,6 +10,7 @@ import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerU
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
+import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
 import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
@@ -279,6 +280,11 @@ export default function CareerScreen() {
             career.applyGrowth(entwicklungData.updatedSlots);
             const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
             const divPlayers = getPlayers(newDivision);
+            const inUCL = state.europeanCup === 'ucl' || state.result?.playerMatches?.some(m => m.competition === 'ucl');
+            const euroIds = inUCL ? new Set(divPlayers.map(p => p.id)) : null;
+            const playerPool = inUCL
+              ? [...divPlayers, ...PLAYERS_EUROPEAN.filter(p => !euroIds.has(p.id))]
+              : divPlayers;
             const filled = entwicklungData.updatedSlots.filter(s => s.player);
             const excludeIds = new Set([
               ...entwicklungData.updatedSlots.filter(s => s.player).map(s => s.player.id),
@@ -287,7 +293,7 @@ export default function CareerScreen() {
             const teamAvg = filled.length
               ? Math.round(filled.reduce((sum, s) => sum + (s.player.displayRating ?? 0), 0) / filled.length)
               : null;
-            const offers = generateTransferMarket(divPlayers, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear, newDivision);
+            const offers = generateTransferMarket(playerPool, excludeIds, FORMATIONS[state.formation], teamAvg, currentYear, newDivision);
             const prize = prizeMoney(state.result?.pos ?? 18, state.division);
             const { total: cupBonus, perComp: cupBonusBreakdown } = calcCupBonus(state.result?.playerMatches ?? []);
             const incomingBids = generateIncomingBids(entwicklungData.updatedSlots, currentYear, state.division);

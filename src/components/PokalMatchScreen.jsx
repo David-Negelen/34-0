@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import './PokalMatchScreen.css';
 
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
-const TICK_MS = 83;   // ms per in-game minute → 90 min ≈ 7.5 s, full 120 min ≈ 10 s
+const TICK_MS = 58;   // ms per in-game minute → 90 min ≈ 5.2 s, full 120 min ≈ 7 s
 
 export default function PokalMatchScreen({ match, roundIndex, onContinue, roundLabel, closeLabel, autoClose = false, hideBadge = false }) {
   const {
@@ -57,13 +57,13 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
             if (!active) return;
             setSimState(s => ({ ...s, phase: 'aet', clockMin: 90 }));
             setTimeout(tick, TICK_MS);
-          }, 1400);
+          }, 900);
         } else if (pens) {
           setSimState(s => ({ ...s, phase: 'pen-banner' }));
           setTimeout(() => {
             if (!active) return;
             setSimState(s => ({ ...s, phase: 'pens' }));
-          }, 1400);
+          }, 900);
         } else {
           setSimState(s => ({ ...s, phase: 'done' }));
         }
@@ -76,21 +76,21 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
           setTimeout(() => {
             if (!active) return;
             setSimState(s => ({ ...s, phase: 'pens' }));
-          }, 1400);
+          }, 900);
         } else {
           setSimState(s => ({ ...s, phase: 'done' }));
         }
       }
     }
 
-    setTimeout(tick, 500);
+    setTimeout(tick, 250);
     return () => { active = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-continue when done (inline mode)
   useEffect(() => {
     if (!autoClose || simState.phase !== 'done') return;
-    const t = setTimeout(() => onContinue?.(), 2000);
+    const t = setTimeout(() => onContinue?.(), 700);
     return () => clearTimeout(t);
   }, [autoClose, simState.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
