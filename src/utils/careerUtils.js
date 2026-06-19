@@ -340,7 +340,7 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     const age = getAge(p.id, seasonToYear(p.spunSeason));
     const prime = playerPrime(p);
     // Gem: young player with significant gap to a strong prime — no artificial inflation
-    const isYoungGem = age !== null && age <= 21 && prime >= 78 && (prime - (p.displayRating ?? p.seasonRating)) >= 12;
+    const isYoungGem = age !== null && age <= 22 && prime >= 77 && (prime - (p.displayRating ?? p.seasonRating)) >= 10;
     const isGem = !!(p.isGem || isYoungGem);
     return { ...p, age, isGem, slotType, price: offerPrice(p.seasonRating, isGem, age, p.potential, slotType) };
   });
@@ -361,7 +361,7 @@ export function generateTransferMarket(players, excludeIds, formation, teamAvg =
   // Cap at 1 gem per market; appears roughly every 3 seasons
   const gemIndices = all.reduce((acc, o, i) => (o.isGem ? [...acc, i] : acc), []);
   if (gemIndices.length > 0) {
-    const keepIdx = Math.random() < 0.33
+    const keepIdx = Math.random() < 0.50
       ? gemIndices[Math.floor(Math.random() * gemIndices.length)]
       : -1;
     return all.map((o, i) => o.isGem && i !== keepIdx ? { ...o, isGem: false } : o);
