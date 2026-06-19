@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCareerState } from '../hooks/useCareerState';
 import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
-import { generateCareerDraftPool, generateTransferMarket, generateIncomingBids, prizeMoney } from '../utils/careerUtils';
+import { generateCareerDraftPool, generateTransferMarket, generateIncomingBids, prizeMoney, calcCupBonus } from '../utils/careerUtils';
 import { simulateFullLeague, calcTeamStrength, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';

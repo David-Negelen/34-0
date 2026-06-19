@@ -108,6 +108,42 @@ function offerPrice(rating, _isGem = false, age = null, potential = null, slotTy
   return Math.max(1, Math.round(base * ageFactor(age) * potentialMultiplier(potential) * positionFactor(slotType)));
 }
 
+// Cup bonus tables (€M) — total award for reaching that round as the furthest stage.
+const POKAL_BONUS = { '1. RUNDE': 0, '2. RUNDE': 0, 'ACHTELFINALE': 1, 'VIERTELFINALE': 2, 'HALBFINALE': 3, 'FINALE': 4, WINNER: 6 };
+const UEL_BONUS   = { LIGAPHASE: 1, PLAYOFF: 2, ACHTELFINALE: 4, VIERTELFINALE: 6, HALBFINALE: 8, FINALE: 10, WINNER: 14 };
+const UCL_BONUS   = { LIGAPHASE: 2, PLAYOFF: 4, ACHTELFINALE: 7, VIERTELFINALE: 11, HALBFINALE: 15, FINALE: 20, WINNER: 28 };
+
+export function calcCupBonus(playerMatches) {
+  let total = 0;
+  const perComp = {};
+
+  for (const comp of ['pokal', 'ucl', 'uel']) {
+    const matches = playerMatches.filter(m => m.competition === comp);
+    if (!matches.length) continue;
+
+    // Non-league matches only (Pokal has no "LIGAPHASE" label, EU might)
+    const koMatches = matches.filter(m => !m.roundLabel?.includes('LIGAPHASE'));
+
+    let round, won;
+    if (comp !== 'pokal' && !koMatches.length) {
+      // European cup, eliminated in league phase
+      round = 'LIGAPHASE';
+      won = false;
+    } else {
+      const last = koMatches.length ? koMatches[koMatches.length - 1] : matches[matches.length - 1];
+      round = (last.roundLabel ?? '').replace(/ — (HINSPIEL|RÜCKSPIEL)$/, '');
+      won = last.won ?? false;
+    }
+
+    const table = comp === 'pokal' ? POKAL_BONUS : comp === 'ucl' ? UCL_BONUS : UEL_BONUS;
+    const key = won && round === 'FINALE' ? 'WINNER' : round;
+    const bonus = table[key] ?? 0;
+    if (bonus > 0) { perComp[comp] = bonus; total += bonus; }
+  }
+
+  return { total, perComp };
+}
+
 // Prize money (€M) by final league position.
 export function prizeMoney(pos, division) {
   if (division === 'bl')  return Math.max(3, Math.round(52 - (pos - 1) * 2.8));
