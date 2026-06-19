@@ -335,6 +335,7 @@ export default function CLScreen() {
           match={matchup.playerLeg1}
           roundLabel={`${CL_ROUND_LABELS[cl.koRoundId]} — HINSPIEL`}
           closeLabel="Zum Rückspiel →"
+          hideBadge
           onContinue={() => setCl(p => ({ ...p, phase: 'ko-match-leg2' }))}
         />
       );

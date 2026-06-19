@@ -4,7 +4,7 @@ import './PokalMatchScreen.css';
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
 const TICK_MS = 83;   // ms per in-game minute → 90 min ≈ 7.5 s, full 120 min ≈ 10 s
 
-export default function PokalMatchScreen({ match, roundIndex, onContinue, roundLabel, closeLabel, autoClose = false }) {
+export default function PokalMatchScreen({ match, roundIndex, onContinue, roundLabel, closeLabel, autoClose = false, hideBadge = false }) {
   const {
     home = true,
     aet = false,
@@ -241,9 +241,11 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
       {/* Result + continue */}
       {isDone && !autoClose && (
         <>
-          <div className={`ms-result-badge ${won ? 'ms-result--win' : draw ? 'ms-result--draw' : 'ms-result--loss'}`}>
-            {won ? 'Weiter ✓' : draw ? 'Unentschieden' : 'Ausgeschieden'}
-          </div>
+          {!hideBadge && (
+            <div className={`ms-result-badge ${won ? 'ms-result--win' : draw ? 'ms-result--draw' : 'ms-result--loss'}`}>
+              {won ? 'Weiter ✓' : draw ? 'Unentschieden' : 'Ausgeschieden'}
+            </div>
+          )}
           <button className="btn btn-primary ms-continue" onClick={onContinue}>
             {closeLabel ?? (won ? 'Nächste Runde →' : 'Zusammenfassung →')}
           </button>
