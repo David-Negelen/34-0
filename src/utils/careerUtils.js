@@ -267,14 +267,15 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
   const usedIds = new Set();
 
   // Match by career prime, not any individual season — creates diverse career-year displays.
-  function pickNear(target, poolSize = 6) {
+  // poolSize=18 + flat weights → players up to ~18 prime-ranks away still compete.
+  function pickNear(target, poolSize = 18) {
     const candidates = eligible
       .filter(p => !usedIds.has(p.id))
       .map(p => ({ p, diff: Math.abs(playerPrime(p) - target) }))
       .sort((a, b) => a.diff - b.diff)
       .slice(0, poolSize);
     if (!candidates.length) return null;
-    const weights = candidates.map((_, i) => Math.max(0.08, 1 - i * 0.16));
+    const weights = candidates.map((_, i) => Math.max(0.07, 1 - i * 0.05));
     const total = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
     for (let i = 0; i < candidates.length; i++) {
@@ -284,9 +285,11 @@ function generateOffersForSlotType(players, excludeIds, slotType, count, teamAvg
     return candidates[candidates.length - 1].p;
   }
 
-  // Show a random career year for variety; potential is still based on prime.
+  // Per-call jitter (±5) spreads each tier across a wider slice of the player pool,
+  // so different players surface each transfer window instead of the same faces.
   function addTier(offset) {
-    const p = pickNear(teamAvg + offset);
+    const jitter = Math.round((Math.random() - 0.5) * 10);
+    const p = pickNear(teamAvg + offset + jitter);
     if (p) { result.push(withPot(attachSeason(p))); usedIds.add(p.id); }
   }
 
