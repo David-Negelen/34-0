@@ -162,7 +162,8 @@
   white-space: nowrap;
 }
 
-.ms-goals--opp .ms-goal-name { color: #e05555; }
+.ms-goals--mine .ms-goal-name { color: var(--green); }
+.ms-goals--opp  .ms-goal-name { color: var(--red); }
 
 .ms-goal-min {
   font-size: 11px;

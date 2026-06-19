@@ -36,6 +36,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
 
   const stateRef = useRef(simState);
   stateRef.current = simState;
+  const bottomRef = useRef(null);
 
   // Single clock loop — uses stateRef to avoid stale closures
   useEffect(() => {
@@ -91,6 +92,11 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
     const t = setTimeout(() => onContinue?.(), 2000);
     return () => clearTimeout(t);
   }, [autoClose, simState.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to bottom whenever sim content grows (new goals, pen kicks, phase changes)
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: 'end' });
+  }, [simState.phase, simState.penRevealed, simState.clockMin]);
 
   // Penalty kick reveal — one individual kick every 900 ms.
   useEffect(() => {
@@ -242,6 +248,7 @@ export default function PokalMatchScreen({ match, roundIndex, onContinue, roundL
           </button>
         </>
       )}
+      <div ref={bottomRef} />
     </div>
   );
 }

@@ -162,27 +162,64 @@ def name_score(a: str, b: str) -> float:
 # Format: {fi_club_id}-{fi_slug}   (same as fifaindex_clubs.txt)
 
 def load_clubs() -> list[tuple[int, str]]:
+    """Parse clubs file. Returns list of (fi_id, fi_slug) for main entries AND
+    any 'alt: id-slug' annotations (different ID = different FIFA edition entry)."""
     if not CLUBS_FILE.exists():
         return []
-    clubs = []
-    for line in CLUBS_FILE.read_text(encoding="utf-8").splitlines():
-        line = line.split("#")[0].strip()
-        if not line:
+    clubs: list[tuple[int, str]] = []
+    seen_ids: set[int] = set()
+
+    def add(fi_id: int, fi_slug: str):
+        if fi_id not in seen_ids:
+            clubs.append((fi_id, fi_slug))
+            seen_ids.add(fi_id)
+
+    for raw in CLUBS_FILE.read_text(encoding="utf-8").splitlines():
+        raw = raw.strip()
+        if not raw or raw.startswith('#'):
             continue
-        m = re.match(r"^(\d+)-(.+)$", line)
-        if m:
-            clubs.append((int(m.group(1)), m.group(2).strip()))
-        else:
-            print(f"  ⚠  Malformed line ignored: {line!r}")
+
+        # Main entry (before any inline comment)
+        main_part = raw.split('#')[0].strip()
+        m = re.match(r'^(\d+)-(\S+)', main_part)
+        if not m:
+            print(f"  ⚠  Malformed line ignored: {raw!r}")
+            continue
+        main_id, main_slug = int(m.group(1)), m.group(2)
+        add(main_id, main_slug)
+
+        # Alt entries with a DIFFERENT ID in the inline comment
+        # Format: alt: 115841-lazio  (same-ID slug alts are ignored — slug doesn't matter)
+        for alt_m in re.finditer(r'\balt:\s*(\d+)-(\S+)', raw):
+            alt_id, alt_slug = int(alt_m.group(1)), alt_m.group(2)
+            if alt_id != main_id:
+                add(alt_id, alt_slug)
+
     return clubs
+
+
+SLUG_OVERRIDES: dict[str, str] = {
+    "rc-deportivo":      "Deportivo La Coruña",
+    "milano-fc":         "AC Milan",
+    "olympique-lyonnais":"Lyon",
+    "stade-rennais":     "Rennes",
+    "fc-k-benhavn":      "Copenhagen",
+}
 
 
 def build_club_map(con: sqlite3.Connection, clubs: list[tuple[int, str]]) -> dict[int, int]:
     """Map fi_club_id → european_cups.db tm_id by fuzzy-matching fi_slug against club names."""
     db_clubs = con.execute("SELECT tm_id, name FROM clubs").fetchall()
+    name_to_tm: dict[str, int] = {name: tm_id for tm_id, name in db_clubs}
     club_map: dict[int, int] = {}
     unmapped: list[str] = []
     for fi_id, fi_slug in clubs:
+        # Hard-coded overrides for slugs that don't fuzzy-match their DB name
+        if fi_slug in SLUG_OVERRIDES:
+            override_name = SLUG_OVERRIDES[fi_slug]
+            if override_name in name_to_tm:
+                club_map[fi_id] = name_to_tm[override_name]
+                continue
         best_id, best_score = None, 0.0
         for tm_id, tm_name in db_clubs:
             s = name_score(fi_slug, tm_name)

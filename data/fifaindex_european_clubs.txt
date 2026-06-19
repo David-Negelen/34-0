@@ -19,90 +19,90 @@
 240-atletico-madrid     # Atlético Madrid
 241-barcelona           # Barcelona
 243-real-madrid         # Real Madrid
-# ?-athletic-bilbao       # Athletic Bilbao
-# ?-deportivo             # Deportivo La Coruña
-# ?-real-betis            # Real Betis
-# ?-real-sociedad         # Real Sociedad
-# ?-sevilla               # Sevilla
-# ?-valencia              # Valencia
-# ?-villarreal            # Villarreal
+448-athletic-club-de-bilbao       # Athletic Bilbao
+242-rc-deportivo             # Deportivo La Coruña
+449-real-betis-balompie           # Real Betis
+457-real-sociedad       # Real Sociedad
+481-sevilla-fc              # Sevilla
+461-valencia-cf              # Valencia
+483-villarreal-cf            # Villarreal
 
 # ── Italy ──
 45-juventus             # Juventus
-46-lazio                # Lazio
+46-lazio                # Lazio  alt: 115841-lazio
 48-napoli               # Napoli
-52-as-roma              # AS Roma
+52-roma              # AS Roma
 55-udinese              # Udinese
-# ?-ac-milan              # AC Milan
-# ?-atalanta              # Atalanta
-# ?-fiorentina            # Fiorentina
-# ?-inter-milan           # Inter Milan
+47-milan              # AC Milan alt: 131681-milano-fc
+39-atalanta             # Atalanta alt: 115845-atalanta
+110374-fiorentina            # Fiorentina
+44-inter           # Inter Milan alt: 131682-inter
 
 # ── France ──
-65-lille                # Lille
+65-losc-lille                # Lille
 73-paris-saint-germain  # Paris Saint-Germain
-# ?-lyon                  # Lyon
-# ?-marseille             # Marseille
-# ?-monaco                # Monaco
-# ?-rennes                # Rennes
+66-olympique-lyonnais                  # Lyon alt: 66-olympique-lyon
+219-marseille            # Marseille alt: 219-olympique-de-marseille
+69-as-monaco                # Monaco alt: 69-as-monaco-fc
+74-stade-rennais                # Rennes alt: 74-stade-rennais-fc
 
 # ── Netherlands ──
 246-feyenoord           # Feyenoord
-# ?-ajax                  # Ajax
-# ?-az                    # AZ
-# ?-psv                   # PSV
+245-ajax                  # Ajax
+1906-az-alkmaar                   # AZ alt: 1906-az
+247-psv                   # PSV
 
 # ── Portugal ──
-# ?-benfica               # Benfica
-# ?-braga                 # Braga
-# ?-porto                 # Porto
-# ?-sporting              # Sporting CP
+234-sport-lisboa-benfica               # Benfica alt: 234-benfica
+1896-sporting-de-braga                 # Braga alt: 1896-sc-braga
+236-fc-porto                 # Porto
+237-sporting-cp            # Sporting CP
 
 # ── Turkey ──
-# ?-besiktas              # Beşiktaş
-# ?-fenerbahce            # Fenerbahçe
-# ?-galatasaray           # Galatasaray
-# ?-trabzonspor           # Trabzonspor
+327-besiktas-jk              # Beşiktaş alt: 327-besiktas
+326-fenerbahce            # Fenerbahçe alt: 326-fenerbahce-sk
+325-galatasaray-sk          # Galatasaray alt: 325-galatasaray
+436-trabzonspor           # Trabzonspor
 
 # ── Belgium ──
-229-anderlecht          # Anderlecht
-# ?-club-brugge           # Club Brugge
+229-anderlecht          # Anderlecht alt: 229-rsc-anderlecht
+231-club-brugge           # Club Brugge
 
 # ── Scotland ──
-# ?-celtic                # Celtic
-# ?-rangers               # Rangers
+78-celtic               # Celtic
+86-rangers              # Rangers
 
 # ── Denmark ──
-# ?-copenhagen            # Copenhagen
-# ?-fc-midtjylland        # FC Midtjylland
+819-fc-k-benhavn          # Copenhagen
+1516-fc-midtjylland        # FC Midtjylland
 
 # ── Greece ──
-# ?-olympiakos            # Olympiakos
-# ?-panathinaikos         # Panathinaikos
+280-olympiacos            # Olympiakos alt: 280-olympiakos-cfp
+1884-panathinaikos         # Panathinaikos
 
 # ── Czech Republic ──
-# ?-slavia-prag           # Slavia Prag
-# ?-sparta-prag           # Sparta Prag
+266-slavia-praha          # Slavia Prag
+267-sparta-praha          # Sparta Prag
 
 # ── Croatia ──
-# ?-dinamo-zagreb         # Dinamo Zagreb
+211-dinamo-zagreb        # Dinamo Zagreb
 
 # ── Poland ──
-# ?-legia-warschau        # Legia Warschau
+1871-legia-warszawa        # Legia Warschau
 
 # ── Austria ──
-# ?-lask                  # LASK
-# ?-rapid-wien            # Rapid Wien
-# ?-rb-salzburg           # Red Bull Salzburg
-# ?-sturm-graz            # Sturm Graz
+252-lask                # LASK
+254-rapid-wien            # Rapid Wien alt: 254-sk-rapid
+191-rb-salzburg           # Red Bull Salzburg
+209-sk-sturm-graz            # Sturm Graz alt: 209-sturm-graz
 
 # ── Russia / Ukraine ──
-# ?-cska-moskau           # CSKA Moskau
-# ?-dynamo-kiew           # Dynamo Kiew
-# ?-lokomotiv-moskau      # Lokomotiv Moskau
-# ?-zenit                 # Zenit St. Petersburg
+315-cska-moskva           # CSKA Moskau
+101047-dynamo-kyiv          # Dynamo Kiew
+100765-lokomotiv-moskva      # Lokomotiv Moskau alt: 100765-lokomotiv
+100769-zenit-st-petersburg              # Zenit St. Petersburg
 
 # ── Scandinavia / Switzerland ──
-# ?-malmo                 # Malmö FF
-# ?-rosenborg             # Rosenborg
-# ?-young-boys            # Young Boys
+320-malmo-ff              # Malmö FF
+298-rosenborg-bk            # Rosenborg
+900-bsc-young-boys         # Young Boys
