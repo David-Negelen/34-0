@@ -757,7 +757,7 @@ export function getAchievements(result, slots = [], league = 'bl', cupInfo = {})
   } else if (leagueWon && pokalWon) {
     if (L === 0 && D === 0) achievements.push({ key: 'perfect_double',    label: 'Double + 34-0-0',        desc: '34-0-0 und das Double. Eine Legende.',                  tier: 'combo' });
     else if (L === 0)       achievements.push({ key: 'invincible_double', label: 'Double + Ungeschlagen',  desc: 'Meister und Pokal – und kein Spiel verloren.',           tier: 'combo' });
-    else                    achievements.push({ key: 'double',            label: 'Double!',                desc: 'Meister und DFB-Pokalsieger in einer Saison.',           tier: 'combo' });
+    else                    achievements.push({ key: 'double',            label: 'Double',                desc: 'Meister und DFB-Pokalsieger in einer Saison.',           tier: 'combo' });
   }
 
   // ── Season records ──

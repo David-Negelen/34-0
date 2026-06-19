@@ -1,114 +1,108 @@
-# fifaindex club IDs for European CL/UEL clubs
-# Format: fi_club_id-fi_club_slug   (one per line, # = comment)
-#
-# Find the ID + slug at https://fifaindex.com/de/teams/
-# Search for the club → the URL contains the ID and slug:
-#   /de/teams/21-bayern-munchen/fc26/  →  add line: 21-bayern-munchen
-#
-# TM IDs shown in brackets for reference (to identify the right club)
+# European CL/UEL clubs — fifaindex.com team IDs
+# Format: {id}-{slug}   (one per line, # = comment)
+# Find the ID+slug from the URL at https://fifaindex.com/de/teams/
+# Example: https://fifaindex.com/de/teams/243-real-madrid/fc26/ → 243-real-madrid
+# Note: slug doesn't need to be exact, the ID is what matters
 
-# ── England ──────────────────────────────────────────────────────────────────
-# Arsenal [TM: 11]
-# Aston Villa [TM: 405]
-# Chelsea [TM: 631]
-# Liverpool [TM: 31]
-# Manchester City [TM: 281]
-# Manchester United [TM: 985]
-# Newcastle United [TM: 762]
-# Tottenham [TM: 148]
-# West Ham [TM: 379]
+# ── England ──
+1-arsenal               # Arsenal
+2-aston-villa           # Aston Villa
+5-chelsea               # Chelsea
+9-liverpool             # Liverpool
+10-manchester-city      # Manchester City
+11-manchester-united    # Manchester United
+13-newcastle-united     # Newcastle United
+18-tottenham-hotspur    # Tottenham
+19-west-ham-united      # West Ham
 
-# ── Spain ─────────────────────────────────────────────────────────────────────
-# Athletic Bilbao [TM: 621]
-# Atlético Madrid [TM: 13]
-# Barcelona [TM: 131]
-# Deportivo La Coruña [TM: 660]
-# Real Betis [TM: 150]
-# Real Madrid [TM: 418]
-# Real Sociedad [TM: 681]
-# Sevilla [TM: 368]
-# Valencia [TM: 1049]
-# Villarreal [TM: 1050]
+# ── Spain ──
+240-atletico-madrid     # Atlético Madrid
+241-barcelona           # Barcelona
+243-real-madrid         # Real Madrid
+# ?-athletic-bilbao       # Athletic Bilbao
+# ?-deportivo             # Deportivo La Coruña
+# ?-real-betis            # Real Betis
+# ?-real-sociedad         # Real Sociedad
+# ?-sevilla               # Sevilla
+# ?-valencia              # Valencia
+# ?-villarreal            # Villarreal
 
-# ── Italy ─────────────────────────────────────────────────────────────────────
-# AC Milan [TM: 5]
-# AS Roma [TM: 12]
-# Atalanta [TM: 800]
-# Fiorentina [TM: 430]
-# Inter Milan [TM: 46]
-# Juventus [TM: 506]
-# Lazio [TM: 398]
-# Napoli [TM: 6195]
-# Udinese [TM: 410]
+# ── Italy ──
+45-juventus             # Juventus
+46-lazio                # Lazio
+48-napoli               # Napoli
+52-as-roma              # AS Roma
+55-udinese              # Udinese
+# ?-ac-milan              # AC Milan
+# ?-atalanta              # Atalanta
+# ?-fiorentina            # Fiorentina
+# ?-inter-milan           # Inter Milan
 
-# ── France ────────────────────────────────────────────────────────────────────
-# Lille [TM: 1082]
-# Lyon [TM: 1041]
-# Marseille [TM: 244]
-# Monaco [TM: 162]
-# Paris Saint-Germain [TM: 583]
-# Rennes [TM: 273]
+# ── France ──
+65-lille                # Lille
+73-paris-saint-germain  # Paris Saint-Germain
+# ?-lyon                  # Lyon
+# ?-marseille             # Marseille
+# ?-monaco                # Monaco
+# ?-rennes                # Rennes
 
-# ── Netherlands ───────────────────────────────────────────────────────────────
-# Ajax [TM: 610]
-# AZ [TM: 208]
-# Feyenoord [TM: 234]
-# PSV [TM: 383]
+# ── Netherlands ──
+246-feyenoord           # Feyenoord
+# ?-ajax                  # Ajax
+# ?-az                    # AZ
+# ?-psv                   # PSV
 
-# ── Portugal ──────────────────────────────────────────────────────────────────
-# Benfica [TM: 294]
-# Braga [TM: 78]
-# Porto [TM: 720]
-# Sporting CP [TM: 336]
+# ── Portugal ──
+# ?-benfica               # Benfica
+# ?-braga                 # Braga
+# ?-porto                 # Porto
+# ?-sporting              # Sporting CP
 
-# ── Germany (European only — Bundesliga clubs handled separately) ─────────────
-# (none in this DB — all BL clubs use bundesliga_draft.db)
+# ── Turkey ──
+# ?-besiktas              # Beşiktaş
+# ?-fenerbahce            # Fenerbahçe
+# ?-galatasaray           # Galatasaray
+# ?-trabzonspor           # Trabzonspor
 
-# ── Turkey ────────────────────────────────────────────────────────────────────
-# Beşiktaş [TM: 114]
-# Fenerbahçe [TM: 36]
-# Galatasaray [TM: 141]
-# Trabzonspor [TM: 2552]
+# ── Belgium ──
+229-anderlecht          # Anderlecht
+# ?-club-brugge           # Club Brugge
 
-# ── Belgium ───────────────────────────────────────────────────────────────────
-# Anderlecht [TM: 58]
-# Club Brugge [TM: 2282]
+# ── Scotland ──
+# ?-celtic                # Celtic
+# ?-rangers               # Rangers
 
-# ── Scotland / Ireland ────────────────────────────────────────────────────────
-# Celtic [TM: 371]
-# Rangers [TM: 416]
+# ── Denmark ──
+# ?-copenhagen            # Copenhagen
+# ?-fc-midtjylland        # FC Midtjylland
 
-# ── Denmark ───────────────────────────────────────────────────────────────────
-# Copenhagen [TM: 190]
-# FC Midtjylland [TM: 929]
+# ── Greece ──
+# ?-olympiakos            # Olympiakos
+# ?-panathinaikos         # Panathinaikos
 
-# ── Greece ────────────────────────────────────────────────────────────────────
-# Olympiakos [TM: 683]
-# Panathinaikos [TM: 1063]
+# ── Czech Republic ──
+# ?-slavia-prag           # Slavia Prag
+# ?-sparta-prag           # Sparta Prag
 
-# ── Czech Republic ───────────────────────────────────────────────────────────
-# Slavia Prag [TM: 62]
-# Sparta Prag [TM: 197]
+# ── Croatia ──
+# ?-dinamo-zagreb         # Dinamo Zagreb
 
-# ── Croatia ───────────────────────────────────────────────────────────────────
-# Dinamo Zagreb [TM: 419]
+# ── Poland ──
+# ?-legia-warschau        # Legia Warschau
 
-# ── Poland ────────────────────────────────────────────────────────────────────
-# Legia Warschau [TM: 255]
+# ── Austria ──
+# ?-lask                  # LASK
+# ?-rapid-wien            # Rapid Wien
+# ?-rb-salzburg           # Red Bull Salzburg
+# ?-sturm-graz            # Sturm Graz
 
-# ── Austria ───────────────────────────────────────────────────────────────────
-# LASK [TM: 1003]
-# Rapid Wien [TM: 1664]
-# Red Bull Salzburg [TM: 409]
-# Sturm Graz [TM: 2440]
+# ── Russia / Ukraine ──
+# ?-cska-moskau           # CSKA Moskau
+# ?-dynamo-kiew           # Dynamo Kiew
+# ?-lokomotiv-moskau      # Lokomotiv Moskau
+# ?-zenit                 # Zenit St. Petersburg
 
-# ── Russia / Ukraine ──────────────────────────────────────────────────────────
-# CSKA Moskau [TM: 2410]
-# Dynamo Kiew [TM: 225]
-# Lokomotiv Moskau [TM: 932]
-# Zenit St. Petersburg [TM: 964]
-
-# ── Scandinavia ───────────────────────────────────────────────────────────────
-# Malmö FF [TM: 300]
-# Rosenborg [TM: 157]
-# Young Boys [TM: 452]
+# ── Scandinavia / Switzerland ──
+# ?-malmo                 # Malmö FF
+# ?-rosenborg             # Rosenborg
+# ?-young-boys            # Young Boys
