@@ -1,0 +1,92 @@
+.mp-wait {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.mp-wait-card {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  color: #fff;
+}
+
+.mp-wait-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 20px;
+  border: 3px solid #333;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: mp-wait-spin 0.9s linear infinite;
+}
+
+@keyframes mp-wait-spin { to { transform: rotate(360deg); } }
+
+.mp-wait-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.mp-wait-sub {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 0 20px;
+}
+
+.mp-wait-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-wait-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.mp-wait-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f5c518;
+  animation: mp-wait-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mp-wait-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+.mp-wait-force {
+  background: #fff;
+  color: #111;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+}
+
+.mp-wait-force:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+.mp-wait-hint {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0 0;
+}
