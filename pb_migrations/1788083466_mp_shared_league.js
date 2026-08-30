@@ -8,6 +8,9 @@
 // promoted/relegated carry on in their new tier, so a room can span bl/2bl/3l.
 // Each (room, season, division) is its own deterministic sub-league — hence
 // `division` on `mp_squads` and `mp_seasons`.
+//
+// up() is idempotent: it only creates a collection that doesn't already exist,
+// so re-running (or a history-desynced automigrate) is a harmless no-op.
 migrate((app) => {
   const open = {
     listRule: '',
@@ -18,9 +21,15 @@ migrate((app) => {
   };
   const DIVS = ['bl', '2bl', '3l'];
 
-  const rooms = new Collection({
-    ...open,
-    type: 'base',
+  const exists = (name) => {
+    try { app.findCollectionByNameOrId(name); return true; } catch (_) { return false; }
+  };
+  const ensure = (spec) => {
+    if (exists(spec.name)) return;
+    app.save(new Collection({ ...open, type: 'base', ...spec }));
+  };
+
+  ensure({
     name: 'mp_rooms',
     fields: [
       { name: 'code', type: 'text', required: true, max: 12 },
@@ -34,11 +43,8 @@ migrate((app) => {
     ],
     indexes: ['CREATE UNIQUE INDEX `idx_mp_rooms_code` ON `mp_rooms` (`code`)'],
   });
-  app.save(rooms);
 
-  const members = new Collection({
-    ...open,
-    type: 'base',
+  ensure({
     name: 'mp_members',
     fields: [
       { name: 'room_code', type: 'text', required: true, max: 12 },
@@ -52,11 +58,8 @@ migrate((app) => {
       'CREATE INDEX `idx_mp_members_room` ON `mp_members` (`room_code`)',
     ],
   });
-  app.save(members);
 
-  const squads = new Collection({
-    ...open,
-    type: 'base',
+  ensure({
     name: 'mp_squads',
     fields: [
       { name: 'room_code', type: 'text', required: true, max: 12 },
@@ -77,11 +80,8 @@ migrate((app) => {
       'CREATE INDEX `idx_mp_squads_room_season` ON `mp_squads` (`room_code`, `season_number`)',
     ],
   });
-  app.save(squads);
 
-  const seasons = new Collection({
-    ...open,
-    type: 'base',
+  ensure({
     name: 'mp_seasons',
     fields: [
       { name: 'room_code', type: 'text', required: true, max: 12 },
@@ -97,7 +97,6 @@ migrate((app) => {
       'CREATE UNIQUE INDEX `idx_mp_seasons_room_season_div` ON `mp_seasons` (`room_code`, `season_number`, `division`)',
     ],
   });
-  app.save(seasons);
 }, (app) => {
   for (const name of ['mp_seasons', 'mp_squads', 'mp_members', 'mp_rooms']) {
     try {
