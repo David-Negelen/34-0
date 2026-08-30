@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   createRoom, joinRoom, getRoom, getMembers, startRoom, leaveRoom, kickMember,
-  touchMember, listPublicRooms, setMpSession, getMpSession, clearMpSession,
+  touchMember, claimHostIfStale, listPublicRooms, setMpSession, getMpSession, clearMpSession,
 } from '../utils/multiplayerUtils';
 import './MultiplayerLobbyScreen.css';
 
@@ -80,8 +80,13 @@ export default function MultiplayerLobbyScreen() {
   const refreshLobby = useCallback(async () => {
     if (!session?.code) return;
     try {
-      const [room, mem] = await Promise.all([getRoom(session.code), getMembers(session.code)]);
+      let [room, mem] = await Promise.all([getRoom(session.code), getMembers(session.code)]);
       if (!room) { setError('Der Raum wurde geschlossen.'); return; }
+      // If the host vanished without leaving, the rightful heir takes over so
+      // the lobby stays startable.
+      if (room.status === 'open' && await claimHostIfStale(session.code, session.playerName).catch(() => false)) {
+        [room, mem] = await Promise.all([getRoom(session.code), getMembers(session.code)]);
+      }
       setRoomStatus(room.status);
       setHostName(room.host_name ?? '');
       setMembers(mem);

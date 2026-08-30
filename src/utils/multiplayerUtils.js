@@ -146,6 +146,34 @@ export async function touchMember(code, playerName) {
   if (mine) await pbUpdate('mp_members', mine.id, { client_id: clientId }).catch(() => {});
 }
 
+// A member counts as "gone" once its heartbeat is older than this. Clients
+// heartbeat every ~15–20s (lobby + career), so ~2 missed beats.
+const HOST_STALE_MS = 45000;
+
+// If the host's tab just vanished (row gone, or heartbeat stale) the room would
+// be stuck — only the host can start or kick. The earliest-joined member that is
+// still alive quietly takes over. Safe to call on every poll: it's a no-op
+// unless the host is really gone AND the caller is the rightful heir.
+export async function claimHostIfStale(code, myName) {
+  const [room, members] = await Promise.all([
+    getRoom(code).catch(() => null),
+    getMembers(code).catch(() => []),
+  ]);
+  if (!room || room.status === 'finished' || room.host_name === myName) return false;
+
+  const now = Date.now();
+  const fresh = m => now - new Date(m.updated).getTime() < HOST_STALE_MS;
+  const hostRow = members.find(m => m.player_name === room.host_name);
+  if (hostRow && fresh(hostRow)) return false; // host still alive
+
+  const alive = members.filter(fresh);
+  const heir = (alive.length ? alive : members)[0]; // getMembers() sorts by created
+  if (!heir || heir.player_name !== myName) return false;
+
+  await pbUpdate('mp_rooms', room.id, { host_name: myName }).catch(() => {});
+  return true;
+}
+
 export async function startRoom(code) {
   const room = await getRoom(code);
   if (!room) throw new MpError('ROOM_NOT_FOUND', 'Raum nicht gefunden');

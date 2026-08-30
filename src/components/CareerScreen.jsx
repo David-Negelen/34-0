@@ -12,7 +12,7 @@ import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { getMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable } from '../utils/multiplayerUtils';
+import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
 import { simulateSharedLeague } from '../utils/sharedLeague';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
 import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
@@ -86,6 +86,25 @@ export default function CareerScreen() {
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
 
+  // While in a shared career: keep this seat's heartbeat warm, and take over as
+  // host if the current host has gone dark (so a stranded league can still be
+  // unblocked from the waiting screen).
+  useEffect(() => {
+    const mp = getMpSession();
+    if (!mp?.code) return;
+    let alive = true;
+    const beat = async () => {
+      if (!alive) return;
+      await touchMember(mp.code, mp.playerName).catch(() => {});
+      const claimed = await claimHostIfStale(mp.code, mp.playerName).catch(() => false);
+      const cur = getMpSession();
+      if (claimed && cur) setMpSession({ ...cur, isHost: true });
+    };
+    beat();
+    const t = setInterval(beat, 15000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
   function startEntwicklung() {
     const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
     const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
@@ -128,7 +147,7 @@ export default function CareerScreen() {
         for (;;) {
           const r = await ensureSeasonSeed(mp.code, seasonNumber, division);
           if (r.ready) { seed = r.seed; break; }
-          setMpWait({ season: seasonNumber, waitingOn: r.waitingOn, isHost: !!mp.isHost, code: mp.code });
+          setMpWait({ season: seasonNumber, waitingOn: r.waitingOn, isHost: !!getMpSession()?.isHost, code: mp.code });
           await sleep(3000);
         }
         setMpWait(null);
