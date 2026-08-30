@@ -3,7 +3,7 @@ const SESSION_KEY = 'mp_session_v1';
 const CLIENT_KEY = 'mp_client_id';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const MAX_PLAYERS_DEFAULT = 10;
+const MAX_PLAYERS_DEFAULT = 18; // one full league table
 
 export class MpError extends Error {
   constructor(code, message, data) {
