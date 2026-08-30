@@ -140,6 +140,13 @@ const DRITTE_LIGA_TEAMS = [
   { name: 'FC Carl Zeiss Jena',         club: 'FC Carl Zeiss Jena',   strength: 53 },
 ];
 
+// Static 17-team filler pool for a division (used by the shared multiplayer league).
+export function leagueBaseTeams(league) {
+  if (league === '2bl') return ZWEITE_LIGA_TEAMS;
+  if (league === '3l')  return DRITTE_LIGA_TEAMS;
+  return BUNDESLIGA_TEAMS;
+}
+
 // ── Historic opponent generation ──────────────────────────────────────────────
 
 function shuffleArr(arr) {
@@ -268,94 +275,110 @@ export function calcTeamStrength(slots) {
 }
 
 // extraTeams: [{name, att, def}] — real multiplayer opponents injected into the league.
-export function simulateFullLeague(slots, league = 'bl', allPlayers = [], extraTeams = []) {
+// precomputed: { teams, rounds, matchResults } — when set, the league table and every
+//   scoreline come from the shared multiplayer simulation instead of being rolled here.
+//   `teams` carries name/att/def/scorerPool and exactly one { isPlayer: true }.
+export function simulateFullLeague(slots, league = 'bl', allPlayers = [], extraTeams = [], precomputed = null) {
   const { att: attStr, def: defStr, ovr: overall } = calcTeamStrength(slots);
-  const ovrBoost = overall > 82 ? Math.pow(overall - 82, 1.5) : 0;
 
-  // Late-game boost: for 90+ OVR squads, effective strength can exceed 99 in lambda
-  // calculations, making 34-0-0 achievable. 95 OVR → +7.5, 100 OVR → +15.
-  const lateBoost = overall > 90 ? (overall - 90) * 3 : 0;
+  let teams, playerIdx, allRounds;
 
-  // Bad season: 12% chance of underperforming — makes finishing 2nd or lower possible.
-  const formPenalty = Math.random() < 0.12 ? -(8 + Math.floor(Math.random() * 6)) : 0;
+  if (precomputed) {
+    teams     = precomputed.teams;
+    playerIdx = teams.findIndex(t => t.isPlayer);
+    allRounds = precomputed.rounds;
+  } else {
+    const ovrBoost = overall > 82 ? Math.pow(overall - 82, 1.5) : 0;
 
-  // Each team gets a season-form offset (σ=6) so the table shuffles each run.
-  // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
-  const historicOpponents = buildHistoricOpponents(league, allPlayers);
-  const allLeagueTeams = historicOpponents.length === 17
-    ? historicOpponents
-    : (league === '2bl' ? ZWEITE_LIGA_TEAMS : league === '3l' ? DRITTE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
-  // When real-player opponents are injected, reduce CPU team count so total stays at 18.
-  const cpuCount = Math.max(1, 17 - extraTeams.length);
-  const LEAGUE_TEAMS = extraTeams.length > 0
-    ? shuffleArr([...allLeagueTeams]).slice(0, cpuCount)
-    : allLeagueTeams;
-  const STRIKER_POS = new Set(['ST', 'LF', 'RF', 'AM', 'SS']);
+    // Late-game boost: for 90+ OVR squads, effective strength can exceed 99 in lambda
+    // calculations, making 34-0-0 achievable. 95 OVR → +7.5, 100 OVR → +15.
+    const lateBoost = overall > 90 ? (overall - 90) * 3 : 0;
 
-  const teams = [
-    ...LEAGUE_TEAMS.map(t => {
-      const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
-      let scorerPool = [];
-      if (t.season && allPlayers.length) {
-        // Historic opponent: exact season, all positions
-        const seasonKey = seasonLabelToKey(t.season);
-        scorerPool = allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey));
-      } else if (t.club && allPlayers.length) {
-        // Static 3L team: pick a random season from data, strikers only
-        const clubStrikers = allPlayers.filter(p =>
-          p.positions?.some(pos => STRIKER_POS.has(pos)) &&
-          p.seasons.some(s => s.club === t.club)
-        );
-        if (clubStrikers.length) {
-          const seasons = [...new Set(
-            clubStrikers.flatMap(p => p.seasons.filter(s => s.club === t.club).map(s => s.season))
-          )];
-          const picked = seasons[Math.floor(Math.random() * seasons.length)];
-          scorerPool = clubStrikers.filter(p => p.seasons.some(s => s.club === t.club && s.season === picked));
+    // Bad season: 12% chance of underperforming — makes finishing 2nd or lower possible.
+    const formPenalty = Math.random() < 0.12 ? -(8 + Math.floor(Math.random() * 6)) : 0;
+
+    // Each team gets a season-form offset (σ=6) so the table shuffles each run.
+    // Bayern still mostly wins; Paderborn mostly struggles — but nothing is guaranteed.
+    const historicOpponents = buildHistoricOpponents(league, allPlayers);
+    const allLeagueTeams = historicOpponents.length === 17
+      ? historicOpponents
+      : (league === '2bl' ? ZWEITE_LIGA_TEAMS : league === '3l' ? DRITTE_LIGA_TEAMS : BUNDESLIGA_TEAMS);
+    // When real-player opponents are injected, reduce CPU team count so total stays at 18.
+    const cpuCount = Math.max(1, 17 - extraTeams.length);
+    const LEAGUE_TEAMS = extraTeams.length > 0
+      ? shuffleArr([...allLeagueTeams]).slice(0, cpuCount)
+      : allLeagueTeams;
+    const STRIKER_POS = new Set(['ST', 'LF', 'RF', 'AM', 'SS']);
+
+    teams = [
+      ...LEAGUE_TEAMS.map(t => {
+        const eff = Math.round(Math.min(98, Math.max(40, t.strength + gauss(4))));
+        let scorerPool = [];
+        if (t.season && allPlayers.length) {
+          // Historic opponent: exact season, all positions
+          const seasonKey = seasonLabelToKey(t.season);
+          scorerPool = allPlayers.filter(p => p.seasons.some(s => s.club === t.club && s.season === seasonKey));
+        } else if (t.club && allPlayers.length) {
+          // Static 3L team: pick a random season from data, strikers only
+          const clubStrikers = allPlayers.filter(p =>
+            p.positions?.some(pos => STRIKER_POS.has(pos)) &&
+            p.seasons.some(s => s.club === t.club)
+          );
+          if (clubStrikers.length) {
+            const seasons = [...new Set(
+              clubStrikers.flatMap(p => p.seasons.filter(s => s.club === t.club).map(s => s.season))
+            )];
+            const picked = seasons[Math.floor(Math.random() * seasons.length)];
+            scorerPool = clubStrikers.filter(p => p.seasons.some(s => s.club === t.club && s.season === picked));
+          }
         }
-      }
-      return { ...t, att: eff, def: eff, scorerPool };
-    }),
-    ...extraTeams.map(t => ({
-      name: t.name,
-      club: t.name,
-      att: Math.round(Math.min(98, Math.max(40, t.att + gauss(4)))),
-      def: Math.round(Math.min(98, Math.max(40, t.def + gauss(4)))),
-      isRealPlayer: true,
-      scorerPool: [],
-    })),
-    { name: 'Deine 11', att: attStr + lateBoost + formPenalty, def: defStr + lateBoost + formPenalty, isPlayer: true, scorerPool: [] },
-  ];
-  const n = teams.length; // 18 (cpu + extra real players + player)
-  const playerIdx = n - 1;
+        return { ...t, att: eff, def: eff, scorerPool };
+      }),
+      ...extraTeams.map(t => ({
+        name: t.name,
+        club: t.name,
+        att: Math.round(Math.min(98, Math.max(40, t.att + gauss(4)))),
+        def: Math.round(Math.min(98, Math.max(40, t.def + gauss(4)))),
+        isRealPlayer: true,
+        scorerPool: [],
+      })),
+      { name: 'Deine 11', att: attStr + lateBoost + formPenalty, def: defStr + lateBoost + formPenalty, isPlayer: true, scorerPool: [] },
+    ];
+    playerIdx = teams.length - 1;
 
+    // Proper 34-round schedule: Hinrunde rounds then Rückrunde (home/away flipped).
+    // Every team plays exactly once per round → player's 34 games come out in order.
+    const hinRunde  = buildRoundRobinRounds(teams.length);
+    const ruckRunde = hinRunde.map(round => round.map(([h, a]) => [a, h]));
+
+    // Soft-sort only the Hinrunde so the player faces weaker opponents early.
+    // Rückrunde mirrors the sorted Hinrunde (same order, home/away flipped) — like a real season.
+    const sortedHin = hinRunde
+      .map(round => {
+        const pm     = round.find(([hi, ai]) => hi === playerIdx || ai === playerIdx);
+        const oppIdx = pm ? (pm[0] === playerIdx ? pm[1] : pm[0]) : -1;
+        const oppStr = oppIdx >= 0 ? teams[oppIdx].att : 70;
+        return { round, sortKey: oppStr + gauss(8) };
+      })
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .map(r => r.round);
+    const sortedRuck = sortedHin.map(round => round.map(([h, a]) => [a, h]));
+    allRounds = [...sortedHin, ...sortedRuck];
+  }
+
+  const n = teams.length;
   const stats = Array.from({ length: n }, () => ({ W: 0, D: 0, L: 0, GF: 0, GA: 0 }));
-
-  // Proper 34-round schedule: Hinrunde rounds then Rückrunde (home/away flipped).
-  // Every team plays exactly once per round → player's 34 games come out in order.
-  const hinRunde  = buildRoundRobinRounds(n);
-  const ruckRunde = hinRunde.map(round => round.map(([h, a]) => [a, h]));
-
-  // Soft-sort only the Hinrunde so the player faces weaker opponents early.
-  // Rückrunde mirrors the sorted Hinrunde (same order, home/away flipped) — like a real season.
-  const sortedHin = hinRunde
-    .map(round => {
-      const pm     = round.find(([hi, ai]) => hi === playerIdx || ai === playerIdx);
-      const oppIdx = pm ? (pm[0] === playerIdx ? pm[1] : pm[0]) : -1;
-      const oppStr = oppIdx >= 0 ? teams[oppIdx].att : 70;
-      return { round, sortKey: oppStr + gauss(8) };
-    })
-    .sort((a, b) => a.sortKey - b.sortKey)
-    .map(r => r.round);
-  const sortedRuck = sortedHin.map(round => round.map(([h, a]) => [a, h]));
-  const allRounds = [...sortedHin, ...sortedRuck];
 
   const playerMatches = [];
   const tableHistory  = [];
 
-  for (const round of allRounds) {
-    for (const [hi, ai] of round) {
-      const { hg, ag } = simulateMatch(teams[hi].att, teams[hi].def, teams[ai].att, teams[ai].def);
+  for (let ri = 0; ri < allRounds.length; ri++) {
+    const round = allRounds[ri];
+    for (let pi = 0; pi < round.length; pi++) {
+      const [hi, ai] = round[pi];
+      const { hg, ag } = precomputed
+        ? precomputed.matchResults[ri][pi]
+        : simulateMatch(teams[hi].att, teams[hi].def, teams[ai].att, teams[ai].def);
 
       if (hg > ag) { stats[hi].W++; stats[ai].L++; }
       else if (hg < ag) { stats[hi].L++; stats[ai].W++; }
