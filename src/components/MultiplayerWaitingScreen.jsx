@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { getMembers, kickMember } from '../utils/multiplayerUtils';
+import { getMembers, kickMember, getMpSession } from '../utils/multiplayerUtils';
 import './MultiplayerWaitingScreen.css';
 
 // Shown after a manager submits their squad, while the shared season is still
 // waiting on the others. Nobody is skipped automatically — a missing manager
 // reconnects and submits, or the host removes them.
-export default function MultiplayerWaitingScreen({ season, waitingOn = [], isHost, code, onKicked }) {
+export default function MultiplayerWaitingScreen({ season, waitingOn = [], submitted = [], total = 0, isHost, code, onKicked }) {
   const [members, setMembers] = useState([]);
   const [busy, setBusy] = useState('');
+  const meName = getMpSession()?.playerName;
 
   useEffect(() => {
     if (!isHost || !code) return;
@@ -30,6 +31,10 @@ export default function MultiplayerWaitingScreen({ season, waitingOn = [], isHos
     }
   }
 
+  const readyCount = submitted.length;
+  const roster = total || readyCount + waitingOn.length;
+  const pct = roster ? Math.round((readyCount / roster) * 100) : 0;
+
   return (
     <div className="mp-wait">
       <div className="mp-wait-card">
@@ -41,12 +46,28 @@ export default function MultiplayerWaitingScreen({ season, waitingOn = [], isHos
             : `Warte auf ${waitingOn.length} Manager…`}
         </p>
 
-        {waitingOn.length > 0 && (
+        {roster > 0 && (
+          <div className="mp-wait-progress">
+            <div className="mp-wait-progress-track">
+              <div className="mp-wait-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="mp-wait-progress-label">{readyCount} / {roster} Manager bereit</span>
+          </div>
+        )}
+
+        {(submitted.length > 0 || waitingOn.length > 0) && (
           <ul className="mp-wait-list">
+            {submitted.map(n => (
+              <li key={n} className="mp-wait-ready">
+                <span className="mp-wait-tick">✓</span>
+                <span className="mp-wait-name">{n}{n === meName ? ' (Du)' : ''}</span>
+                <span className="mp-wait-status">bereit</span>
+              </li>
+            ))}
             {waitingOn.map(n => (
-              <li key={n}>
+              <li key={n} className="mp-wait-pending">
                 <span className="mp-wait-dot" />
-                <span className="mp-wait-name">{n}</span>
+                <span className="mp-wait-name">{n}{n === meName ? ' (Du)' : ''}</span>
                 {isHost && (
                   <button
                     className="mp-wait-kick"

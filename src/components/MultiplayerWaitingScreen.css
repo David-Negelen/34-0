@@ -37,7 +37,32 @@
 .mp-wait-sub {
   font-size: 14px;
   color: #aaa;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
+}
+
+.mp-wait-progress {
+  margin: 0 0 18px;
+}
+
+.mp-wait-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #2a2a2a;
+  overflow: hidden;
+}
+
+.mp-wait-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #4caf50;
+  transition: width 0.4s ease;
+}
+
+.mp-wait-progress-label {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+  color: #999;
 }
 
 .mp-wait-list {
@@ -70,6 +95,25 @@
 }
 
 @keyframes mp-wait-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+.mp-wait-list li.mp-wait-ready {
+  background: #181f18;
+  border-color: #2c3a2c;
+  color: #9aa79a;
+}
+
+.mp-wait-tick {
+  width: 8px;
+  color: #4caf50;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mp-wait-status {
+  font-size: 11px;
+  color: #4caf50;
+}
 
 .mp-wait-name { flex: 1; text-align: left; }
 

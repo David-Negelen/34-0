@@ -255,14 +255,17 @@ export async function getSeason(code, season, division) {
 // seed writes to one winner.
 export async function ensureSeasonSeed(code, season, division) {
   let row = await getSeason(code, season, division);
-  if (row?.seed) return { ready: true, seed: row.seed, row, waitingOn: [] };
+  if (row?.seed) return { ready: true, seed: row.seed, row, waitingOn: [], submitted: [], total: 0 };
 
   const [members, squads] = await Promise.all([getMembers(code), getSquads(code, season)]);
-  const submitted = new Set(squads.map(s => s.player_name));
-  const waitingOn = members.map(m => m.player_name).filter(n => !submitted.has(n));
+  const roster = members.map(m => m.player_name);
+  const submittedSet = new Set(squads.map(s => s.player_name));
+  const submitted = roster.filter(n => submittedSet.has(n)); // ready for the next season
+  const waitingOn = roster.filter(n => !submittedSet.has(n));
+  const progress = { waitingOn, submitted, total: roster.length };
 
-  if (squads.some(s => s.division === division) === false) return { ready: false, seed: null, row: null, waitingOn };
-  if (waitingOn.length > 0) return { ready: false, seed: null, row: null, waitingOn };
+  if (squads.some(s => s.division === division) === false) return { ready: false, seed: null, row: null, ...progress };
+  if (waitingOn.length > 0) return { ready: false, seed: null, row: null, ...progress };
 
   try {
     row = await pbCreate('mp_seasons', {
@@ -273,7 +276,7 @@ export async function ensureSeasonSeed(code, season, division) {
     row = await getSeason(code, season, division);
     if (!row) throw e;
   }
-  return { ready: true, seed: row.seed, row, waitingOn: [] };
+  return { ready: true, seed: row.seed, row, waitingOn: [], submitted, total: roster.length };
 }
 
 // Cache one division's authoritative standings + advance the room's season pointer.

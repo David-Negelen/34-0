@@ -147,7 +147,10 @@ export default function CareerScreen() {
         for (;;) {
           const r = await ensureSeasonSeed(mp.code, seasonNumber, division);
           if (r.ready) { seed = r.seed; break; }
-          setMpWait({ season: seasonNumber, waitingOn: r.waitingOn, isHost: !!getMpSession()?.isHost, code: mp.code });
+          setMpWait({
+            season: seasonNumber, waitingOn: r.waitingOn, submitted: r.submitted, total: r.total,
+            isHost: !!getMpSession()?.isHost, code: mp.code,
+          });
           await sleep(3000);
         }
         setMpWait(null);
@@ -263,9 +266,15 @@ export default function CareerScreen() {
       <MultiplayerWaitingScreen
         season={mpWait.season}
         waitingOn={mpWait.waitingOn}
+        submitted={mpWait.submitted}
+        total={mpWait.total}
         isHost={mpWait.isHost}
         code={mpWait.code}
-        onKicked={() => setMpWait(w => w && { ...w, waitingOn: [] })}
+        onKicked={(name) => setMpWait(w => w && {
+          ...w,
+          waitingOn: w.waitingOn.filter(n => n !== name),
+          total: Math.max(0, (w.total ?? 1) - 1),
+        })}
       />
     );
   }
