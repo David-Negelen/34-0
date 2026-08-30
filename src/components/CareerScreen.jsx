@@ -68,9 +68,10 @@ function getPlayers(div) {
   return BL2_PLAYERS;
 }
 
-function nextEuropeanCup(division, pos) {
+function nextEuropeanCup(division, pos, uclWon = false, uelWon = false) {
+  if (uclWon) return 'ucl';
   if (division === 'bl' && pos <= 4) return 'ucl';
-  if (division === 'bl' && pos <= 6) return 'uel';
+  if (uelWon || (division === 'bl' && pos <= 6)) return 'uel';
   return null;
 }
 
@@ -84,7 +85,13 @@ export default function CareerScreen() {
   function startEntwicklung() {
     const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
     const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
-    career.setEuropeanCup(nextEuropeanCup(state.division, state.result?.pos ?? 18));
+    const ci = state.result?.cupInfo;
+    career.setEuropeanCup(nextEuropeanCup(
+      state.division,
+      state.result?.pos ?? 18,
+      ci?.europeanWon && ci?.europeanComp === 'ucl',
+      ci?.europeanWon && ci?.europeanComp === 'uel',
+    ));
     setEntwicklungData({ updatedSlots, growthLog, retirements });
   }
 
@@ -144,6 +151,7 @@ export default function CareerScreen() {
         ...result,
         achievements: getAchievements(result, slots, division, cupInfo),
         table, playerMatches, playerStats, tableHistory, playoff,
+        cupInfo,
       });
 
       if (mp) {
