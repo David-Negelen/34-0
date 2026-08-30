@@ -101,8 +101,7 @@ export default function CareerScreen() {
 
   const [seasonRunning, setSeasonRunning] = useState(false);
   const [seasonError, setSeasonError] = useState(null);
-  const [mpWait, setMpWait] = useState(null); // { season, waitingOn, isHost, forcing } while a shared season resolves
-  const forceRef = useRef(false);
+  const [mpWait, setMpWait] = useState(null); // { season, waitingOn, isHost, code } while a shared season resolves
 
   async function runSeason(slots, division, seasonNumber) {
     if (seasonRunning) return;
@@ -121,14 +120,15 @@ export default function CareerScreen() {
         const scorers = slots
           .filter(s => s.player && s.type !== 'BENCH')
           .map(s => ({ name: s.player.name, pos: s.type }));
+        // submitSquad is sealed once the season seed is frozen — a late return
+        // just proceeds to the (already-resolvable) wait below.
         await submitSquad({ code: mp.code, playerName: mp.playerName, season: seasonNumber, division, att, def, ovr, formation: state.formation, scorers });
 
-        forceRef.current = false;
         let seed;
         for (;;) {
-          const r = await ensureSeasonSeed(mp.code, seasonNumber, division, { force: forceRef.current });
+          const r = await ensureSeasonSeed(mp.code, seasonNumber, division);
           if (r.ready) { seed = r.seed; break; }
-          setMpWait({ season: seasonNumber, waitingOn: r.waitingOn, isHost: !!mp.isHost, forcing: forceRef.current });
+          setMpWait({ season: seasonNumber, waitingOn: r.waitingOn, isHost: !!mp.isHost, code: mp.code });
           await sleep(3000);
         }
         setMpWait(null);
@@ -149,9 +149,15 @@ export default function CareerScreen() {
 
       const { result, table: rawTable, playerMatches: leagueMatches, playerStats, tableHistory } =
         simulateFullLeague(slots, division, players, [], precomputed);
-      const realNames = mpTable ? new Set(mpTable.filter(r => r.isReal).map(r => r.name)) : null;
-      const table = realNames
-        ? rawTable.map(r => ({ ...r, isReal: realNames.has(r.name) }))
+      // In MP the displayed standings come straight from the authoritative
+      // (deterministic, server-cached) table, not a local re-derivation.
+      const table = mpTable
+        ? mpTable.map(r => ({
+            ...r,
+            isPlayer: r.name === mp.playerName,
+            isReal: r.isReal && r.name !== mp.playerName,
+            name: r.name === mp.playerName ? 'Deine 11' : r.name,
+          }))
         : rawTable;
       const needsPlayoff =
         (result.pos === 3  && (division === '2bl' || division === '3l')) ||
@@ -191,11 +197,6 @@ export default function CareerScreen() {
     } finally {
       setSeasonRunning(false);
     }
-  }
-
-  function forceResolveSeason() {
-    forceRef.current = true;
-    setMpWait(w => (w ? { ...w, forcing: true } : w));
   }
 
   function handleEndCareer() {
@@ -244,8 +245,8 @@ export default function CareerScreen() {
         season={mpWait.season}
         waitingOn={mpWait.waitingOn}
         isHost={mpWait.isHost}
-        forcing={mpWait.forcing}
-        onForce={forceResolveSeason}
+        code={mpWait.code}
+        onKicked={() => setMpWait(w => w && { ...w, waitingOn: [] })}
       />
     );
   }

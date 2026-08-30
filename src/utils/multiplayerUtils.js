@@ -41,8 +41,8 @@ export function clearMpSession() {
 }
 
 // ── PocketBase REST helpers ──────────────────────────────────────────────────
-// Filters only ever interpolate room codes ([A-Z2-9]) and integers, so the
-// whole filter string is safely encodeURIComponent'd — no injection surface.
+// Filters only ever interpolate room codes ([A-Z2-9]), fixed keywords and
+// integers, so the whole filter string is safely encodeURIComponent'd.
 
 async function pbList(collection, filter) {
   const qs = `perPage=200${filter ? `&filter=${encodeURIComponent(filter)}` : ''}`;
@@ -93,15 +93,26 @@ export async function getMembers(code) {
   return items.sort((a, b) => (a.created < b.created ? -1 : 1));
 }
 
-export async function createRoom(hostName, league = '2bl') {
+// Open, discoverable rooms for the lobby browse list.
+export async function listPublicRooms() {
+  const rooms = await pbList('mp_rooms', `visibility="public" && status="open"`).catch(() => []);
+  const out = await Promise.all(rooms.map(async r => {
+    const members = await getMembers(r.code).catch(() => []);
+    const max = r.max_players ?? MAX_PLAYERS_DEFAULT;
+    return { code: r.code, hostName: r.host_name, league: r.league, players: members.length, maxPlayers: max, full: members.length >= max };
+  }));
+  return out.sort((a, b) => b.players - a.players);
+}
+
+export async function createRoom(hostName, league = '2bl', visibility = 'private') {
   const clientId = getClientId();
   const code = generateCode();
   await pbCreate('mp_rooms', {
-    code, host_name: hostName, league, status: 'open',
+    code, host_name: hostName, league, visibility, status: 'open',
     current_season: 1, max_players: MAX_PLAYERS_DEFAULT,
   });
   await pbCreate('mp_members', { room_code: code, player_name: hostName, client_id: clientId });
-  return { code, playerName: hostName, clientId, isHost: true, league };
+  return { code, playerName: hostName, clientId, isHost: true, league, visibility };
 }
 
 export async function joinRoom(code, playerName) {
@@ -110,26 +121,28 @@ export async function joinRoom(code, playerName) {
   if (!room) throw new MpError('ROOM_NOT_FOUND', 'Raum nicht gefunden');
 
   const members = await getMembers(code);
-  const mine = members.find(m => m.player_name === playerName && m.client_id === clientId);
-  if (mine) {
-    return { code, playerName, clientId, isHost: room.host_name === playerName, league: room.league, room };
+  const seat = members.find(m => m.player_name === playerName);
+
+  // Reconnect: same browser always; a name-match while the game is running is
+  // treated as the player coming back (claims this device for the seat).
+  if (seat && (seat.client_id === clientId || room.status === 'active')) {
+    if (seat.client_id !== clientId) await pbUpdate('mp_members', seat.id, { client_id: clientId }).catch(() => {});
+    return { code, playerName, clientId, isHost: room.host_name === playerName, league: room.league, visibility: room.visibility, room, reconnected: seat.client_id !== clientId };
   }
+  if (seat) throw new MpError('NAME_TAKEN', 'Name in diesem Raum schon vergeben');
   if (room.status !== 'open') throw new MpError('ROOM_STARTED', 'Das Spiel läuft bereits');
-  if (members.some(m => m.player_name === playerName)) {
-    throw new MpError('NAME_TAKEN', 'Name in diesem Raum schon vergeben');
-  }
-  if (members.length >= (room.max_players ?? MAX_PLAYERS_DEFAULT)) {
-    throw new MpError('ROOM_FULL', 'Raum ist voll');
-  }
+  if (members.length >= (room.max_players ?? MAX_PLAYERS_DEFAULT)) throw new MpError('ROOM_FULL', 'Raum ist voll');
+
   await pbCreate('mp_members', { room_code: code, player_name: playerName, client_id: clientId });
-  return { code, playerName, clientId, isHost: false, league: room.league, room };
+  return { code, playerName, clientId, isHost: false, league: room.league, visibility: room.visibility, room };
 }
 
-// Bump the member row's `updated` so other clients can tell who is still around.
+// Bump the member row's `updated` so others can see who is still connected.
 export async function touchMember(code, playerName) {
   const clientId = getClientId();
   const members = await getMembers(code).catch(() => []);
-  const mine = members.find(m => m.player_name === playerName && m.client_id === clientId);
+  const mine = members.find(m => m.player_name === playerName && m.client_id === clientId)
+            ?? members.find(m => m.player_name === playerName);
   if (mine) await pbUpdate('mp_members', mine.id, { client_id: clientId }).catch(() => {});
 }
 
@@ -139,15 +152,29 @@ export async function startRoom(code) {
   await pbUpdate('mp_rooms', room.id, { status: 'active' });
 }
 
+// Hand the host role to the next remaining member; delete the room if empty.
+async function reassignHost(code, goneName) {
+  const [room, members] = await Promise.all([getRoom(code).catch(() => null), getMembers(code).catch(() => [])]);
+  if (!room) return;
+  const remaining = members.filter(m => m.player_name !== goneName);
+  if (remaining.length === 0) { await pbDelete('mp_rooms', room.id); return; }
+  if (room.host_name === goneName) await pbUpdate('mp_rooms', room.id, { host_name: remaining[0].player_name }).catch(() => {});
+}
+
+// A manager voluntarily quits — frees the room to resolve without them.
 export async function leaveRoom(code, playerName) {
   const clientId = getClientId();
   const members = await getMembers(code).catch(() => []);
-  const mine = members.find(m => m.player_name === playerName && m.client_id === clientId);
+  const mine = members.find(m => m.player_name === playerName && m.client_id === clientId)
+            ?? members.find(m => m.player_name === playerName);
   if (mine) await pbDelete('mp_members', mine.id);
+  await reassignHost(code, playerName).catch(() => {});
 }
 
-export async function removeMember(memberId) {
-  await pbDelete('mp_members', memberId);
+// Host removes a player who isn't coming back.
+export async function kickMember(code, member) {
+  await pbDelete('mp_members', member.id);
+  await reassignHost(code, member.player_name).catch(() => {});
 }
 
 // ── Per-season squads ──────────────────────────────────────────────────────
@@ -158,8 +185,13 @@ export async function getSquads(code, season) {
 }
 
 // Upsert this manager's squad snapshot for the given season + division/tier.
+// Sealed once the tier's seed is frozen — never mutate an input another client
+// may already have simulated from (desync guard).
 export async function submitSquad({ code, playerName, season, division, att, def, ovr, formation, scorers }) {
   const clientId = getClientId();
+  const sealed = await getSeason(code, season, division).catch(() => null);
+  if (sealed?.seed) return { locked: true };
+
   const body = {
     room_code: code, player_name: playerName, client_id: clientId, season_number: season,
     division, team_att: att, team_def: def, team_ovr: ovr ?? 0,
@@ -172,7 +204,6 @@ export async function submitSquad({ code, playerName, season, division, att, def
     return await pbCreate('mp_squads', body);
   } catch (e) {
     if (e.code !== 'VALIDATION') throw e;
-    // lost a create race against ourselves on another tab — patch the winner
     const again = (await getSquads(code, season)).find(r => r.player_name === playerName);
     if (again) return pbUpdate('mp_squads', again.id, body);
     throw e;
@@ -190,11 +221,12 @@ export async function getSeason(code, season, division) {
   return items[0] ?? null;
 }
 
-// Freeze a division's sub-league once EVERY rostered manager has submitted a
-// season-N squad (in whatever tier), or the host forces it. Each division gets
-// its own seed row; the unique (room, season, division) index makes concurrent
-// seed writes collapse to one winner.
-export async function ensureSeasonSeed(code, season, division, { force = false } = {}) {
+// Freeze a division's sub-league once EVERY seated manager has submitted a
+// season-N squad (in whatever tier). No skipping — a missing player must
+// reconnect and submit, or the host must kick them. Each division gets its own
+// seed row; the unique (room, season, division) index collapses concurrent
+// seed writes to one winner.
+export async function ensureSeasonSeed(code, season, division) {
   let row = await getSeason(code, season, division);
   if (row?.seed) return { ready: true, seed: row.seed, row, waitingOn: [] };
 
@@ -202,9 +234,8 @@ export async function ensureSeasonSeed(code, season, division, { force = false }
   const submitted = new Set(squads.map(s => s.player_name));
   const waitingOn = members.map(m => m.player_name).filter(n => !submitted.has(n));
 
-  const mineThisTier = squads.filter(s => s.division === division);
-  if (mineThisTier.length < 1) return { ready: false, seed: null, row: null, waitingOn };
-  if (waitingOn.length > 0 && !force) return { ready: false, seed: null, row: null, waitingOn };
+  if (squads.some(s => s.division === division) === false) return { ready: false, seed: null, row: null, waitingOn };
+  if (waitingOn.length > 0) return { ready: false, seed: null, row: null, waitingOn };
 
   try {
     row = await pbCreate('mp_seasons', {

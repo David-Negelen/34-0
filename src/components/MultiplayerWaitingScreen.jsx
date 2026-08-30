@@ -1,17 +1,34 @@
 import { useEffect, useState } from 'react';
+import { getMembers, kickMember } from '../utils/multiplayerUtils';
 import './MultiplayerWaitingScreen.css';
 
 // Shown after a manager submits their squad, while the shared season is still
-// waiting on the other managers. `waitingOn` is the list of names not yet in.
-export default function MultiplayerWaitingScreen({ season, waitingOn = [], isHost, forcing, onForce }) {
-  const [elapsed, setElapsed] = useState(0);
+// waiting on the others. Nobody is skipped automatically — a missing manager
+// reconnects and submits, or the host removes them.
+export default function MultiplayerWaitingScreen({ season, waitingOn = [], isHost, code, onKicked }) {
+  const [members, setMembers] = useState([]);
+  const [busy, setBusy] = useState('');
 
   useEffect(() => {
-    const t = setInterval(() => setElapsed(e => e + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
+    if (!isHost || !code) return;
+    let alive = true;
+    const load = () => getMembers(code).then(m => { if (alive) setMembers(m); }).catch(() => {});
+    load();
+    const t = setInterval(load, 4000);
+    return () => { alive = false; clearInterval(t); };
+  }, [isHost, code]);
 
-  const canForce = isHost && waitingOn.length > 0 && elapsed >= 20;
+  async function handleKick(name) {
+    const member = members.find(m => m.player_name === name);
+    if (!member) return;
+    setBusy(name);
+    try {
+      await kickMember(code, member);
+      onKicked?.(name);
+    } finally {
+      setBusy('');
+    }
+  }
 
   return (
     <div className="mp-wait">
@@ -27,18 +44,29 @@ export default function MultiplayerWaitingScreen({ season, waitingOn = [], isHos
         {waitingOn.length > 0 && (
           <ul className="mp-wait-list">
             {waitingOn.map(n => (
-              <li key={n}><span className="mp-wait-dot" />{n}</li>
+              <li key={n}>
+                <span className="mp-wait-dot" />
+                <span className="mp-wait-name">{n}</span>
+                {isHost && (
+                  <button
+                    className="mp-wait-kick"
+                    onClick={() => handleKick(n)}
+                    disabled={busy === n || !members.some(m => m.player_name === n)}
+                  >
+                    {busy === n ? '…' : 'entfernen'}
+                  </button>
+                )}
+              </li>
             ))}
           </ul>
         )}
 
-        {canForce && (
-          <button className="mp-wait-force" onClick={onForce} disabled={forcing}>
-            {forcing ? 'Starte…' : 'Ohne fehlende Manager fortfahren'}
-          </button>
-        )}
-        {isHost && waitingOn.length > 0 && !canForce && (
-          <p className="mp-wait-hint">Fortfahren ohne alle ist in {20 - elapsed}s möglich</p>
+        {waitingOn.length > 0 && (
+          <p className="mp-wait-hint">
+            {isHost
+              ? 'Ein Manager, der nicht zurückkommt, kann entfernt werden — dann läuft die Saison ohne ihn weiter.'
+              : 'Sobald alle ihre Saison eingereicht haben, geht es weiter.'}
+          </p>
         )}
       </div>
     </div>

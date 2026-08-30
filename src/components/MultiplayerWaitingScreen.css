@@ -71,22 +71,24 @@
 
 @keyframes mp-wait-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-.mp-wait-force {
-  background: #fff;
-  color: #111;
-  border: none;
-  border-radius: 10px;
-  padding: 13px 20px;
-  font-size: 14px;
-  font-weight: 700;
+.mp-wait-name { flex: 1; text-align: left; }
+
+.mp-wait-kick {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #999;
+  font-size: 11px;
+  padding: 4px 8px;
   cursor: pointer;
-  width: 100%;
 }
 
-.mp-wait-force:disabled { background: #444; color: #888; cursor: not-allowed; }
+.mp-wait-kick:hover:not(:disabled) { border-color: #ff6b6b; color: #ff6b6b; }
+.mp-wait-kick:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .mp-wait-hint {
   font-size: 12px;
-  color: #666;
+  color: #777;
   margin: 4px 0 0;
+  line-height: 1.5;
 }
