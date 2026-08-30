@@ -84,7 +84,8 @@ export default function MultiplayerLobbyScreen() {
       if (!room) { setError('Der Raum wurde geschlossen.'); return; }
       // If the host vanished without leaving, the rightful heir takes over so
       // the lobby stays startable.
-      if (room.status === 'open' && await claimHostIfStale(session.code, session.playerName).catch(() => false)) {
+      if (room.status === 'open'
+        && await claimHostIfStale(session.code, session.playerName, { room, members: mem }).catch(() => false)) {
         [room, mem] = await Promise.all([getRoom(session.code), getMembers(session.code)]);
       }
       setRoomStatus(room.status);

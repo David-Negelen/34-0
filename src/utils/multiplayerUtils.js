@@ -154,11 +154,10 @@ const HOST_STALE_MS = 45000;
 // be stuck — only the host can start or kick. The earliest-joined member that is
 // still alive quietly takes over. Safe to call on every poll: it's a no-op
 // unless the host is really gone AND the caller is the rightful heir.
-export async function claimHostIfStale(code, myName) {
-  const [room, members] = await Promise.all([
-    getRoom(code).catch(() => null),
-    getMembers(code).catch(() => []),
-  ]);
+export async function claimHostIfStale(code, myName, prefetched) {
+  const [room, members] = prefetched
+    ? [prefetched.room, prefetched.members]
+    : await Promise.all([getRoom(code).catch(() => null), getMembers(code).catch(() => [])]);
   if (!room || room.status === 'finished' || room.host_name === myName) return false;
 
   const now = Date.now();
