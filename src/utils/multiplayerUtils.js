@@ -147,8 +147,9 @@ export async function touchMember(code, playerName) {
 }
 
 // A member counts as "gone" once its heartbeat is older than this. Clients
-// heartbeat every ~15–20s (lobby + career), so ~2 missed beats.
-const HOST_STALE_MS = 45000;
+// heartbeat every ~15–20s (lobby + career), so ~2 missed beats. Also drives the
+// waiting screen's per-manager "aktiv / weg" presence readout.
+export const HOST_STALE_MS = 45000;
 
 // If the host's tab just vanished (row gone, or heartbeat stale) the room would
 // be stuck — only the host can start or kick. The earliest-joined member that is

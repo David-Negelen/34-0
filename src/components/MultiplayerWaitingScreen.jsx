@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
-import { getRoom, getMembers, kickMember, getMpSession } from '../utils/multiplayerUtils';
+import { getRoom, getMembers, kickMember, getMpSession, HOST_STALE_MS } from '../utils/multiplayerUtils';
 import './MultiplayerWaitingScreen.css';
+
+// Coarse "last seen X ago" for the presence readout.
+function since(ms) {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s} s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} Min.`;
+  return `${Math.round(m / 60)} Std.`;
+}
 
 // Shown after a manager submits their squad, while the shared season is still
 // waiting on the others. Nobody is skipped automatically — a missing manager
@@ -70,21 +79,31 @@ export default function MultiplayerWaitingScreen({ season, waitingOn = [], submi
                 <span className="mp-wait-status">bereit</span>
               </li>
             ))}
-            {waitingOn.map(n => (
-              <li key={n} className="mp-wait-pending">
-                <span className="mp-wait-dot" />
-                <span className="mp-wait-name">{n}{n === meName ? ' (Du)' : ''}</span>
-                {amHost && (
-                  <button
-                    className="mp-wait-kick"
-                    onClick={() => handleKick(n)}
-                    disabled={busy === n || !members.some(m => m.player_name === n)}
-                  >
-                    {busy === n ? '…' : 'entfernen'}
-                  </button>
-                )}
-              </li>
-            ))}
+            {waitingOn.map(n => {
+              const mem = members.find(m => m.player_name === n);
+              const age = mem ? Date.now() - new Date(mem.updated).getTime() : null;
+              const away = age != null && age >= HOST_STALE_MS;
+              return (
+                <li key={n} className="mp-wait-pending">
+                  <span className={`mp-wait-dot${away ? ' mp-wait-dot--away' : ''}`} />
+                  <span className="mp-wait-name">{n}{n === meName ? ' (Du)' : ''}</span>
+                  {age != null && (
+                    <span className={`mp-wait-presence mp-wait-presence--${away ? 'away' : 'active'}`}>
+                      {away ? `weg · ${since(age)}` : 'aktiv'}
+                    </span>
+                  )}
+                  {amHost && (
+                    <button
+                      className="mp-wait-kick"
+                      onClick={() => handleKick(n)}
+                      disabled={busy === n || !mem}
+                    >
+                      {busy === n ? '…' : 'entfernen'}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
 

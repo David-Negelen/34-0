@@ -96,6 +96,20 @@
 
 @keyframes mp-wait-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
+.mp-wait-dot--away {
+  background: #666;
+  opacity: 0.6;
+  animation: none;
+}
+
+.mp-wait-presence {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.mp-wait-presence--active { color: #4caf50; }
+.mp-wait-presence--away   { color: #f5a623; }
+
 .mp-wait-list li.mp-wait-ready {
   background: #181f18;
   border-color: #2c3a2c;
