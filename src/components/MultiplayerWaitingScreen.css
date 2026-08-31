@@ -1,0 +1,138 @@
+.mp-wait {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.mp-wait-card {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  color: #fff;
+}
+
+.mp-wait-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 20px;
+  border: 3px solid #333;
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: mp-wait-spin 0.9s linear infinite;
+}
+
+@keyframes mp-wait-spin { to { transform: rotate(360deg); } }
+
+.mp-wait-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.mp-wait-sub {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 0 16px;
+}
+
+.mp-wait-progress {
+  margin: 0 0 18px;
+}
+
+.mp-wait-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #2a2a2a;
+  overflow: hidden;
+}
+
+.mp-wait-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #4caf50;
+  transition: width 0.4s ease;
+}
+
+.mp-wait-progress-label {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+  color: #999;
+}
+
+.mp-wait-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-wait-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.mp-wait-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f5c518;
+  animation: mp-wait-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mp-wait-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+.mp-wait-list li.mp-wait-ready {
+  background: #181f18;
+  border-color: #2c3a2c;
+  color: #9aa79a;
+}
+
+.mp-wait-tick {
+  width: 8px;
+  color: #4caf50;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mp-wait-status {
+  font-size: 11px;
+  color: #4caf50;
+}
+
+.mp-wait-name { flex: 1; text-align: left; }
+
+.mp-wait-kick {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #999;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.mp-wait-kick:hover:not(:disabled) { border-color: #ff6b6b; color: #ff6b6b; }
+.mp-wait-kick:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.mp-wait-hint {
+  font-size: 12px;
+  color: #777;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}

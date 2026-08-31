@@ -12,8 +12,12 @@ import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { getMpSession, uploadSquad, submitResult, getRoomSeason } from '../utils/multiplayerUtils';
+import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
+import { simulateSharedLeague } from '../utils/sharedLeague';
 import MultiplayerTableOverlay from './MultiplayerTableOverlay';
+import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 import { simulatePokalMatches, simulateEuropeanCupFull } from './CareerCups';
 const PokalMatchScreen = lazy(() => import('./PokalMatchScreen'));
 import './CareerScreen.css';
@@ -68,9 +72,10 @@ function getPlayers(div) {
   return BL2_PLAYERS;
 }
 
-function nextEuropeanCup(division, pos) {
+function nextEuropeanCup(division, pos, uclWon = false, uelWon = false) {
+  if (uclWon) return 'ucl';
   if (division === 'bl' && pos <= 4) return 'ucl';
-  if (division === 'bl' && pos <= 6) return 'uel';
+  if (uelWon || (division === 'bl' && pos <= 6)) return 'uel';
   return null;
 }
 
@@ -81,15 +86,41 @@ export default function CareerScreen() {
   const [endData, setEndData] = useState(null);
   const [entwicklungData, setEntwicklungData] = useState(null);
 
+  // While in a shared career: keep this seat's heartbeat warm, and take over as
+  // host if the current host has gone dark (so a stranded league can still be
+  // unblocked from the waiting screen).
+  useEffect(() => {
+    const mp = getMpSession();
+    if (!mp?.code) return;
+    let alive = true;
+    const beat = async () => {
+      if (!alive) return;
+      await touchMember(mp.code, mp.playerName).catch(() => {});
+      const claimed = await claimHostIfStale(mp.code, mp.playerName).catch(() => false);
+      const cur = getMpSession();
+      if (claimed && cur) setMpSession({ ...cur, isHost: true });
+    };
+    beat();
+    const t = setInterval(beat, 15000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
   function startEntwicklung() {
     const currentYear = (state.careerStartYear ?? 2000) + state.seasonNumber - 1;
     const { updatedSlots, growthLog, retirements } = applyGrowth(state.slots, state.result?.playerStats, state.careerStats, currentYear, state.division);
-    career.setEuropeanCup(nextEuropeanCup(state.division, state.result?.pos ?? 18));
+    const ci = state.result?.cupInfo;
+    career.setEuropeanCup(nextEuropeanCup(
+      state.division,
+      state.result?.pos ?? 18,
+      ci?.europeanWon && ci?.europeanComp === 'ucl',
+      ci?.europeanWon && ci?.europeanComp === 'uel',
+    ));
     setEntwicklungData({ updatedSlots, growthLog, retirements });
   }
 
   const [seasonRunning, setSeasonRunning] = useState(false);
   const [seasonError, setSeasonError] = useState(null);
+  const [mpWait, setMpWait] = useState(null); // { season, waitingOn, isHost, code } while a shared season resolves
 
   async function runSeason(slots, division, seasonNumber) {
     if (seasonRunning) return;
@@ -99,22 +130,57 @@ export default function CareerScreen() {
       const players = getPlayers(division);
       const mp = getMpSession();
 
-      let extraTeams = [];
+      // Shared multiplayer league: upload this season's squad, wait for every
+      // manager, then run the identical seeded simulation everyone else runs.
+      let precomputed = null;
+      let mpTable = null;
       if (mp) {
-        try {
-          const { att, def, ovr } = calcTeamStrength(slots);
-          await uploadSquad({ code: mp.code, playerName: mp.playerName, seasonNumber, att, def, ovr });
-          const others = await getRoomSeason(mp.code, seasonNumber);
-          extraTeams = others
-            .filter(m => m.player_name !== mp.playerName && m.team_att)
-            .map(m => ({ name: m.player_name, att: m.team_att, def: m.team_def }));
-        } catch {
-          // no-op: fall back to solo simulation
+        const { att, def, ovr } = calcTeamStrength(slots);
+        const scorers = slots
+          .filter(s => s.player && s.type !== 'BENCH')
+          .map(s => ({ name: s.player.name, pos: s.type }));
+        // submitSquad is sealed once the season seed is frozen — a late return
+        // just proceeds to the (already-resolvable) wait below.
+        await submitSquad({ code: mp.code, playerName: mp.playerName, season: seasonNumber, division, att, def, ovr, formation: state.formation, scorers });
+
+        let seed;
+        for (;;) {
+          const r = await ensureSeasonSeed(mp.code, seasonNumber, division);
+          if (r.ready) { seed = r.seed; break; }
+          setMpWait({
+            season: seasonNumber, waitingOn: r.waitingOn, submitted: r.submitted, total: r.total,
+            isHost: !!getMpSession()?.isHost, code: mp.code,
+          });
+          await sleep(3000);
         }
+        setMpWait(null);
+
+        // Only the squads in this manager's own tier form the shared sub-league.
+        const squads = (await getSquads(mp.code, seasonNumber)).filter(s => s.division === division);
+        const shared = simulateSharedLeague(seed, squads, division);
+        const myIdx = shared.teams.findIndex(t => t.name === mp.playerName);
+        const viewTeams = shared.teams.map((t, i) => ({
+          ...t,
+          name: i === myIdx ? 'Deine 11' : t.name,
+          isPlayer: i === myIdx,
+        }));
+        precomputed = { teams: viewTeams, rounds: shared.rounds, matchResults: shared.matchResults };
+        mpTable = shared.table;
+        writeSeasonTable(mp.code, seasonNumber, division, shared.table).catch(() => {});
       }
 
-      const { result, table, playerMatches: leagueMatches, playerStats, tableHistory } =
-        simulateFullLeague(slots, division, players, extraTeams);
+      const { result, table: rawTable, playerMatches: leagueMatches, playerStats, tableHistory } =
+        simulateFullLeague(slots, division, players, [], precomputed);
+      // In MP the displayed standings come straight from the authoritative
+      // (deterministic, server-cached) table, not a local re-derivation.
+      const table = mpTable
+        ? mpTable.map(r => ({
+            ...r,
+            isPlayer: r.name === mp.playerName,
+            isReal: r.isReal && r.name !== mp.playerName,
+            name: r.name === mp.playerName ? 'Deine 11' : r.name,
+          }))
+        : rawTable;
       const needsPlayoff =
         (result.pos === 3  && (division === '2bl' || division === '3l')) ||
         (result.pos === 16 && (division === 'bl'  || division === '2bl'));
@@ -144,21 +210,12 @@ export default function CareerScreen() {
         ...result,
         achievements: getAchievements(result, slots, division, cupInfo),
         table, playerMatches, playerStats, tableHistory, playoff,
+        cupInfo,
+        mpTable,
       });
-
-      if (mp) {
-        submitResult({
-          code: mp.code,
-          playerName: mp.playerName,
-          seasonNumber,
-          pts: result.pts,
-          pos: result.pos,
-          gf: result.GF,
-          ga: result.GA,
-        }).catch(() => {});
-      }
     } catch (err) {
-      setSeasonError(String(err));
+      setMpWait(null);
+      setSeasonError(err?.message ? `Multiplayer: ${err.message}` : String(err));
     } finally {
       setSeasonRunning(false);
     }
@@ -198,25 +255,45 @@ export default function CareerScreen() {
     return (
       <CareerEndScreen
         data={endData}
-        onNewCareer={() => { career.reset(); setEndData(null); }}
-        onHome={() => { career.reset(); navigate('/'); }}
+        onNewCareer={() => { clearMpSession(); career.reset(); setEndData(null); }}
+        onHome={() => { clearMpSession(); career.reset(); navigate('/'); }}
+      />
+    );
+  }
+
+  if (mpWait) {
+    return (
+      <MultiplayerWaitingScreen
+        season={mpWait.season}
+        waitingOn={mpWait.waitingOn}
+        submitted={mpWait.submitted}
+        total={mpWait.total}
+        isHost={mpWait.isHost}
+        code={mpWait.code}
+        onKicked={(name) => setMpWait(w => w && {
+          ...w,
+          waitingOn: w.waitingOn.filter(n => n !== name),
+          total: Math.max(0, (w.total ?? 1) - 1),
+        })}
       />
     );
   }
 
   if (state.phase === 'setup') {
+    const mpLeague = getMpSession()?.league ?? null;
     return (
       <CareerSetup
         formation={state.formation}
-        startingDivision={state.startingDivision ?? '2bl'}
+        startingDivision={mpLeague ?? state.startingDivision ?? '2bl'}
+        lockedLeague={mpLeague}
         onSetFormation={career.setFormation}
         onSetStartingDivision={career.setStartingDivision}
         onStart={(mode) => {
-          if (mode === 'klassik') {
+          if (mode === 'klassik' && !mpLeague) {
             navigate(`/karriere-klassik?formation=${state.formation}`);
             return;
           }
-          const div = state.startingDivision ?? '2bl';
+          const div = mpLeague ?? state.startingDivision ?? '2bl';
           const pool = generateCareerDraftPool(getPlayers(div), FORMATIONS[state.formation], 30, div);
           career.beginDraft(pool, div);
         }}
@@ -320,6 +397,7 @@ export default function CareerScreen() {
           <MultiplayerTableOverlay
             code={mp.code}
             seasonNumber={state.seasonNumber}
+            division={state.division}
             myPlayerName={mp.playerName}
           />
         )}
@@ -332,21 +410,32 @@ export default function CareerScreen() {
       career.sellPlayer(playerId, amount);
     }
 
+    const mp = getMpSession();
     return (
-      <CareerTransfer
-        state={state}
-        onBuy={career.buyOffer}
-        onUndo={career.undoBuy}
-        onMove={career.moveInSquad}
-        onMoveFromKader={career.moveFromKader}
-        onSell={handleSell}
-        onChangeFormation={career.changeFormation}
-        onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
-        onEnd={handleEndCareer}
-        onHome={() => { career.reset(); navigate('/'); }}
-        seasonRunning={seasonRunning}
-        seasonError={seasonError}
-      />
+      <>
+        <CareerTransfer
+          state={state}
+          onBuy={career.buyOffer}
+          onUndo={career.undoBuy}
+          onMove={career.moveInSquad}
+          onMoveFromKader={career.moveFromKader}
+          onSell={handleSell}
+          onChangeFormation={career.changeFormation}
+          onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
+          onEnd={handleEndCareer}
+          onHome={() => { career.reset(); navigate('/'); }}
+          seasonRunning={seasonRunning}
+          seasonError={seasonError}
+        />
+        {mp && state.seasonNumber > 1 && (
+          <MultiplayerTableOverlay
+            code={mp.code}
+            seasonNumber={state.seasonNumber - 1}
+            division={state.seasonHistory[state.seasonHistory.length - 1]?.division ?? state.division}
+            myPlayerName={mp.playerName}
+          />
+        )}
+      </>
     );
   }
 
@@ -361,7 +450,7 @@ const DIV_INFO = {
   'bl':  { label: 'Bundesliga',    sub: 'Höchste Spielklasse — Kampf um den Meistertitel' },
 };
 
-function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartingDivision, onStart, onBack }) {
+function CareerSetup({ formation, startingDivision, lockedLeague = null, onSetFormation, onSetStartingDivision, onStart, onBack }) {
   const [mode, setMode] = useState('standard');
   const divInfo = mode === 'klassik' ? DIV_INFO['2bl'] : (DIV_INFO[startingDivision] ?? DIV_INFO['2bl']);
   return (
@@ -377,42 +466,54 @@ function CareerSetup({ formation, startingDivision, onSetFormation, onSetStartin
       </header>
 
       <div className="career-setup-body">
-        <section className="setup-section">
-          <h3 className="setup-label">Modus</h3>
-          <div className="formation-btns">
-            <button
-              className={`formation-btn ${mode === 'standard' ? 'selected' : ''}`}
-              onClick={() => setMode('standard')}
-            >
-              Transfermarkt
-            </button>
-            <button
-              className={`formation-btn ${mode === 'klassik' ? 'selected' : ''}`}
-              onClick={() => setMode('klassik')}
-            >
-              Klassik
-            </button>
-          </div>
-          {mode === 'klassik' && (
-            <p className="formation-desc">Start in der 2. Bundesliga · Direkte Transfers · kein Budget</p>
-          )}
-        </section>
-
-        {mode !== 'klassik' && (
+        {lockedLeague ? (
           <section className="setup-section">
-            <h3 className="setup-label">Startliga</h3>
-            <div className="formation-btns">
-              {Object.entries(DIV_INFO).map(([key, info]) => (
-                <button
-                  key={key}
-                  className={`formation-btn ${startingDivision === key ? 'selected' : ''}`}
-                  onClick={() => onSetStartingDivision(key)}
-                >
-                  {info.label}
-                </button>
-              ))}
-            </div>
+            <h3 className="setup-label">Multiplayer</h3>
+            <p className="formation-desc">
+              Start-Liga: <strong>{DIV_INFO[lockedLeague]?.label ?? lockedLeague}</strong> · vom Host festgelegt.
+              Auf- und Abstieg zählen — du spielst dann in deiner neuen Liga weiter.
+            </p>
           </section>
+        ) : (
+          <>
+            <section className="setup-section">
+              <h3 className="setup-label">Modus</h3>
+              <div className="formation-btns">
+                <button
+                  className={`formation-btn ${mode === 'standard' ? 'selected' : ''}`}
+                  onClick={() => setMode('standard')}
+                >
+                  Transfermarkt
+                </button>
+                <button
+                  className={`formation-btn ${mode === 'klassik' ? 'selected' : ''}`}
+                  onClick={() => setMode('klassik')}
+                >
+                  Klassik
+                </button>
+              </div>
+              {mode === 'klassik' && (
+                <p className="formation-desc">Start in der 2. Bundesliga · Direkte Transfers · kein Budget</p>
+              )}
+            </section>
+
+            {mode !== 'klassik' && (
+              <section className="setup-section">
+                <h3 className="setup-label">Startliga</h3>
+                <div className="formation-btns">
+                  {Object.entries(DIV_INFO).map(([key, info]) => (
+                    <button
+                      key={key}
+                      className={`formation-btn ${startingDivision === key ? 'selected' : ''}`}
+                      onClick={() => onSetStartingDivision(key)}
+                    >
+                      {info.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
 
         <section className="setup-section">
@@ -1508,9 +1609,9 @@ function CareerTable({ table, league }) {
         const gd = row.GF - row.GA;
         const zone = tableZone(row.pos, league);
         return (
-          <div key={row.name} className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''}`}>
+          <div key={row.name} className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''} ${row.isReal ? 'lt-row-real' : ''}`}>
             <span className="lt-pos">{row.pos}</span>
-            <span className="lt-name">{row.name}</span>
+            <span className="lt-name">{row.name}{row.isReal && <span className="lt-real-badge">Live</span>}</span>
             <span className="lt-wdl">{row.W}-{row.D}-{row.L}</span>
             <span className="lt-gd">{gd > 0 ? '+' : ''}{gd}</span>
             <span className="lt-pts">{row.pts}</span>

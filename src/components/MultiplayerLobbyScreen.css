@@ -179,3 +179,171 @@
 }
 
 .mp-start-btn:hover { background: #eee; }
+
+.mp-start-btn:disabled {
+  background: #444;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.mp-error {
+  color: #ff6b6b;
+  font-size: 13px;
+  max-width: 340px;
+  text-align: center;
+  margin: 12px 0 0;
+}
+
+.mp-roster {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-roster li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.mp-roster-me {
+  border-color: #666;
+}
+
+.mp-roster-name {
+  flex: 1;
+  color: #eee;
+  font-weight: 600;
+}
+
+.mp-roster-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+  background: #2a2a2a;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.mp-roster-empty {
+  justify-content: center;
+  color: #666 !important;
+}
+
+.mp-waiting-host {
+  font-size: 14px;
+  color: #aaa;
+  max-width: 340px;
+  text-align: center;
+}
+
+.mp-league-picker {
+  display: flex;
+  gap: 6px;
+}
+
+.mp-league-btn {
+  flex: 1;
+  padding: 10px 6px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1e1e1e;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mp-league-btn--active {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+
+.mp-tabs {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 16px;
+}
+
+.mp-tabs button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1e1e1e;
+  color: #999;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mp-tabs button.active {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+
+.mp-roster-kick {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #888;
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+
+.mp-roster-kick:hover:not(:disabled) { border-color: #ff6b6b; color: #ff6b6b; }
+.mp-roster-kick:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.mp-public-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-public-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.mp-public-host { font-weight: 700; color: #eee; font-size: 14px; }
+.mp-public-meta { flex: 1; color: #888; font-size: 12px; }
+
+.mp-public-join {
+  background: #fff;
+  color: #111;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.mp-public-join:disabled { background: #444; color: #888; cursor: not-allowed; }
