@@ -19,7 +19,7 @@ import { simulateSharedPokal, simulateSharedEuro } from '../utils/sharedCups';
 import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-import { simulatePokalMatches, simulateEuropeanCupFull } from './CareerCups';
+import { simulatePokalMatches, simulateEuropeanCupFull, normalizeCupMatch } from './CareerCups';
 const PokalMatchScreen = lazy(() => import('./PokalMatchScreen'));
 import './CareerScreen.css';
 
@@ -208,7 +208,7 @@ export default function CareerScreen() {
             ...r,
             isPlayer: r.name === mp.playerName,
             isReal: r.isReal && r.name !== mp.playerName,
-            name: r.name === mp.playerName ? 'Deine 11' : r.name,
+            name: r.name === mp.playerName ? `${r.name} (Du)` : r.name,
           }))
         : rawTable;
       const needsPlayoff =
@@ -241,6 +241,17 @@ export default function CareerScreen() {
               : [];
             return m;
           };
+          // Shared-cup sims emit the raw { home:bool, opponent, ownGoals, oppGoals2 }
+          // shape; the match log renders the solo shape. Run it through the same
+          // normaliser, but keep what sharedCups already resolved: penScore is
+          // player:opp, and two-leg ties carry their own aggregate.
+          const normalizeShared = m => ({
+            ...normalizeCupMatch(fillEvents(m), m.competition, m.roundLabel, m.day),
+            penScore: m.penScore,
+            aggOwn: m.aggOwn,
+            aggOpp: m.aggOpp,
+            otherResults: m.otherResults ?? [],
+          });
           const toSummary = pm => Object.fromEntries(
             Object.entries(pm).map(([n, v]) => [n, { exitRound: v.exitRound, won: v.won }]),
           );
@@ -251,7 +262,7 @@ export default function CareerScreen() {
             if (cupSeed) {
               const pokal = simulateSharedPokal(cupSeed, pokalSquads);
               const mine = pokal.perManager[mp.playerName];
-              if (mine) { pokalWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
+              if (mine) { pokalWon = mine.won; cupMatches.push(...mine.matches.map(normalizeShared)); }
               writeCupResult(mp.code, seasonNumber, 'pokal', { champion: pokal.champion, summary: toSummary(pokal.perManager) }).catch(() => {});
             }
           }
@@ -272,7 +283,7 @@ export default function CareerScreen() {
               if (cupSeed) {
                 const eu = simulateSharedEuro(cupSeed, euroSquads, comp);
                 const mine = eu.perManager[mp.playerName];
-                if (mine) { europeanWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
+                if (mine) { europeanWon = mine.won; cupMatches.push(...mine.matches.map(normalizeShared)); }
                 writeCupResult(mp.code, seasonNumber, comp, { champion: eu.champion, summary: toSummary(eu.perManager) }).catch(() => {});
               }
             }

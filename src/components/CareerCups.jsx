@@ -25,7 +25,7 @@ function scoreStr(m) {
 const ROUND_LABELS = ['1. RUNDE', '2. RUNDE', 'ACHTELFINALE', 'VIERTELFINALE', 'HALBFINALE', 'FINALE'];
 const POKAL_DAYS   = [4.3, 10.3, 17.3, 24.3, 29.3, 34.5];
 
-function normalizeCupMatch(pm, competition, roundLabel, day) {
+export function normalizeCupMatch(pm, competition, roundLabel, day) {
   // penScore convention in simulation is always "home:away" for that specific leg.
   // Normalise to "player:opponent" so the display is unambiguous.
   let penScore = pm.penScore;
