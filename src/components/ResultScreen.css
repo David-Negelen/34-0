@@ -819,6 +819,9 @@
   .result-pitch-wrap { height: 340px; }
   .lt-legend      { flex-wrap: wrap; gap: 8px 14px; }
   .lp-key         { flex-wrap: wrap; gap: 4px 14px; }
+
+  /* Single-column layout — let the match log flow with the page, not scroll on its own */
+  .ml-list        { height: auto; overflow: visible; }
 }
 
 @media (max-width: 600px) {
@@ -835,8 +838,7 @@
   .result-body   { padding: 12px 10px; gap: 14px; }
   .result-pitch-wrap { height: 300px; }
 
-  /* Match log: shorter on phones so it doesn't eat the whole screen */
-  .ml-list       { height: 300px; }
+  /* Match log */
   .ml-header     { padding: 9px 12px; }
   .ml-card       { padding: 9px 12px; gap: 10px; }
   .ml-opponent   { font-size: 13px; }
@@ -874,7 +876,6 @@
   .result-title { font-size: 17px; }
   .result-body  { padding: 10px 8px; gap: 12px; }
   .result-pitch-wrap { height: 260px; }
-  .ml-list { height: 260px; }
   .stat-pill-val { font-size: 24px; }
   .season-stat-val.big { font-size: 22px; }
 }
