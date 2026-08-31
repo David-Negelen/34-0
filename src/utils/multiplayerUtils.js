@@ -290,12 +290,6 @@ export async function writeSeasonTable(code, season, division, table) {
   }
 }
 
-export async function getSeasonTable(code, season, division) {
-  const row = await getSeason(code, season, division).catch(() => null);
-  if (!row) return { table: [], resolved: false };
-  return { table: row.table ?? [], resolved: !!row.resolved };
-}
-
 // Every division's resolved table for a season — for the cross-tier standings view.
 export async function getSeasonSummary(code, season) {
   const rows = await pbList('mp_seasons', `room_code="${code}" && season_number=${season}`).catch(() => []);
