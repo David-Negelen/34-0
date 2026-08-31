@@ -296,9 +296,14 @@ export function drawCLRoundTwoLegs(teams, roundLabel, slots) {
       const own2 = playerIsHomeLeg1 ? leg2.ag : leg2.hg;
       const opp2 = playerIsHomeLeg1 ? leg2.hg : leg2.ag;
       const ownReg2 = playerIsHomeLeg1 ? leg2.agReg : leg2.hgReg;
+      // The OPPONENT's regulation goals — the opposite side from ownReg2. Goals
+      // beyond it are the ET goals; using ownReg2 here mistimes the opponent's
+      // regulation goals as extra-time goals, making a level 90-min aggregate
+      // look like an unjustified Verlängerung.
+      const oppReg2 = playerIsHomeLeg1 ? leg2.hgReg : leg2.agReg;
       const ev2 = squad.length ? generateMatchEvents(own2, opp2, squad, 0.04, leg2.aet, ownReg2) : [];
       const og2 = Array.from({ length: opp2 }, (_, gi) => ({
-        minute: leg2.aet && gi >= (playerIsHomeLeg1 ? leg2.agReg : leg2.hgReg)
+        minute: leg2.aet && gi >= oppReg2
           ? Math.floor(Math.random() * 30) + 91
           : Math.floor(Math.random() * 90) + 1,
         scorerName: null,

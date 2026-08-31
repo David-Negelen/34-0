@@ -363,11 +363,13 @@ export function simulateSharedEuro(seed, euroSquads, competition = 'ucl') {
         mu = { home, away, tie: t, homeWon: t.hWins, twoLeg: true };
         if (home.isRealPlayer) {
           mu.homeLeg1Opp = buildOppGoals(rng, t.leg1.ag, away.scorers);
-          mu.homeLeg2Opp = buildOppGoals(rng, t.leg2.ag, away.scorers, t.leg2.aet, t.leg2.agReg);
+          // Leg 2 swaps sides: the away team is leg-2 home, so what `home` conceded
+          // is t.leg2.hg / .hgReg (not the .ag side, which is `home`'s own goals).
+          mu.homeLeg2Opp = buildOppGoals(rng, t.leg2.hg, away.scorers, t.leg2.aet, t.leg2.hgReg);
         }
         if (away.isRealPlayer) {
           mu.awayLeg1Opp = buildOppGoals(rng, t.leg1.hg, home.scorers);
-          mu.awayLeg2Opp = buildOppGoals(rng, t.leg2.hg, home.scorers, t.leg2.aet, t.leg2.hgReg);
+          mu.awayLeg2Opp = buildOppGoals(rng, t.leg2.ag, home.scorers, t.leg2.aet, t.leg2.agReg);
         }
         winners.push(t.hWins ? home : away);
       }
