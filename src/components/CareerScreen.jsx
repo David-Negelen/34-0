@@ -12,7 +12,7 @@ import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, ensureCupSeed, writeCupResult, getCupSummary, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
+import { getMpSession, setMpSession, clearMpSession, leaveRoom, getRoom, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, ensureCupSeed, writeCupResult, getCupSummary, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
 import { simulateSharedLeague } from '../utils/sharedLeague';
 import { simulateSharedPokal, simulateSharedEuro } from '../utils/sharedCups';
 import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
@@ -111,15 +111,20 @@ export default function CareerScreen() {
   // host if the current host has gone dark (so a stranded league can still be
   // unblocked from the waiting screen).
   useEffect(() => {
-    const mp = getMpSession();
-    if (!mp?.code) return;
+    if (!getMpSession()?.code) return;
     let alive = true;
     const beat = async () => {
-      if (!alive) return;
+      const mp = getMpSession(); // re-read each beat: self-stops once the career ends
+      if (!alive || !mp?.code) return;
       await touchMember(mp.code, mp.playerName).catch(() => {});
-      const claimed = await claimHostIfStale(mp.code, mp.playerName).catch(() => false);
+      await claimHostIfStale(mp.code, mp.playerName).catch(() => {});
+      // Keep isHost honest in both directions — a takeover AND a step-down after
+      // the real host reconnects — so only the true host shows kick controls.
+      const room = await getRoom(mp.code).catch(() => null);
       const cur = getMpSession();
-      if (claimed && cur) setMpSession({ ...cur, isHost: true });
+      if (room && cur && !!cur.isHost !== (room.host_name === mp.playerName)) {
+        setMpSession({ ...cur, isHost: room.host_name === mp.playerName });
+      }
     };
     beat();
     const t = setInterval(beat, 15000);
@@ -141,7 +146,7 @@ export default function CareerScreen() {
 
   const [seasonRunning, setSeasonRunning] = useState(false);
   const [seasonError, setSeasonError] = useState(null);
-  const [mpWait, setMpWait] = useState(null); // { season, waitingOn, isHost, code } while a shared season resolves
+  const [mpWait, setMpWait] = useState(null); // { season, waitingOn, submitted, total, code } while a shared season resolves
 
   async function runSeason(slots, division, seasonNumber) {
     if (seasonRunning) return;
@@ -171,7 +176,7 @@ export default function CareerScreen() {
           if (r.ready) { seed = r.seed; break; }
           setMpWait({
             season: seasonNumber, waitingOn: r.waitingOn, submitted: r.submitted, total: r.total,
-            isHost: !!getMpSession()?.isHost, code: mp.code,
+            code: mp.code,
           });
           await sleep(3000);
         }
@@ -302,6 +307,12 @@ export default function CareerScreen() {
   }
 
   function handleEndCareer() {
+    const mp = getMpSession();
+    if (mp?.code) {
+      if (!window.confirm('Karriere beenden und den Raum verlassen?')) return;
+      leaveRoom(mp.code, mp.playerName).catch(() => {});
+      clearMpSession();
+    }
     const currentRecord = state.result
       ? { season: state.seasonNumber, division: state.division, pos: state.result.pos, pts: state.result.pts, GF: state.result.GF ?? 0, GA: state.result.GA ?? 0 }
       : null;
@@ -348,7 +359,6 @@ export default function CareerScreen() {
         waitingOn={mpWait.waitingOn}
         submitted={mpWait.submitted}
         total={mpWait.total}
-        isHost={mpWait.isHost}
         code={mpWait.code}
         onKicked={(name) => setMpWait(w => w && {
           ...w,
