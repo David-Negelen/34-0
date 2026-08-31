@@ -6,7 +6,7 @@ import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferMarket, prizeMoney } from '../utils/careerUtils';
 import { simulateFullLeague, getAchievements } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
-import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
+import { canPlayerFillSlot, getCompatibleSlots, labelDE, formationPosChips } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { applyGrowthClassic, potentialTier, ovrColorClass } from '../utils/growthUtils';
@@ -266,7 +266,7 @@ function ClassicSetup({ formation, onSetFormation, onStart, onBack }) {
 function ClassicDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
-  const [posFilter, setPosFilter] = useState('');
+  const [posFilter, setPosFilter] = useState(null); // { label, type } — picked pitch position
 
   const formationSlots  = slots.filter(s => s.type !== 'BENCH');
   const filledFormation = formationSlots.filter(s => s.player !== null).length;
@@ -297,7 +297,8 @@ function ClassicDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
     setSlotPickTarget(null);
   }
 
-  const poolFiltered = draftPool.filter(p => !posFilter || p.positions.includes(posFilter));
+  const poolFiltered = draftPool.filter(p => !posFilter || p.positions.includes(posFilter.type));
+  const posChips = formationPosChips(formationSlots, type => draftPool.some(pl => pl.positions.includes(type)));
 
   return (
     <div className="career-screen">
@@ -332,9 +333,9 @@ function ClassicDraft({ state, onPlace, onRemove, onResult, onReset, onHome }) {
             </button>
           )}
           <div className="career-pos-filters">
-            <button className={`career-filter-btn${posFilter === '' ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
-            {[...new Set(formationSlots.map(s => s.type))].filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
-              <button key={p} className={`career-filter-btn${posFilter === p ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
+            <button className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(null)}>Alle</button>
+            {posChips.map(({ label, type }) => (
+              <button key={label} className={`career-filter-btn${posFilter?.label === label ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter?.label === label ? null : { label, type })}>{labelDE(label)}</button>
             ))}
           </div>
           <div className="career-pool-grid">

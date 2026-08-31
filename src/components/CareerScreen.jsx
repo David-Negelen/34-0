@@ -6,7 +6,7 @@ import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferMarket, generateIncomingBids, prizeMoney, calcCupBonus } from '../utils/careerUtils';
 import { simulateFullLeague, calcTeamStrength, getAchievements, generateMatchEvents } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
-import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
+import { canPlayerFillSlot, getCompatibleSlots, labelDE, formationPosChips } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
 import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
@@ -663,13 +663,9 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome, seas
 
   const poolFiltered = draftPool.filter(p => !posFilter || p.positions.includes(posFilter.type));
 
-  // One chip per distinct pitch position in this formation (RWB/LWB/RM/LM …),
-  // labelled like the board — not the underlying slot type. The chip still
-  // filters the pool by that slot's type.
-  const posChips = formationSlots
-    .filter((s, i, arr) => arr.findIndex(x => x.label === s.label) === i)
-    .filter(s => draftPool.some(pl => pl.positions.includes(s.type)))
-    .map(s => ({ label: s.label, type: s.type }));
+  // One chip per distinct pitch position in this formation, labelled like the
+  // board — not the underlying slot type. The chip filters the pool by that type.
+  const posChips = formationPosChips(formationSlots, type => draftPool.some(pl => pl.positions.includes(type)));
 
   return (
     <div className="career-screen">
@@ -1002,7 +998,7 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
   const formationSlots  = slots;
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [selectedKaderId, setSelectedKaderId] = useState(null);
-  const [posFilter, setPosFilter] = useState('');
+  const [posFilter, setPosFilter] = useState(null); // { label, type } — picked pitch position
 
   const DIV_RANK = { '3l': 0, '2bl': 1, 'bl': 2 };
   const prevDivision  = seasonHistory[seasonHistory.length - 1]?.division;
@@ -1018,7 +1014,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
 
   const byOvr = (a, b) => b.seasonRating - a.seasonRating;
   const allAvailableOffers = transferOffers.filter(o => !o.used && !o.skipped).sort(byOvr);
-  const overviewOffers = allAvailableOffers.filter(o => !posFilter || o.slotType === posFilter);
+  const overviewOffers = allAvailableOffers.filter(o => !posFilter || o.slotType === posFilter.type);
+  // Same formation-derived chips as the draft; here they gate the transfer market.
+  const posChips = formationPosChips(formationSlots, type => allAvailableOffers.some(o => o.slotType === type));
 
   const marketOffers = selectedSlot
     ? transferOffers.filter(o => !o.used && !o.skipped && o.slotType === selectedSlot.type).sort(byOvr)
@@ -1191,9 +1189,9 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                       <button
                         key={s.id}
                         className="career-missing-slot-btn"
-                        onClick={() => { setSelectedSlotId(s.id); setPosFilter(''); }}
+                        onClick={() => { setSelectedSlotId(s.id); setPosFilter(null); }}
                       >
-                        {labelDE(s.type)}
+                        {labelDE(s.label)}
                       </button>
                     ))}
                   </div>
@@ -1233,19 +1231,19 @@ function CareerTransfer({ state, onBuy, onUndo, onMove, onMoveFromKader, onSell,
                   <div className="career-pos-filters">
                     <button
                       className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`}
-                      onClick={() => setPosFilter('')}
+                      onClick={() => setPosFilter(null)}
                     >Alle</button>
-                    {['GK', 'CB', 'LB', 'RB', 'DM', 'CM', 'LW', 'RW', 'ST'].filter(pos => allAvailableOffers.some(o => o.slotType === pos)).map(pos => (
+                    {posChips.map(({ label, type }) => (
                       <button
-                        key={pos}
+                        key={label}
                         className={[
                           'career-filter-btn',
-                          posFilter === pos ? 'career-filter-btn-active' : '',
-                          emptyFormationSlots.some(s => s.type === pos) ? 'career-filter-btn--missing' : '',
+                          posFilter?.label === label ? 'career-filter-btn-active' : '',
+                          emptyFormationSlots.some(s => s.label === label) ? 'career-filter-btn--missing' : '',
                         ].filter(Boolean).join(' ')}
-                        onClick={() => setPosFilter(prev => prev === pos ? '' : pos)}
+                        onClick={() => setPosFilter(posFilter?.label === label ? null : { label, type })}
                       >
-                        {labelDE(pos)}
+                        {labelDE(label)}
                       </button>
                     ))}
                   </div>

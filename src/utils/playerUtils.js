@@ -151,6 +151,17 @@ const LABEL_DE = {
 };
 export const labelDE = label => LABEL_DE[label] ?? label;
 
+// One position-filter chip per distinct pitch position in a formation — labelled
+// like the board (RWB / LWB / RM / LM / ZOM …), not the underlying slot type —
+// each carrying that `type` for eligibility checks. `hasOptions(type)` drops
+// positions with nothing to show (no pool player / no market offer for them).
+export function formationPosChips(slots, hasOptions = () => true) {
+  return slots
+    .filter((s, i, arr) => arr.findIndex(x => x.label === s.label) === i)
+    .filter(s => hasOptions(s.type))
+    .map(s => ({ label: s.label, type: s.type }));
+}
+
 // Rating to display for a player based on ratingMode
 export function getDisplayRating(player, ratingMode) {
   return ratingMode === 'prime' ? player.primeRating : player.seasonRating;

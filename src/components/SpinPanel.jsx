@@ -7,6 +7,7 @@ import {
   getDisplayRating,
   randomSpin,
   labelDE,
+  formationPosChips,
 } from '../utils/playerUtils';
 import PlayerCard from './PlayerCard';
 import './SpinPanel.css';
@@ -54,7 +55,7 @@ export default function SpinPanel({
   const [deadSpin, setDeadSpin] = useState(false);
   // Slot locked at spin-start so changing selection mid-spin can't redirect placement.
   const [lockedSlotId, setLockedSlotId] = useState(null);
-  const [posFilter, setPosFilter] = useState('');
+  const [posFilter, setPosFilter] = useState(null); // { label, type } — picked pitch position
 
   const animRef = useRef(null);
 
@@ -157,7 +158,7 @@ export default function SpinPanel({
     setDeadSpin(false);
     setPendingPlayer(null);
     setLockedSlotId(null);
-    setPosFilter('');
+    setPosFilter(null);
     onSetPendingSpin(null);
     onSpinActiveChange?.(false);
   }
@@ -309,8 +310,8 @@ export default function SpinPanel({
           {candidates.length === 0 ? (
             <p className="no-candidates">Keine Kandidaten für deine offenen Positionen.</p>
           ) : (() => {
-            const availPos = [...new Set(openSlots.map(s => s.type))].filter(p => candidates.some(c => c.positions.includes(p)));
-            const visible = posFilter ? candidates.filter(c => c.positions.includes(posFilter)) : candidates;
+            const posChips = formationPosChips(openSlots, type => candidates.some(c => c.positions.includes(type)));
+            const visible = posFilter ? candidates.filter(c => c.positions.includes(posFilter.type)) : candidates;
             return (
               <>
                 <div className="candidates-header">
@@ -318,11 +319,11 @@ export default function SpinPanel({
                     <h4>Spieler wählen</h4>
                     <span className="candidates-count">{visible.length}</span>
                   </div>
-                  {availPos.length > 1 && (
+                  {posChips.length > 1 && (
                     <div className="candidates-pos-filters">
-                      <button className={`cand-filter-btn${posFilter === '' ? ' cand-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
-                      {availPos.map(p => (
-                        <button key={p} className={`cand-filter-btn${posFilter === p ? ' cand-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
+                      <button className={`cand-filter-btn${!posFilter ? ' cand-filter-btn-active' : ''}`} onClick={() => setPosFilter(null)}>Alle</button>
+                      {posChips.map(({ label, type }) => (
+                        <button key={label} className={`cand-filter-btn${posFilter?.label === label ? ' cand-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter?.label === label ? null : { label, type })}>{labelDE(label)}</button>
                       ))}
                     </div>
                   )}
