@@ -12,9 +12,8 @@ import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
+import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
 import { simulateSharedLeague } from '../utils/sharedLeague';
-import MultiplayerTableOverlay from './MultiplayerTableOverlay';
 import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -23,6 +22,7 @@ const PokalMatchScreen = lazy(() => import('./PokalMatchScreen'));
 import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
+const DIV_ORDER = { bl: 0, '2bl': 1, '3l': 2 };
 
 const PLAYOFF_OPPONENTS = {
   bl:   ['Hamburger SV', 'FC Schalke 04', 'Hannover 96', '1. FC Köln', 'Hertha BSC',
@@ -381,27 +381,16 @@ export default function CareerScreen() {
       );
     }
 
-    const mp = getMpSession();
     return (
-      <>
-        <CareerResult
-          state={state}
-          promoted={promoted}
-          relegated={relegated}
-          newDivision={newDivision}
-          onContinue={startEntwicklung}
-          onEnd={handleEndCareer}
-          onHome={() => { career.reset(); navigate('/'); }}
-        />
-        {mp && (
-          <MultiplayerTableOverlay
-            code={mp.code}
-            seasonNumber={state.seasonNumber}
-            division={state.division}
-            myPlayerName={mp.playerName}
-          />
-        )}
-      </>
+      <CareerResult
+        state={state}
+        promoted={promoted}
+        relegated={relegated}
+        newDivision={newDivision}
+        onContinue={startEntwicklung}
+        onEnd={handleEndCareer}
+        onHome={() => { career.reset(); navigate('/'); }}
+      />
     );
   }
 
@@ -410,32 +399,21 @@ export default function CareerScreen() {
       career.sellPlayer(playerId, amount);
     }
 
-    const mp = getMpSession();
     return (
-      <>
-        <CareerTransfer
-          state={state}
-          onBuy={career.buyOffer}
-          onUndo={career.undoBuy}
-          onMove={career.moveInSquad}
-          onMoveFromKader={career.moveFromKader}
-          onSell={handleSell}
-          onChangeFormation={career.changeFormation}
-          onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
-          onEnd={handleEndCareer}
-          onHome={() => { career.reset(); navigate('/'); }}
-          seasonRunning={seasonRunning}
-          seasonError={seasonError}
-        />
-        {mp && state.seasonNumber > 1 && (
-          <MultiplayerTableOverlay
-            code={mp.code}
-            seasonNumber={state.seasonNumber - 1}
-            division={state.seasonHistory[state.seasonHistory.length - 1]?.division ?? state.division}
-            myPlayerName={mp.playerName}
-          />
-        )}
-      </>
+      <CareerTransfer
+        state={state}
+        onBuy={career.buyOffer}
+        onUndo={career.undoBuy}
+        onMove={career.moveInSquad}
+        onMoveFromKader={career.moveFromKader}
+        onSell={handleSell}
+        onChangeFormation={career.changeFormation}
+        onStartSeason={() => runSeason(state.slots, state.division, state.seasonNumber)}
+        onEnd={handleEndCareer}
+        onHome={() => { career.reset(); navigate('/'); }}
+        seasonRunning={seasonRunning}
+        seasonError={seasonError}
+      />
     );
   }
 
@@ -743,6 +721,19 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
   const [tableTab, setTableTab] = useState('table');
 
+  // Cross-tier standings: only relevant once a shared room has split across leagues.
+  const mp = getMpSession();
+  const [mpSummary, setMpSummary] = useState([]);
+  useEffect(() => {
+    if (!mp?.code) return;
+    let alive = true;
+    const load = () => getSeasonSummary(mp.code, seasonNumber).then(s => { if (alive) setMpSummary(s); }).catch(() => {});
+    load();
+    const t = setInterval(load, 5000);
+    return () => { alive = false; clearInterval(t); };
+  }, [mp?.code, seasonNumber]);
+  const mpMultiTier = new Set(mpSummary.map(s => s.division)).size > 1;
+
   const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches, tableHistory, playerStats } = result ?? {};
   const GD = (GF ?? 0) - (GA ?? 0);
 
@@ -852,10 +843,15 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
                     {tableHistory?.length > 0 && (
                       <button className={`tab-btn${tableTab === 'curve' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('curve')}>Fieberkurve</button>
                     )}
+                    {mpMultiTier && (
+                      <button className={`tab-btn${tableTab === 'allmgr' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('allmgr')}>Alle Manager</button>
+                    )}
                   </div>
-                  {tableTab === 'table'
-                    ? <CareerTable table={table} league={division} />
-                    : <FeverCurve tableHistory={tableHistory} league={division} />}
+                  {tableTab === 'curve'
+                    ? <FeverCurve tableHistory={tableHistory} league={division} />
+                    : tableTab === 'allmgr' && mpMultiTier
+                      ? <MpAllManagers summary={mpSummary} myName={mp?.playerName} />
+                      : <CareerTable table={table} league={division} />}
                 </div>
               )}
 
@@ -1630,6 +1626,32 @@ function CareerTable({ table, league }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Where every real manager stands across all tiers — only shown once a shared
+// room has split across leagues.
+function MpAllManagers({ summary = [], myName }) {
+  const rows = summary
+    .flatMap(s => (s.table || [])
+      .filter(r => r.isReal)
+      .map(r => ({ ...r, division: s.division, resolved: s.resolved })))
+    .sort((a, b) => (DIV_ORDER[a.division] ?? 9) - (DIV_ORDER[b.division] ?? 9) || a.pos - b.pos);
+
+  return (
+    <div className="league-table">
+      <div className="result-section-label" style={{ padding: '0 16px', marginBottom: 10 }}>Alle Manager</div>
+      {rows.length === 0 ? (
+        <div className="lt-row" style={{ color: 'var(--text-muted)', fontSize: 12 }}>Noch keine Ergebnisse.</div>
+      ) : rows.map(m => (
+        <div key={`${m.division}-${m.name}`} className={`lt-row ${m.name === myName ? 'lt-row-player' : ''}`}>
+          <span className="lt-pos">{m.pos}</span>
+          <span className="lt-name">{m.name === myName ? 'Du' : m.name}</span>
+          <span className="lt-div">{DIV_LABEL[m.division] ?? m.division}</span>
+          <span className="lt-pts">{m.pts}{m.resolved ? '' : ' *'}</span>
+        </div>
+      ))}
     </div>
   );
 }

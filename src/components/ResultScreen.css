@@ -424,6 +424,13 @@
   flex-shrink: 0;
 }
 
+.lt-div {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .lt-pts {
   font-size: 13px;
   font-weight: 800;
