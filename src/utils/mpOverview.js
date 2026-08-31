@@ -34,9 +34,11 @@ export function buildMpOverview(history, myName) {
     }
   }
 
+  // Only real managers get a row; a cup won by a CPU club counts toward nobody
+  // here (it still shows in the roll of honour below).
   for (const c of cups) {
-    if (!c.champion) continue;
-    const m = touch(c.champion);
+    const m = c.champion && mgr[c.champion];
+    if (!m) continue;
     if (c.competition === 'pokal') m.pokal += 1;
     else if (c.competition === 'ucl') m.ucl += 1;
     else if (c.competition === 'uel') m.uel += 1;
