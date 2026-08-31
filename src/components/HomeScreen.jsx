@@ -50,7 +50,7 @@ export default function HomeScreen() {
         </div>
         <div className="league-group">
           <button className="league-card league-card--multiplayer" onClick={() => navigate('/multiplayer')}>
-            <span className="league-card-name">Multiplayer</span>
+            <span className="league-card-name">Multiplayer Karriere</span>
             <span className="league-card-sub">Gemeinsame Liga mit Freunden · eigener Kader</span>
           </button>
         </div>
