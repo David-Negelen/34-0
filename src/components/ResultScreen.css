@@ -431,6 +431,23 @@
   white-space: nowrap;
 }
 
+.mp-cup-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mp-cup-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
 .lt-pts {
   font-size: 13px;
   font-weight: 800;

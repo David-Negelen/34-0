@@ -17,9 +17,9 @@ export function shuffleCL(arr) {
   return a;
 }
 
-const RESULT_ORDER = ['winner', 'final', 'sf', 'qf', 'r16', 'r32', 'po', 'group'];
-const UCL_STRENGTH = { winner: 88, final: 84, sf: 80, qf: 76, r16: 72, r32: 69, po: 68, group: 64 };
-const UEL_STRENGTH = { winner: 82, final: 78, sf: 74, qf: 70, r16: 67, r32: 64, po: 62, group: 60 };
+export const RESULT_ORDER = ['winner', 'final', 'sf', 'qf', 'r16', 'r32', 'po', 'group'];
+export const UCL_STRENGTH = { winner: 88, final: 84, sf: 80, qf: 76, r16: 72, r32: 69, po: 68, group: 64 };
+export const UEL_STRENGTH = { winner: 82, final: 78, sf: 74, qf: 70, r16: 67, r32: 64, po: 62, group: 60 };
 
 export const CL_ROUND_LABELS = {
   playoff: 'PLAYOFF',
@@ -70,7 +70,7 @@ export function buildCLField(slots, competition = 'ucl') {
 }
 
 // 8-round partial round-robin for n=36 teams (circle method, first 8 of 35 rounds)
-function buildCLScheduleRounds(n) {
+export function buildCLScheduleRounds(n) {
   const rotating = Array.from({ length: n - 1 }, (_, i) => i + 1);
   const rounds = [];
   for (let r = 0; r < n - 1; r++) {

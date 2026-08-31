@@ -4,7 +4,7 @@ import { useCareerState } from '../hooks/useCareerState';
 import FormationBoard from './FormationBoard';
 import { FORMATIONS, FORMATION_KEYS } from '../data/formations';
 import { generateCareerDraftPool, generateTransferMarket, generateIncomingBids, prizeMoney, calcCupBonus } from '../utils/careerUtils';
-import { simulateFullLeague, calcTeamStrength, getAchievements } from '../utils/simulation';
+import { simulateFullLeague, calcTeamStrength, getAchievements, generateMatchEvents } from '../utils/simulation';
 import { FeverCurve, PlayerStats } from './ResultScreen';
 import { canPlayerFillSlot, getCompatibleSlots, labelDE } from '../utils/playerUtils';
 import { PLAYERS as BL_PLAYERS } from '../data/players';
@@ -12,8 +12,9 @@ import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
+import { getMpSession, setMpSession, clearMpSession, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, ensureCupSeed, writeCupResult, getCupSummary, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
 import { simulateSharedLeague } from '../utils/sharedLeague';
+import { simulateSharedPokal, simulateSharedEuro } from '../utils/sharedCups';
 import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -79,6 +80,26 @@ function nextEuropeanCup(division, pos, uclWon = false, uelWon = false) {
   return null;
 }
 
+// Which room managers are in this season's shared UCL / UEL, derived from last
+// season's authoritative bl table + cup champions (same rule as nextEuropeanCup).
+// Every client computes the identical sets from the same shared data.
+function euroQualifiers(prevSummary, prevCups, managerNames) {
+  const ucl = new Set(), uel = new Set();
+  const blTable  = prevSummary.find(s => s.division === 'bl')?.table ?? [];
+  const uclChamp = prevCups.find(c => c.competition === 'ucl')?.champion ?? null;
+  const uelChamp = prevCups.find(c => c.competition === 'uel')?.champion ?? null;
+  for (const row of blTable) {
+    if (!row.isReal) continue;
+    const c = nextEuropeanCup('bl', row.pos, row.name === uclChamp, row.name === uelChamp);
+    if (c === 'ucl') ucl.add(row.name);
+    else if (c === 'uel') uel.add(row.name);
+  }
+  // A cup-holding manager who isn't in last season's bl table still enters.
+  if (uclChamp && managerNames.has(uclChamp)) { ucl.add(uclChamp); uel.delete(uclChamp); }
+  if (uelChamp && managerNames.has(uelChamp) && !ucl.has(uelChamp)) uel.add(uelChamp);
+  return { ucl, uel };
+}
+
 export default function CareerScreen() {
   const navigate = useNavigate();
   const career = useCareerState();
@@ -134,6 +155,7 @@ export default function CareerScreen() {
       // manager, then run the identical seeded simulation everyone else runs.
       let precomputed = null;
       let mpTable = null;
+      let allSquads = [];
       if (mp) {
         const { att, def, ovr } = calcTeamStrength(slots);
         const scorers = slots
@@ -156,7 +178,8 @@ export default function CareerScreen() {
         setMpWait(null);
 
         // Only the squads in this manager's own tier form the shared sub-league.
-        const squads = (await getSquads(mp.code, seasonNumber)).filter(s => s.division === division);
+        allSquads = await getSquads(mp.code, seasonNumber);
+        const squads = allSquads.filter(s => s.division === division);
         const shared = simulateSharedLeague(seed, squads, division);
         const myIdx = shared.teams.findIndex(t => t.name === mp.playerName);
         const viewTeams = shared.teams.map((t, i) => ({
@@ -190,22 +213,79 @@ export default function CareerScreen() {
       const cupMatches = [];
       let pokalWon = false;
       let europeanWon = false;
-      if (division === 'bl' || division === '2bl') {
-        const pokal = simulatePokalMatches(slots);
-        pokalWon = pokal.won;
-        cupMatches.push(...pokal.playerMatches);
-      }
-      if (state.europeanCup) {
-        const eu = simulateEuropeanCupFull(slots, state.europeanCup);
-        europeanWon = eu.champion === 'Deine 11';
-        cupMatches.push(...(eu.normalizedPlayerMatches ?? []));
+      let mpEuroComp = null; // which European cup this manager actually played (MP)
+
+      if (mp) {
+        // Shared cups: one DFB-Pokal / UCL / UEL bracket per room per season.
+        // Every qualified manager is seeded into the same bracket; ties between
+        // two managers use both submitted squad strengths. sharedCups produces
+        // deterministic scores — the player's own goal events are filled in
+        // locally here (cosmetic, does not affect sync).
+        const evSquad = slots
+          .filter(s => s.player && s.type !== 'BENCH')
+          .map(s => ({ id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label,
+            rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
+        const fillEvents = m => {
+          m.events = evSquad.length
+            ? generateMatchEvents(m.ownGoals, m.oppGoals2, evSquad,
+                m.roundLabel === 'LIGAPHASE' ? 0.01 : 0.04, m.aet, m.ownGoalsReg)
+            : [];
+          return m;
+        };
+        const toSummary = pm => Object.fromEntries(
+          Object.entries(pm).map(([n, v]) => [n, { exitRound: v.exitRound, won: v.won }]),
+        );
+
+        if (division === 'bl' || division === '2bl') {
+          const pokalSquads = allSquads.filter(s => s.division === 'bl' || s.division === '2bl');
+          const { seed: cupSeed } = await ensureCupSeed(mp.code, seasonNumber, 'pokal');
+          if (cupSeed) {
+            const pokal = simulateSharedPokal(cupSeed, pokalSquads);
+            const mine = pokal.perManager[mp.playerName];
+            if (mine) { pokalWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
+            writeCupResult(mp.code, seasonNumber, 'pokal', { champion: pokal.champion, summary: toSummary(pokal.perManager) }).catch(() => {});
+          }
+        }
+
+        if (seasonNumber > 1) {
+          // The shared bl table + cup champions from last season decide who is in
+          // UCL / UEL — computed identically on every client, not from local state.
+          const [prevSummary, prevCups] = await Promise.all([
+            getSeasonSummary(mp.code, seasonNumber - 1),
+            getCupSummary(mp.code, seasonNumber - 1),
+          ]);
+          const q = euroQualifiers(prevSummary, prevCups, new Set(allSquads.map(s => s.player_name)));
+          const comp = q.ucl.has(mp.playerName) ? 'ucl' : q.uel.has(mp.playerName) ? 'uel' : null;
+          mpEuroComp = comp;
+          if (comp) {
+            const euroSquads = allSquads.filter(s => (comp === 'ucl' ? q.ucl : q.uel).has(s.player_name));
+            const { seed: cupSeed } = await ensureCupSeed(mp.code, seasonNumber, comp);
+            if (cupSeed) {
+              const eu = simulateSharedEuro(cupSeed, euroSquads, comp);
+              const mine = eu.perManager[mp.playerName];
+              if (mine) { europeanWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
+              writeCupResult(mp.code, seasonNumber, comp, { champion: eu.champion, summary: toSummary(eu.perManager) }).catch(() => {});
+            }
+          }
+        }
+      } else {
+        if (division === 'bl' || division === '2bl') {
+          const pokal = simulatePokalMatches(slots);
+          pokalWon = pokal.won;
+          cupMatches.push(...pokal.playerMatches);
+        }
+        if (state.europeanCup) {
+          const eu = simulateEuropeanCupFull(slots, state.europeanCup);
+          europeanWon = eu.champion === 'Deine 11';
+          cupMatches.push(...(eu.normalizedPlayerMatches ?? []));
+        }
       }
 
       const leagueMatchesTagged = leagueMatches.map(m => ({ ...m, competition: division }));
       const playerMatches = [...leagueMatchesTagged, ...cupMatches]
         .sort((a, b) => (a.day ?? 0) - (b.day ?? 0));
 
-      const cupInfo = { pokalWon, europeanWon, europeanComp: state.europeanCup ?? null };
+      const cupInfo = { pokalWon, europeanWon, europeanComp: (mp ? mpEuroComp : state.europeanCup) ?? null };
       career.setResult({
         ...result,
         achievements: getAchievements(result, slots, division, cupInfo),
@@ -721,18 +801,23 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
   const [logDone, setLogDone] = useState(!(result?.playerMatches?.length));
   const [tableTab, setTableTab] = useState('table');
 
-  // Cross-tier standings: only relevant once a shared room has split across leagues.
+  // Cross-tier standings + shared cup results for the "Alle Manager" view.
   const mp = getMpSession();
   const [mpSummary, setMpSummary] = useState([]);
+  const [mpCups, setMpCups] = useState([]);
   useEffect(() => {
     if (!mp?.code) return;
     let alive = true;
-    const load = () => getSeasonSummary(mp.code, seasonNumber).then(s => { if (alive) setMpSummary(s); }).catch(() => {});
+    const load = () => Promise.all([
+      getSeasonSummary(mp.code, seasonNumber),
+      getCupSummary(mp.code, seasonNumber),
+    ]).then(([s, c]) => { if (alive) { setMpSummary(s); setMpCups(c); } }).catch(() => {});
     load();
     const t = setInterval(load, 5000);
     return () => { alive = false; clearInterval(t); };
   }, [mp?.code, seasonNumber]);
   const mpMultiTier = new Set(mpSummary.map(s => s.division)).size > 1;
+  const mpRoomTab = mpMultiTier || mpCups.some(c => c.summary && Object.keys(c.summary).length > 0);
 
   const { W, D, L, GF, GA, pts, pos = 18, table, playerMatches, tableHistory, playerStats } = result ?? {};
   const GD = (GF ?? 0) - (GA ?? 0);
@@ -843,14 +928,14 @@ function CareerResult({ state, promoted, relegated, newDivision, onContinue, onE
                     {tableHistory?.length > 0 && (
                       <button className={`tab-btn${tableTab === 'curve' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('curve')}>Fieberkurve</button>
                     )}
-                    {mpMultiTier && (
+                    {mpRoomTab && (
                       <button className={`tab-btn${tableTab === 'allmgr' ? ' tab-btn-active' : ''}`} onClick={() => setTableTab('allmgr')}>Alle Manager</button>
                     )}
                   </div>
                   {tableTab === 'curve'
                     ? <FeverCurve tableHistory={tableHistory} league={division} />
-                    : tableTab === 'allmgr' && mpMultiTier
-                      ? <MpAllManagers summary={mpSummary} myName={mp?.playerName} />
+                    : tableTab === 'allmgr' && mpRoomTab
+                      ? <MpAllManagers summary={mpSummary} cups={mpCups} myName={mp?.playerName} />
                       : <CareerTable table={table} league={division} />}
                 </div>
               )}
@@ -1630,28 +1715,68 @@ function CareerTable({ table, league }) {
   );
 }
 
-// Where every real manager stands across all tiers — only shown once a shared
-// room has split across leagues.
-function MpAllManagers({ summary = [], myName }) {
+// Room overview for the result screen: where every manager stands across the
+// tiers, plus each manager's run in the shared cups.
+const CUP_SHORT = { pokal: 'Pokal', ucl: 'UCL', uel: 'UEL' };
+const CUP_ROUND_SHORT = {
+  '1. RUNDE': '1. Rd', '2. RUNDE': '2. Rd', 'LIGAPHASE': 'Ligaphase', 'PLAYOFF': 'Playoff',
+  'ACHTELFINALE': 'AF', 'VIERTELFINALE': 'VF', 'HALBFINALE': 'HF', 'FINALE': 'Finale',
+};
+
+function MpAllManagers({ summary = [], cups = [], myName }) {
   const rows = summary
     .flatMap(s => (s.table || [])
       .filter(r => r.isReal)
       .map(r => ({ ...r, division: s.division, resolved: s.resolved })))
     .sort((a, b) => (DIV_ORDER[a.division] ?? 9) - (DIV_ORDER[b.division] ?? 9) || a.pos - b.pos);
 
+  // manager name -> [{ comp, label }]
+  const cupByManager = {};
+  for (const c of cups) {
+    for (const [name, v] of Object.entries(c.summary || {})) {
+      const label = v.won ? 'Sieger' : (CUP_ROUND_SHORT[v.exitRound] ?? v.exitRound ?? '—');
+      (cupByManager[name] ??= []).push({ comp: c.competition, label });
+    }
+  }
+  const cupNames = Object.keys(cupByManager).sort();
+
   return (
     <div className="league-table">
-      <div className="result-section-label" style={{ padding: '0 16px', marginBottom: 10 }}>Alle Manager</div>
-      {rows.length === 0 ? (
+      {rows.length > 0 && (
+        <>
+          <div className="result-section-label" style={{ padding: '0 16px', marginBottom: 10 }}>Alle Manager</div>
+          {rows.map(m => (
+            <div key={`${m.division}-${m.name}`} className={`lt-row ${m.name === myName ? 'lt-row-player' : ''}`}>
+              <span className="lt-pos">{m.pos}</span>
+              <span className="lt-name">{m.name === myName ? 'Du' : m.name}</span>
+              <span className="lt-div">{DIV_LABEL[m.division] ?? m.division}</span>
+              <span className="lt-pts">{m.pts}{m.resolved ? '' : ' *'}</span>
+            </div>
+          ))}
+        </>
+      )}
+
+      {cupNames.length > 0 && (
+        <>
+          <div className="result-section-label" style={{ padding: '14px 16px 10px' }}>Pokal &amp; Europa</div>
+          {cupNames.map(name => (
+            <div key={`cup-${name}`} className={`lt-row ${name === myName ? 'lt-row-player' : ''}`}>
+              <span className="lt-name">{name === myName ? 'Du' : name}</span>
+              <span className="mp-cup-tags">
+                {['pokal', 'ucl', 'uel'].map(comp => {
+                  const hit = cupByManager[name].find(x => x.comp === comp);
+                  if (!hit) return null;
+                  return <span key={comp} className="mp-cup-tag">{CUP_SHORT[comp]}: {hit.label}</span>;
+                })}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
+
+      {rows.length === 0 && cupNames.length === 0 && (
         <div className="lt-row" style={{ color: 'var(--text-muted)', fontSize: 12 }}>Noch keine Ergebnisse.</div>
-      ) : rows.map(m => (
-        <div key={`${m.division}-${m.name}`} className={`lt-row ${m.name === myName ? 'lt-row-player' : ''}`}>
-          <span className="lt-pos">{m.pos}</span>
-          <span className="lt-name">{m.name === myName ? 'Du' : m.name}</span>
-          <span className="lt-div">{DIV_LABEL[m.division] ?? m.division}</span>
-          <span className="lt-pts">{m.pts}{m.resolved ? '' : ' *'}</span>
-        </div>
-      ))}
+      )}
     </div>
   );
 }

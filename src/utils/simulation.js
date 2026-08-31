@@ -18,7 +18,7 @@ function gauss(sigma) {
 
 // ── Player event simulation ───────────────────────────────────────────────────
 
-const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, LM:12, RM:12, RW:14, LW:14, ST:22 };
+export const SCORE_WEIGHTS  = { GK:0, RB:2, CB:1, LB:2, DM:3, CM:6, AM:10, LM:12, RM:12, RW:14, LW:14, ST:22 };
 const ASSIST_WEIGHTS = { GK:1, RB:5, CB:2, LB:5, DM:8, CM:14, AM:20, LM:16, RM:16, RW:14, LW:14, ST:6 };
 
 // Scale each player's weight by their rating relative to a baseline of 75.
@@ -481,20 +481,20 @@ export function simulateFullLeague(slots, league = 'bl', allPlayers = [], extraT
 
 // ── DFB-Pokal simulation ──────────────────────────────────────────────────────
 
-const POKAL_BLACKLIST = new Set(['RB Leipzig']);
-const POKAL_LOWER_STRENGTH = 50;
+export const POKAL_BLACKLIST = new Set(['RB Leipzig']);
+export const POKAL_LOWER_STRENGTH = 50;
 
 const POKAL_ROUNDS = [
   '1. Runde', '2. Runde', 'Achtelfinale', 'Viertelfinale', 'Halbfinale', 'Finale',
 ];
 
-function pokalTier(club, season) {
+export function pokalTier(club, season) {
   if (HISTORIC_TABLES.bl[club]?.[season])    return 'bl';
   if (HISTORIC_TABLES['2bl'][club]?.[season]) return '2bl';
   return 'lower';
 }
 
-function pokalStrength(club, season) {
+export function pokalStrength(club, season) {
   const bl  = HISTORIC_TABLES.bl[club]?.[season];
   const tbl = HISTORIC_TABLES['2bl'][club]?.[season];
   if (bl)  return ptsToStrength(bl.pts, 'bl');
