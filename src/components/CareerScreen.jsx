@@ -12,7 +12,8 @@ import { PLAYERS as BL2_PLAYERS } from '../data/players2bl';
 import { PLAYERS as BL3_PLAYERS } from '../data/players3l';
 import { PLAYERS_EUROPEAN } from '../data/playersEuropean';
 import { applyGrowth, potentialTier, ovrColorClass } from '../utils/growthUtils';
-import { getMpSession, setMpSession, clearMpSession, leaveRoom, getRoom, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, ensureCupSeed, writeCupResult, getCupSummary, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
+import { getMpSession, setMpSession, clearMpSession, leaveRoom, getRoom, submitSquad, getSquads, ensureSeasonSeed, writeSeasonTable, getSeasonSummary, ensureCupSeed, writeCupResult, getCupSummary, getRoomHistory, touchMember, claimHostIfStale } from '../utils/multiplayerUtils';
+import { buildMpOverview } from '../utils/mpOverview';
 import { simulateSharedLeague } from '../utils/sharedLeague';
 import { simulateSharedPokal, simulateSharedEuro } from '../utils/sharedCups';
 import MultiplayerWaitingScreen from './MultiplayerWaitingScreen';
@@ -24,6 +25,7 @@ import './CareerScreen.css';
 
 const DIV_LABEL = { bl: 'Bundesliga', '2bl': '2. Bundesliga', '3l': '3. Liga' };
 const DIV_ORDER = { bl: 0, '2bl': 1, '3l': 2 };
+const DIV_SHORT = { bl: 'BL', '2bl': '2BL', '3l': '3L' };
 
 const PLAYOFF_OPPONENTS = {
   bl:   ['Hamburger SV', 'FC Schalke 04', 'Hannover 96', '1. FC Köln', 'Hertha BSC',
@@ -311,10 +313,16 @@ export default function CareerScreen() {
     }
   }
 
-  function handleEndCareer() {
+  async function handleEndCareer() {
     const mp = getMpSession();
+    let mpOverview = null;
+    let mpMyName = null;
     if (mp?.code) {
       if (!window.confirm('Karriere beenden und den Raum verlassen?')) return;
+      mpMyName = mp.playerName;
+      mpOverview = await getRoomHistory(mp.code)
+        .then(h => buildMpOverview(h, mp.playerName))
+        .catch(() => null);
       leaveRoom(mp.code, mp.playerName).catch(() => {});
       clearMpSession();
     }
@@ -324,7 +332,7 @@ export default function CareerScreen() {
     const history = [...state.seasonHistory, ...(currentRecord ? [currentRecord] : [])];
     // Merge last season's stats (BEGIN_TRANSFER not yet called when ending from result screen)
     const careerStats = mergeStats(state.careerStats, state.result?.playerStats ?? []);
-    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers, careerStats });
+    setEndData({ history, slots: state.slots, allPlayers: state.allPlayers, careerStats, mpOverview, mpMyName });
   }
 
   function mergeStats(base, playerStats) {
@@ -1717,7 +1725,7 @@ function CareerTable({ table, league }) {
         return (
           <div key={row.name} className={`lt-row lt-zone-${zone} ${row.isPlayer ? 'lt-row-player' : ''} ${row.isReal ? 'lt-row-real' : ''}`}>
             <span className="lt-pos">{row.pos}</span>
-            <span className="lt-name">{row.name}{row.isReal && <span className="lt-real-badge">Live</span>}</span>
+            <span className="lt-name">{row.name}</span>
             <span className="lt-wdl">{row.W}-{row.D}-{row.L}</span>
             <span className="lt-gd">{gd > 0 ? '+' : ''}{gd}</span>
             <span className="lt-pts">{row.pts}</span>
@@ -1890,8 +1898,62 @@ function CareerPlayoffCard({ playoff }) {
 
 // ── End Screen ────────────────────────────────────────────────────────────────
 
+// Room-wide honours board shown when a multiplayer career ends: one row per
+// manager (titles / promotions / cups / best finish) plus a season-by-season
+// roll of champions. Absent for solo careers.
+function MpCareerOverview({ overview, myName }) {
+  const { managers = [], roll = [] } = overview ?? {};
+  if (!managers.length && !roll.length) return null;
+  const bestLabel = b => (b ? `${b.pos}. · ${DIV_SHORT[b.division] ?? b.division}` : '–');
+
+  return (
+    <div className="career-history-card mpo-card">
+      <div className="result-section-label">Alle Manager</div>
+      <div className="mpo-row mpo-row--head">
+        <span className="mpo-name" />
+        <span className="mpo-col" title="Saisons">Sais.</span>
+        <span className="mpo-col" title="Meistertitel">🏆</span>
+        <span className="mpo-col" title="Aufstiege">⬆</span>
+        <span className="mpo-col" title="Pokalsiege">🏅</span>
+        <span className="mpo-best">Bester</span>
+      </div>
+      {managers.map(m => (
+        <div key={m.name} className={`mpo-row ${m.name === myName ? 'mpo-row--me' : ''}`}>
+          <span className="mpo-name">{m.name === myName ? 'Du' : m.name}</span>
+          <span className="mpo-col">{m.seasons}</span>
+          <span className="mpo-col">{m.titles || '–'}</span>
+          <span className="mpo-col">{m.promotions || '–'}</span>
+          <span className="mpo-col">{(m.pokal + m.ucl + m.uel) || '–'}</span>
+          <span className="mpo-best">{bestLabel(m.best)}</span>
+        </div>
+      ))}
+
+      {roll.length > 0 && (
+        <>
+          <div className="result-section-label" style={{ marginTop: 16 }}>Titelträger</div>
+          {roll.map(e => (
+            <div key={e.season} className="mpo-roll-row">
+              <span className="mpo-roll-season">Saison {e.season}</span>
+              <span className="mp-cup-tags">
+                {e.league && (
+                  <span className="mp-cup-tag">
+                    {e.league.division === 'bl' ? '🏆 ' : `${DIV_SHORT[e.league.division]} `}{e.league.name}
+                  </span>
+                )}
+                {e.pokal && <span className="mp-cup-tag">Pokal {e.pokal}</span>}
+                {e.ucl && <span className="mp-cup-tag">UCL {e.ucl}</span>}
+                {e.uel && <span className="mp-cup-tag">UEL {e.uel}</span>}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
 function CareerEndScreen({ data, onNewCareer, onHome }) {
-  const { history, slots = [], careerStats = {}, allPlayers = [] } = data;
+  const { history, slots = [], careerStats = {}, allPlayers = [], mpOverview = null, mpMyName = null } = data;
   const totalSeasons = history.length;
   const totalPts = history.reduce((sum, s) => sum + (s.pts ?? 0), 0);
   const totalGF  = history.reduce((sum, s) => sum + (s.GF  ?? 0), 0);
@@ -1952,6 +2014,8 @@ function CareerEndScreen({ data, onNewCareer, onHome }) {
             </div>
           )}
         </div>
+
+        {mpOverview && <MpCareerOverview overview={mpOverview} myName={mpMyName} />}
 
         {slots.some(s => s.player) && (
           <div className="career-history-card career-end-squad">

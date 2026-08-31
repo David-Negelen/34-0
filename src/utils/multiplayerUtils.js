@@ -360,3 +360,21 @@ export async function getCupSummary(code, season) {
     summary: r.summary ?? {},
   }));
 }
+
+// Every sub-league table and every cup champion for the whole room, across all
+// seasons — powers the end-of-career "who won what" overview.
+export async function getRoomHistory(code) {
+  const [seasons, cups] = await Promise.all([
+    pbList('mp_seasons', `room_code="${code}"`).catch(() => []),
+    pbList('mp_cups', `room_code="${code}"`).catch(() => []),
+  ]);
+  return {
+    seasons: seasons.map(r => ({
+      season: r.season_number, division: r.division,
+      resolved: !!r.resolved, table: r.table ?? [],
+    })),
+    cups: cups.map(r => ({
+      season: r.season_number, competition: r.competition, champion: r.champion || null,
+    })),
+  };
+}
