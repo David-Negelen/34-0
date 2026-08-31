@@ -557,7 +557,7 @@ function CareerSetup({ formation, startingDivision, lockedLeague = null, onSetFo
 function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome, seasonRunning = false, seasonError = null }) {
   const { slots, draftPool, formation } = state;
   const [slotPickTarget, setSlotPickTarget] = useState(null);
-  const [posFilter, setPosFilter] = useState('');
+  const [posFilter, setPosFilter] = useState(null); // { label, type } — the picked pitch position
 
   const formationSlots = slots.filter(s => s.type !== 'BENCH');
   const filledFormation = formationSlots.filter(s => s.player !== null).length;
@@ -593,7 +593,15 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome, seas
     setSlotPickTarget(null);
   }
 
-  const poolFiltered = draftPool.filter(p => !posFilter || p.positions.includes(posFilter));
+  const poolFiltered = draftPool.filter(p => !posFilter || p.positions.includes(posFilter.type));
+
+  // One chip per distinct pitch position in this formation (RWB/LWB/RM/LM …),
+  // labelled like the board — not the underlying slot type. The chip still
+  // filters the pool by that slot's type.
+  const posChips = formationSlots
+    .filter((s, i, arr) => arr.findIndex(x => x.label === s.label) === i)
+    .filter(s => draftPool.some(pl => pl.positions.includes(s.type)))
+    .map(s => ({ label: s.label, type: s.type }));
 
   return (
     <div className="career-screen">
@@ -642,9 +650,13 @@ function CareerDraft({ state, onPlace, onRemove, onResult, onReset, onHome, seas
             </button>
           )}
           <div className="career-pos-filters">
-            <button className={`career-filter-btn${posFilter === '' ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter('')}>Alle</button>
-            {[...new Set(formationSlots.map(s => s.type))].filter(p => draftPool.some(pl => pl.positions.includes(p))).map(p => (
-              <button key={p} className={`career-filter-btn${posFilter === p ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(posFilter === p ? '' : p)}>{labelDE(p)}</button>
+            <button className={`career-filter-btn${!posFilter ? ' career-filter-btn-active' : ''}`} onClick={() => setPosFilter(null)}>Alle</button>
+            {posChips.map(({ label, type }) => (
+              <button
+                key={label}
+                className={`career-filter-btn${posFilter?.label === label ? ' career-filter-btn-active' : ''}`}
+                onClick={() => setPosFilter(posFilter?.label === label ? null : { label, type })}
+              >{labelDE(label)}</button>
             ))}
           </div>
 
