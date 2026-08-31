@@ -225,53 +225,58 @@ export default function CareerScreen() {
         // Every qualified manager is seeded into the same bracket; ties between
         // two managers use both submitted squad strengths. sharedCups produces
         // deterministic scores — the player's own goal events are filled in
-        // locally here (cosmetic, does not affect sync).
-        const evSquad = slots
-          .filter(s => s.player && s.type !== 'BENCH')
-          .map(s => ({ id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label,
-            rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
-        const fillEvents = m => {
-          m.events = evSquad.length
-            ? generateMatchEvents(m.ownGoals, m.oppGoals2, evSquad,
-                m.roundLabel === 'LIGAPHASE' ? 0.01 : 0.04, m.aet, m.ownGoalsReg)
-            : [];
-          return m;
-        };
-        const toSummary = pm => Object.fromEntries(
-          Object.entries(pm).map(([n, v]) => [n, { exitRound: v.exitRound, won: v.won }]),
-        );
+        // locally here (cosmetic, does not affect sync). Cups are secondary:
+        // any failure here must not stop the league season from completing.
+        try {
+          const evSquad = slots
+            .filter(s => s.player && s.type !== 'BENCH')
+            .map(s => ({ id: s.player.id, name: s.player.name, slotType: s.type, slotLabel: s.label,
+              rating: s.player.displayRating ?? s.player.primeRating ?? 75 }));
+          const fillEvents = m => {
+            m.events = evSquad.length
+              ? generateMatchEvents(m.ownGoals, m.oppGoals2, evSquad,
+                  m.roundLabel === 'LIGAPHASE' ? 0.01 : 0.04, m.aet, m.ownGoalsReg)
+              : [];
+            return m;
+          };
+          const toSummary = pm => Object.fromEntries(
+            Object.entries(pm).map(([n, v]) => [n, { exitRound: v.exitRound, won: v.won }]),
+          );
 
-        if (division === 'bl' || division === '2bl') {
-          const pokalSquads = allSquads.filter(s => s.division === 'bl' || s.division === '2bl');
-          const { seed: cupSeed } = await ensureCupSeed(mp.code, seasonNumber, 'pokal');
-          if (cupSeed) {
-            const pokal = simulateSharedPokal(cupSeed, pokalSquads);
-            const mine = pokal.perManager[mp.playerName];
-            if (mine) { pokalWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
-            writeCupResult(mp.code, seasonNumber, 'pokal', { champion: pokal.champion, summary: toSummary(pokal.perManager) }).catch(() => {});
-          }
-        }
-
-        if (seasonNumber > 1) {
-          // The shared bl table + cup champions from last season decide who is in
-          // UCL / UEL — computed identically on every client, not from local state.
-          const [prevSummary, prevCups] = await Promise.all([
-            getSeasonSummary(mp.code, seasonNumber - 1),
-            getCupSummary(mp.code, seasonNumber - 1),
-          ]);
-          const q = euroQualifiers(prevSummary, prevCups, new Set(allSquads.map(s => s.player_name)));
-          const comp = q.ucl.has(mp.playerName) ? 'ucl' : q.uel.has(mp.playerName) ? 'uel' : null;
-          mpEuroComp = comp;
-          if (comp) {
-            const euroSquads = allSquads.filter(s => (comp === 'ucl' ? q.ucl : q.uel).has(s.player_name));
-            const { seed: cupSeed } = await ensureCupSeed(mp.code, seasonNumber, comp);
+          if (division === 'bl' || division === '2bl') {
+            const pokalSquads = allSquads.filter(s => s.division === 'bl' || s.division === '2bl');
+            const { seed: cupSeed } = await ensureCupSeed(mp.code, seasonNumber, 'pokal');
             if (cupSeed) {
-              const eu = simulateSharedEuro(cupSeed, euroSquads, comp);
-              const mine = eu.perManager[mp.playerName];
-              if (mine) { europeanWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
-              writeCupResult(mp.code, seasonNumber, comp, { champion: eu.champion, summary: toSummary(eu.perManager) }).catch(() => {});
+              const pokal = simulateSharedPokal(cupSeed, pokalSquads);
+              const mine = pokal.perManager[mp.playerName];
+              if (mine) { pokalWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
+              writeCupResult(mp.code, seasonNumber, 'pokal', { champion: pokal.champion, summary: toSummary(pokal.perManager) }).catch(() => {});
             }
           }
+
+          if (seasonNumber > 1) {
+            // The shared bl table + cup champions from last season decide who is in
+            // UCL / UEL — computed identically on every client, not from local state.
+            const [prevSummary, prevCups] = await Promise.all([
+              getSeasonSummary(mp.code, seasonNumber - 1),
+              getCupSummary(mp.code, seasonNumber - 1),
+            ]);
+            const q = euroQualifiers(prevSummary, prevCups, new Set(allSquads.map(s => s.player_name)));
+            const comp = q.ucl.has(mp.playerName) ? 'ucl' : q.uel.has(mp.playerName) ? 'uel' : null;
+            mpEuroComp = comp;
+            if (comp) {
+              const euroSquads = allSquads.filter(s => (comp === 'ucl' ? q.ucl : q.uel).has(s.player_name));
+              const { seed: cupSeed } = await ensureCupSeed(mp.code, seasonNumber, comp);
+              if (cupSeed) {
+                const eu = simulateSharedEuro(cupSeed, euroSquads, comp);
+                const mine = eu.perManager[mp.playerName];
+                if (mine) { europeanWon = mine.won; cupMatches.push(...mine.matches.map(fillEvents)); }
+                writeCupResult(mp.code, seasonNumber, comp, { champion: eu.champion, summary: toSummary(eu.perManager) }).catch(() => {});
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[mp] shared cups unavailable this season — league unaffected', e);
         }
       } else {
         if (division === 'bl' || division === '2bl') {

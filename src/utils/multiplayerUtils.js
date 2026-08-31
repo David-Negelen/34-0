@@ -314,24 +314,30 @@ export async function getCup(code, season, competition) {
 // Freeze a competition's bracket. Same "everyone submitted" gate as the
 // league, so once runSeason's league step is past this returns immediately.
 // The unique (room, season, competition) index collapses concurrent writes.
+// Cups are a secondary feature: any backend trouble here returns "not ready"
+// so the shared league season still completes.
 export async function ensureCupSeed(code, season, competition) {
-  let row = await getCup(code, season, competition);
-  if (row?.seed) return { ready: true, seed: row.seed, row };
-
-  const rd = await seasonReadiness(code, season);
-  if (!rd.allIn) return { ready: false, seed: null, row: null, waitingOn: rd.waitingOn };
-
   try {
-    row = await pbCreate('mp_cups', {
-      room_code: code, season_number: season, competition,
-      seed: makeSeed(), champion: '', summary: {}, resolved: false,
-    });
-  } catch (e) {
-    if (e.code !== 'VALIDATION') throw e;
-    row = await getCup(code, season, competition);
-    if (!row) throw e;
+    let row = await getCup(code, season, competition);
+    if (row?.seed) return { ready: true, seed: row.seed, row };
+
+    const rd = await seasonReadiness(code, season);
+    if (!rd.allIn) return { ready: false, seed: null, row: null, waitingOn: rd.waitingOn };
+
+    try {
+      row = await pbCreate('mp_cups', {
+        room_code: code, season_number: season, competition,
+        seed: makeSeed(), champion: '', summary: {}, resolved: false,
+      });
+    } catch (e) {
+      if (e.code !== 'VALIDATION') throw e;
+      row = await getCup(code, season, competition);
+      if (!row) throw e;
+    }
+    return { ready: true, seed: row.seed, row };
+  } catch {
+    return { ready: false, seed: null, row: null };
   }
-  return { ready: true, seed: row.seed, row };
 }
 
 // Cache a competition's champion + per-manager exit rounds (idempotent).
