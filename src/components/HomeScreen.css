@@ -136,6 +136,10 @@
   border-left: 3px solid #9c27b0;
 }
 
+.league-card--multiplayer {
+  border-left: 3px solid var(--green);
+}
+
 .league-card--karriere-klassik {
   border-left: 3px solid #607d8b;
 }
