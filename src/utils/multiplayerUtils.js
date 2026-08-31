@@ -248,6 +248,17 @@ export async function getSeason(code, season, division) {
   return items[0] ?? null;
 }
 
+// Who has / hasn't submitted a season-N squad (in any tier). Shared by the
+// league and cup seed gates: a season resolves only once everyone is in.
+export async function seasonReadiness(code, season) {
+  const [members, squads] = await Promise.all([getMembers(code), getSquads(code, season)]);
+  const roster = members.map(m => m.player_name);
+  const done = new Set(squads.map(s => s.player_name));
+  const submitted = roster.filter(n => done.has(n));
+  const waitingOn = roster.filter(n => !done.has(n));
+  return { squads, submitted, waitingOn, total: roster.length, allIn: roster.length > 0 && waitingOn.length === 0 };
+}
+
 // Freeze a division's sub-league once EVERY seated manager has submitted a
 // season-N squad (in whatever tier). No skipping — a missing player must
 // reconnect and submit, or the host must kick them. Each division gets its own
@@ -257,15 +268,11 @@ export async function ensureSeasonSeed(code, season, division) {
   let row = await getSeason(code, season, division);
   if (row?.seed) return { ready: true, seed: row.seed, row, waitingOn: [], submitted: [], total: 0 };
 
-  const [members, squads] = await Promise.all([getMembers(code), getSquads(code, season)]);
-  const roster = members.map(m => m.player_name);
-  const submittedSet = new Set(squads.map(s => s.player_name));
-  const submitted = roster.filter(n => submittedSet.has(n)); // ready for the next season
-  const waitingOn = roster.filter(n => !submittedSet.has(n));
-  const progress = { waitingOn, submitted, total: roster.length };
+  const rd = await seasonReadiness(code, season);
+  const progress = { waitingOn: rd.waitingOn, submitted: rd.submitted, total: rd.total };
 
-  if (squads.some(s => s.division === division) === false) return { ready: false, seed: null, row: null, ...progress };
-  if (waitingOn.length > 0) return { ready: false, seed: null, row: null, ...progress };
+  if (rd.squads.some(s => s.division === division) === false) return { ready: false, seed: null, row: null, ...progress };
+  if (!rd.allIn) return { ready: false, seed: null, row: null, ...progress };
 
   try {
     row = await pbCreate('mp_seasons', {
@@ -276,7 +283,7 @@ export async function ensureSeasonSeed(code, season, division) {
     row = await getSeason(code, season, division);
     if (!row) throw e;
   }
-  return { ready: true, seed: row.seed, row, waitingOn: [], submitted, total: roster.length };
+  return { ready: true, seed: row.seed, row, waitingOn: [], submitted: rd.submitted, total: rd.total };
 }
 
 // Cache one division's authoritative standings + advance the room's season pointer.
@@ -294,4 +301,55 @@ export async function writeSeasonTable(code, season, division, table) {
 export async function getSeasonSummary(code, season) {
   const rows = await pbList('mp_seasons', `room_code="${code}" && season_number=${season}`).catch(() => []);
   return rows.map(r => ({ division: r.division, resolved: !!r.resolved, table: r.table ?? [] }));
+}
+
+// ── Shared cups (one bracket per room per season per competition) ──────────
+
+export async function getCup(code, season, competition) {
+  const items = await pbList('mp_cups', `room_code="${code}" && season_number=${season} && competition="${competition}"`);
+  return items[0] ?? null;
+}
+
+// Freeze a competition's bracket. Same "everyone submitted" gate as the
+// league, so once runSeason's league step is past this returns immediately.
+// The unique (room, season, competition) index collapses concurrent writes.
+export async function ensureCupSeed(code, season, competition) {
+  let row = await getCup(code, season, competition);
+  if (row?.seed) return { ready: true, seed: row.seed, row };
+
+  const rd = await seasonReadiness(code, season);
+  if (!rd.allIn) return { ready: false, seed: null, row: null, waitingOn: rd.waitingOn };
+
+  try {
+    row = await pbCreate('mp_cups', {
+      room_code: code, season_number: season, competition,
+      seed: makeSeed(), champion: '', summary: {}, resolved: false,
+    });
+  } catch (e) {
+    if (e.code !== 'VALIDATION') throw e;
+    row = await getCup(code, season, competition);
+    if (!row) throw e;
+  }
+  return { ready: true, seed: row.seed, row };
+}
+
+// Cache a competition's champion + per-manager exit rounds (idempotent).
+export async function writeCupResult(code, season, competition, { champion, summary }) {
+  const row = await getCup(code, season, competition);
+  if (!row || row.resolved) return;
+  await pbUpdate('mp_cups', row.id, {
+    champion: champion ?? '', summary: summary ?? {}, resolved: true,
+  }).catch(() => {});
+}
+
+// All three competitions' cached results for a season — powers the standings
+// view and next season's European qualification.
+export async function getCupSummary(code, season) {
+  const rows = await pbList('mp_cups', `room_code="${code}" && season_number=${season}`).catch(() => []);
+  return rows.map(r => ({
+    competition: r.competition,
+    resolved: !!r.resolved,
+    champion: r.champion || null,
+    summary: r.summary ?? {},
+  }));
 }
